@@ -1,22 +1,20 @@
-# Support
+# 支持
 
-## Getting Help
+## 获取帮助
 
-| Need | Where to go |
+| 需求 | 去向 |
 |------|-------------|
-| **Bug report** | [Open a GitHub Issue](https://github.com/AgriciDaniel/claude-ads/issues/new/choose) |
-| **Feature request or question** | [GitHub Discussions](https://github.com/AgriciDaniel/claude-ads/discussions) |
-| **Security vulnerability** | [GitHub Security Advisory](https://github.com/AgriciDaniel/claude-ads/security/advisories/new) (private) |
-| **Contributing** | See [CONTRIBUTING.md](CONTRIBUTING.md) |
+| **问题报告** | [创建 GitHub Issue](https://github.com/AgriciDaniel/claude-ads/issues/new/choose) |
+| **功能请求或问题咨询** | [GitHub Discussions](https://github.com/AgriciDaniel/claude-ads/discussions) |
+| **安全漏洞** | [GitHub Security Advisory](https://github.com/AgriciDaniel/claude-ads/security/advisories/new)（私密） |
+| **参与贡献** | 参见 [CONTRIBUTING.md](CONTRIBUTING.md) |
 
-## Before Opening an Issue
+## 创建 issue 之前
 
-1. Check the [README](README.md); installation, usage, and FAQ cover the most common questions
-2. Search [existing issues](https://github.com/AgriciDaniel/claude-ads/issues) to avoid duplicates
-3. Include your OS, Python version, the command that failed, and the full error output
+1. 查看 [README](README.md)；安装、用法和常见问题涵盖了最常见的问题。
+2. 搜索[现有 issue](https://github.com/AgriciDaniel/claude-ads/issues)，避免重复。
+3. 提供操作系统、Python 版本、失败的命令及完整错误输出。
 
-## Response Time
+## 响应时间
 
-Issues and discussions are monitored regularly. Most questions receive a response
-within a few days. Security reports are acknowledged within 48 hours; see
-[SECURITY.md](SECURITY.md) for details.
+我们定期查看 issue 和讨论。多数问题会在几天内得到回复。安全报告在 48 小时内确认收到；详情见 [SECURITY.md](SECURITY.md)。

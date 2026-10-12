@@ -1,43 +1,27 @@
-# Google Ads creative generation contract
+# Google Ads 创意生成契约
 
-Use this reference for generation planning across Google Ads surfaces, including
-asset-based, search, feed, video, and Demand Gen campaigns. It intentionally does
-not freeze dimensions, character limits, asset counts, feature names, or format
-availability: those are current platform claims and must come from dated official
-evidence and the target account.
+使用本参考文档规划 Google Ads 各广告载体的生成工作，包括基于素材、搜索、Feed、视频和 Demand Gen 广告系列。它刻意不固定尺寸、字符限制、素材数量、功能名称或格式可用性：这些都是当前平台声明，必须来自注明日期的官方证据和目标账户。
 
-## Specification gate
+## 规格关卡
 
-Before generating, create a placement matrix with:
+生成前，创建包含以下内容的版位矩阵：
 
-- campaign type, objective, network, placement, geography, and account eligibility;
-- official source ID, retrieval date, and refresh date for every required asset;
-- accepted file type, ratio, pixel range, byte limit, copy limit, and asset count;
-- crop behavior, logo/text restrictions, policy constraints, and approval state;
-- whether the item is required, recommended, optional, automatically generated, or
-  unavailable for the selected campaign.
+- 广告系列类型、目标、网络、版位、地理区域和账户资格；
+- 每项必需素材的官方来源 ID、检索日期和刷新日期；
+- 接受的文件类型、比例、像素范围、字节限制、文案限制和素材数量；
+- 裁切行为、标志/文字限制、政策约束和批准状态；
+- 对所选广告系列而言，该项是必需、建议、可选、自动生成，还是不可用。
 
-If a load-bearing specification is absent or stale, return `needs_input`. A familiar
-canvas size is not proof that an upload will be accepted. Do not describe announced,
-beta, premium, or account-ineligible automation as enabled.
+如果关键规格缺失或过时，返回 `needs_input`。熟悉的画布尺寸不能证明上传会被接受。不要将已宣布、测试版、高级或账户不符合资格的自动化描述为已启用。
 
-## Google-specific review
+## Google 专属审查
 
-- Separate Search copy, asset-group images and logos, feed assets, Demand Gen
-  assets, and YouTube assets; requirements and cropping are not interchangeable.
-- Validate the landing page, product feed, business name, logo ownership, and policy
-  claims before generating assets around them.
-- Produce materially different concepts, not only crops or color changes, when the
-  brief calls for creative testing.
-- Keep critical subjects within the official placement safe areas and preview every
-  supported crop. Do not assume text or logos are universally forbidden or allowed.
-- Treat automatic asset creation, final-URL behavior, and generated copy as governed
-  account settings. Record their current state and owner intent.
+- 区分 Search 文案、素材组图像和标志、Feed 素材、Demand Gen 素材和 YouTube 素材；要求和裁切方式不能互换。
+- 围绕素材生成前，验证落地页、商品 Feed、企业名称、标志所有权和政策声明。
+- 当简报要求创意测试时，产出实质不同的概念，而不只是裁切或颜色变化。
+- 将关键主体置于官方版位安全区域内，并预览每种支持的裁切。不要假定文字或标志普遍被禁止或允许。
+- 将自动素材创建、最终 URL 行为和生成文案视为受治理的账户设置。记录其当前状态和负责人意图。
 
-## Output contract
+## 输出契约
 
-Each asset-manifest entry records concept ID, source IDs, placement, ratio,
-dimensions, format, size, checksum, copy fields, rights/provenance, safety review,
-preview result, and account eligibility. A generated file is a draft until its
-manifest validates and the operator approves it. Generation does not imply upload
-or live Google Ads write support.
+每项素材清单条目记录概念 ID、来源 ID、版位、比例、尺寸、格式、大小、校验和、文案字段、权利/溯源、安全审查、预览结果和账户资格。生成文件在清单验证通过且操作者批准前仍是草稿。生成不意味着上传，也不意味着支持实时 Google Ads 写入。

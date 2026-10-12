@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from claude_ads_core.i18n import locale_scope
+
 from claude_ads_core.contracts import CONTRACT_NAMES, ContractError, schema_path, validate_contract
 from claude_ads_core.orchestration import OrchestrationError, OrchestrationStore, evaluate_artifact_gate
 
@@ -16,6 +18,13 @@ from claude_ads_core.orchestration import OrchestrationError, OrchestrationStore
 def workflow_fixtures(repo_root: Path) -> dict[str, dict]:
     path = repo_root / "tests/fixtures/workflows/valid-artifacts.json"
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+@pytest.fixture(autouse=True)
+def _explicit_english_contract_messages():
+    """Retain the original English failure assertions in this module."""
+    with locale_scope("en"):
+        yield
 
 
 def _contract_name(fixture_name: str) -> str:

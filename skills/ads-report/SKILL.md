@@ -1,20 +1,22 @@
 ---
 name: ads-report
-description: "Render Markdown, HTML, or PDF paid-advertising reports from a validated Claude Ads JSON run bundle. Use for ads report, client report, audit PDF, executive audience reporting, or exporting prior audit and plan results."
+description: "从已验证的 Claude Ads JSON 运行数据包渲染 Markdown、HTML 或 PDF 付费广告报告。适用于广告报告、客户报告、审计 PDF、面向高管的报告，或导出以往审计和计划结果。"
 ---
 
-# Render Paid Media Reports
+# 渲染付费媒体报告
 
-1. Accept a validated versioned report bundle, never loose worker prose.
-2. Confirm run completeness, evidence coverage, privacy class, branding choice,
-   requested audience, and output formats.
-3. Render all formats from the same canonical data and deterministic templates.
-4. Preserve findings, confidence, evidence references, contradictions, missing
-   inputs, actions, owners, and measurement windows.
-5. Run structural checks, then visual/layout checks for HTML and PDF.
-6. Write atomically inside the run directory and update its manifest.
+操作语言默认使用简体中文：首次回复、工具前说明、过程进度、AskUserQuestion 的问题、选项和说明，以及最终报告均使用中文；用户明确指定其他操作语言时遵从。广告投放语言独立于操作语言。JSON keys/enums 和原始证据不翻译。委派任务时必须传递操作语言要求。
 
-Do not include credentials, customer lists, private paths, raw research, internal
-agent transcripts, or promotional copy unless the operator explicitly enabled
-branding. Never hide partial or insufficient-evidence status in an executive
-summary.
+1. 接收已验证且带版本的报告数据包，绝不能使用零散的工作代理文字叙述。
+2. 确认运行完整性、证据覆盖率、隐私分类、品牌展示选择、
+   请求的受众和输出格式。
+3. 使用相同的规范化数据和确定性模板渲染所有格式。
+4. 保留发现、置信度、证据引用、矛盾、缺失
+   输入、行动、负责人和衡量窗口。
+5. 先运行结构检查，再对 HTML 和 PDF 进行视觉/布局检查。
+6. 在运行目录内原子化写入，并更新其清单。
+
+不得包含凭据、客户名单、私密路径、原始研究或内部
+代理记录；除非操作者明确启用品牌展示，也不得包含宣传
+文案。绝不能在执行摘要中隐瞒部分完成或证据不足的
+状态。

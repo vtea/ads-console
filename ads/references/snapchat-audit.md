@@ -1,54 +1,43 @@
-# Snapchat Ads control reference
+# Snapchat Ads 控制项参考
 
-Retrieved: 2026-07-11. Refresh official platform and policy sources before using
-this reference after its control-plane refresh date.
+检索日期：2026-07-11。在本参考文档的控制平面刷新日期之后使用前，请刷新官方平台和政策来源。
 
-## Category model
+## 类别模型
 
-This reference does not define an executable scoring profile. Bind a versioned
-profile whose categories cover the applicable controls and whose weights total 100;
-otherwise produce findings without a health score.
+本参考文档不定义可执行的评分配置。绑定一个带版本的配置，其类别须涵盖适用控制项，且权重总计为 100；否则，只生成发现，不提供健康分数。
 
-## Runtime evaluation contract
+## 运行时评估契约
 
-- Treat each row as an applicability-first evidence question. Missing evidence is
-  `unknown`; unavailable or ineligible surfaces are `not_applicable`.
-- Verify objective, placement, geography, measurement path, reporting lifecycle,
-  catalog use, policy, and account eligibility before evaluation.
-- The registered source below grounds the Marketing API surface only. Current
-  Pixel, CAPI, measurement, report-field, format, policy, and availability claims
-  require additional dated official source IDs or account evidence.
-- This reference is advisory and export-read only. It does not provide a live Snap
-  API reader or mutation adapter.
+- 将每一行视为优先检查适用性的证据问题。缺失证据为 `unknown`；不可用或不符合资格的广告载体为 `not_applicable`。
+- 评估前核实目标、版位、地理区域、衡量路径、报告生命周期、商品目录使用、政策和账户资格。
+- 下列已登记来源仅为 Marketing API 范围提供依据。当前 Pixel、CAPI、衡量、报告字段、格式、政策和可用性声明，需要额外的注明日期的官方来源 ID 或账户证据。
+- 本参考文档仅用于咨询和读取导出数据。它不提供实时 Snap API 读取器或变更适配器。
 
-## Controls
+## 控制项
 
-| ID | Category | Evidence question |
+| ID | 类别 | 证据问题 |
 | --- | --- | --- |
-| SC-M01 | Measurement | Snap Pixel, Conversions API, MMP, or offline source is declared and verified. |
-| SC-M02 | Measurement | Events and values match the objective and use documented deduplication when needed. |
-| SC-M03 | Measurement | App campaigns include the required app measurement configuration. |
-| SC-M04 | Measurement | Attribution windows and report fields are explicit and comparable. |
-| SC-R01 | Reporting | Date boundaries use the ad-account timezone and the data-finalization window is disclosed. |
-| SC-R02 | Reporting | Large or product-level reports use the supported asynchronous lifecycle. |
-| SC-S01 | Structure | Campaign, ad-squad, ad, creative, and objective relationships are valid. |
-| SC-S02 | Structure | Optimization, placements, and delivery choices match the declared outcome. |
-| SC-A01 | Audience | Audience, geography, device, and first-party targeting are intentional and eligible. |
-| SC-C01 | Creative | Creative is mobile-first and native to the selected Snap placement. |
-| SC-C02 | Creative | Materially different hooks, formats, and concepts are available for testing. |
-| SC-C03 | Creative | AR, Lens, Story, collection, or lead formats use their required assets and destinations. |
-| SC-D01 | Retail | Catalog mappings, product availability, and product-level reporting validate when DPA is used. |
-| SC-B01 | Budget | Budget, bid, pacing, and campaign caps are viable and use correct currency units. |
-| SC-P01 | Policy | Brand-safety, age, privacy, regulated-category, and review-status constraints are checked. |
-| SC-E01 | Experiment | Tests isolate one decision and account for reporting latency. |
+| SC-M01 | 衡量 | 已声明并验证 Snap Pixel、Conversions API、MMP 或线下来源。 |
+| SC-M02 | 衡量 | 事件和价值匹配目标，并在需要时使用文档规定的去重。 |
+| SC-M03 | 衡量 | 应用广告系列包含所需的应用衡量配置。 |
+| SC-M04 | 衡量 | 归因窗口和报告字段明确且可比。 |
+| SC-R01 | 报告 | 日期边界使用广告账户时区，并披露数据最终确定窗口。 |
+| SC-R02 | 报告 | 大型或商品级报告使用支持的异步生命周期。 |
+| SC-S01 | 结构 | 广告系列、ad-squad、广告、创意和目标关系有效。 |
+| SC-S02 | 结构 | 优化、版位和投放选择匹配声明的成果。 |
+| SC-A01 | 受众 | 受众、地理区域、设备和第一方定向出于明确意图且符合资格。 |
+| SC-C01 | 创意 | 创意以移动端为先，并原生适配所选 Snap 版位。 |
+| SC-C02 | 创意 | 有实质不同的吸引点、格式和概念可供测试。 |
+| SC-C03 | 创意 | AR、Lens、Story、合集或线索格式使用其所需素材和目标页面。 |
+| SC-D01 | 零售 | 使用 DPA 时，商品目录映射、商品可用性和商品级报告验证通过。 |
+| SC-B01 | 预算 | 预算、出价、投放节奏和广告系列上限可行，且使用正确货币单位。 |
+| SC-P01 | 政策 | 已检查品牌安全、年龄、隐私、受监管类别和审查状态约束。 |
+| SC-E01 | 实验 | 测试隔离一项决策，并考虑报告延迟。 |
 
-Results use `pass`, `fail`, `unknown`, or `not_applicable`. Unknown controls
-reduce evidence coverage; unavailable, beta, premium, or ineligible features are
-unscored opportunities.
+结果使用 `pass`、`fail`、`unknown` 或 `not_applicable`。未知控制项降低证据覆盖率；不可用、测试版、高级或不符合资格的功能作为不评分的机会。
 
-## Registered official evidence
+## 已登记官方证据
 
-- `snap-marketing-api`: [Snap Marketing API](https://developers.snap.com/marketing-api/home)
+- `snap-marketing-api`：[Snap Marketing API](https://developers.snap.com/marketing-api/home)
 
-Official sources override this summary when they change. Unsupported controls stay
-`unknown`; practitioner material may supplement but not replace official evidence.
+官方来源发生变化时，以官方来源为准，而非本概述。缺乏支持的控制项保持为 `unknown`；从业者材料可以补充，但不能替代官方证据。

@@ -1,54 +1,43 @@
-# Reddit Ads control reference
+# Reddit Ads 控制项参考
 
-Retrieved: 2026-07-11. Refresh official platform and policy sources before using
-this reference after its control-plane refresh date.
+检索日期：2026-07-11。在本参考文档的控制平面刷新日期之后使用前，请刷新官方平台和政策来源。
 
-## Category model
+## 类别模型
 
-This reference does not define an executable scoring profile. Bind a versioned
-profile whose categories cover the applicable controls and whose weights total 100;
-otherwise produce findings without a health score.
+本参考文档不定义可执行的评分配置。绑定一个带版本的配置，其类别须涵盖适用控制项，且权重总计为 100；否则，只生成发现，不提供健康分数。
 
-## Runtime evaluation contract
+## 运行时评估契约
 
-- Treat each row as an applicability-first evidence question. Missing evidence is
-  `unknown`; unavailable or ineligible surfaces are `not_applicable`.
-- Verify objective, placement, geography, identity, measurement path, catalog use,
-  reporting definitions, policy, and account eligibility before evaluation.
-- The registered source below grounds supported conversion events only. Current
-  catalog, DPA, targeting, format, policy, and API claims require additional dated
-  official source IDs or account evidence.
-- This reference is advisory and export-read only. It does not provide a live
-  Reddit API reader or mutation adapter.
+- 将每一行视为优先检查适用性的证据问题。缺失证据为 `unknown`；不可用或不符合资格的广告载体为 `not_applicable`。
+- 评估前核实目标、版位、地理区域、身份、衡量路径、商品目录使用、报告定义、政策和账户资格。
+- 下列已登记来源仅为支持的转化事件提供依据。当前商品目录、DPA、定向、格式、政策和 API 声明，需要额外的注明日期的官方来源 ID 或账户证据。
+- 本参考文档仅用于咨询和读取导出数据。它不提供实时 Reddit API 读取器或变更适配器。
 
-## Controls
+## 控制项
 
-| ID | Category | Evidence question |
+| ID | 类别 | 证据问题 |
 | --- | --- | --- |
-| RD-M01 | Measurement | Primary conversion source and ownership are identified. |
-| RD-M02 | Measurement | Reddit Pixel or Conversions API events match the business conversion taxonomy. |
-| RD-M03 | Measurement | Pixel and server events use deduplication when both paths send the same event. |
-| RD-M04 | Measurement | Events Manager diagnostics and representative test events have been reviewed. |
-| RD-S01 | Structure | Campaign objective and optimization event match the business outcome. |
-| RD-S02 | Structure | Prospecting and retargeting intent are distinguishable and exclusions prevent avoidable overlap. |
-| RD-A01 | Audience | Community, interest, keyword, or first-party targeting is supported by the offer and evidence. |
-| RD-A02 | Audience | Audience expansion is deliberate and measured rather than assumed beneficial. |
-| RD-C01 | Creative | Creative reads naturally in the selected Reddit placement and community context. |
-| RD-C02 | Creative | Materially different concepts, hooks, and formats are available for testing. |
-| RD-C03 | Creative | Ad promise, comment context, and landing-page experience remain consistent. |
-| RD-R01 | Retail | Catalog fields, availability, prices, links, and refresh behavior are healthy when commerce formats are used. |
-| RD-R02 | Retail | Dynamic product advertising maps the relevant catalog and measurement source. |
-| RD-B01 | Budget | Budget and bid strategy are viable for the objective, data volume, and test design. |
-| RD-P01 | Policy | Brand-safety, placement, regulated-category, and privacy controls have been reviewed. |
-| RD-E01 | Experiment | Tests isolate a decision, define success criteria, and avoid overlapping changes. |
+| RD-M01 | 衡量 | 已识别主要转化来源和责任归属。 |
+| RD-M02 | 衡量 | Reddit Pixel 或 Conversions API 事件与业务转化分类体系匹配。 |
+| RD-M03 | 衡量 | 当 Pixel 和服务器两条路径发送同一事件时，采用去重。 |
+| RD-M04 | 衡量 | 已审查 Events Manager 诊断和有代表性的测试事件。 |
+| RD-S01 | 结构 | 广告系列目标和优化事件匹配业务成果。 |
+| RD-S02 | 结构 | 新客开发和再定向意图可区分，且排除设置防止可避免的重叠。 |
+| RD-A01 | 受众 | 社区、兴趣、关键词或第一方定向有优惠和证据支持。 |
+| RD-A02 | 受众 | 受众扩展是有意且经过衡量的，而非假定有益。 |
+| RD-C01 | 创意 | 创意在所选 Reddit 版位和社区情境中读来自然。 |
+| RD-C02 | 创意 | 有实质不同的概念、吸引点和格式可供测试。 |
+| RD-C03 | 创意 | 广告承诺、评论情境和落地页体验保持一致。 |
+| RD-R01 | 零售 | 使用电商格式时，商品目录字段、可用性、价格、链接和刷新行为健康。 |
+| RD-R02 | 零售 | 动态商品广告映射相关商品目录和衡量来源。 |
+| RD-B01 | 预算 | 预算和出价策略对于目标、数据量和测试设计而言可行。 |
+| RD-P01 | 政策 | 已审查品牌安全、版位、受监管类别和隐私控制。 |
+| RD-E01 | 实验 | 测试隔离一项决策、定义成功标准，并避免重叠变更。 |
 
-Results use `pass`, `fail`, `unknown`, or `not_applicable`. Unknown controls
-reduce evidence coverage; unavailable, beta, premium, or ineligible features are
-unscored opportunities.
+结果使用 `pass`、`fail`、`unknown` 或 `not_applicable`。未知控制项降低证据覆盖率；不可用、测试版、高级或不符合资格的功能作为不评分的机会。
 
-## Registered official evidence
+## 已登记官方证据
 
-- `reddit-business-help`: [Reddit supported conversion events](https://business.reddithelp.com/articles/Knowledge/supported-conversion-events)
+- `reddit-business-help`：[Reddit 支持的转化事件](https://business.reddithelp.com/articles/Knowledge/supported-conversion-events)
 
-Official sources override this summary when they change. Unsupported controls stay
-`unknown`; practitioner material may supplement but not replace official evidence.
+官方来源发生变化时，以官方来源为准，而非本概述。缺乏支持的控制项保持为 `unknown`；从业者材料可以补充，但不能替代官方证据。

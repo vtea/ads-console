@@ -1,38 +1,38 @@
-# Healthcare paid-media planning questions
+# 医疗保健付费媒体规划问题
 
-> Status: qualitative, unscored planning aid; not medical, privacy, or legal advice.
+> 状态：定性、不计分的规划辅助资料；不构成医疗、隐私或法律建议。
 
-## Required gates
+## 必需门禁
 
-- Context gate: identify the provider, service or product, audience, jurisdiction,
-  care setting, objective, conversion, accountable privacy owner, and clinical reviewer.
-- Evidence gate: verify current official source IDs from platforms and regulators, including
-  `hhs-tracking-guidance-official` when its scope is applicable.
-- Privacy gate: determine whether pages, events, URLs, forms, audiences, or vendor flows
-  could disclose protected or sensitive health information; block uncertain tracking uses.
-- Clinical-claim gate: require approved indication, evidence, limitations, risk language,
-  and qualified review before using outcome or comparative claims.
-- Regulatory gate: identify category, region, certification, targeting, disclosure,
-  accessibility, and emergency-content requirements from current official evidence.
-- Capability gate: keep sensitive data out of unsupported providers, prompts, reports,
-  logs, and account operations.
+- 背景门禁：明确提供方、服务或产品、受众、司法辖区、
+  照护场景、目标、转化、承担责任的隐私负责人和临床审查者。
+- 证据门禁：验证来自平台和监管机构的当前官方来源 ID，包括
+  在其范围适用时的 `hhs-tracking-guidance-official`。
+- 隐私门禁：判断页面、事件、URL、表单、受众或供应商流程
+  是否可能披露受保护或敏感健康信息；阻止存在不确定性的跟踪用途。
+- 临床声明门禁：在使用效果或比较性声明之前，必须具备已批准的适应症、证据、限制、风险表述
+  和具备资格的审查。
+- 监管门禁：根据当前官方证据识别类别、区域、认证、定向、披露、
+  无障碍和紧急情况内容要求。
+- 能力门禁：不得让敏感数据进入不受支持的提供方、提示词、报告、
+  日志和账户操作。
 
-## Planning questions
+## 规划问题
 
-- What service or product is offered, to whom, by which authorized entity?
-- Which claims are approved, understandable, balanced, and supported?
-- Which conversion events are useful without exposing health status or treatment interest?
-- Which targeting or creative concepts risk sensitive-trait inference or exploitation?
-- How will consent, vendor access, retention, deletion, incident response, and review work?
-- What should happen when a user may need urgent or professional care rather than an ad?
+- 由哪个获授权实体，向谁提供什么服务或产品？
+- 哪些声明已获批准、易于理解、平衡且有依据？
+- 哪些转化事件有用，又不会暴露健康状况或治疗兴趣？
+- 哪些定向或创意概念存在推断或利用敏感特征的风险？
+- 同意、供应商访问、保留、删除、事件响应和审查将如何运作？
+- 当用户可能需要紧急或专业照护而非广告时，应如何处理？
 
-## Candidate considerations
+## 候选考量
 
-- Consider education, access, service explanation, and trust hypotheses only after the
-  privacy, clinical, regulatory, and platform gates pass.
-- Separate marketing measurement from medical outcomes and never infer diagnosis.
+- 仅在隐私、临床、监管和平台门禁通过后，
+  才考虑教育、获得服务、服务解释和信任假设。
+- 将营销衡量与医疗结果分开，绝不能推断诊断。
 
-## Output guardrails
+## 输出防护规则
 
-- Return questions, source IDs, approvals, unresolved risks, owners, and stop conditions.
-- Do not prescribe eligibility, targeting, tracking, claims, bids, allocations, or outcomes.
+- 返回问题、来源 ID、批准、未解决风险、负责人和停止条件。
+- 不得规定资格、定向、跟踪、声明、出价、分配比例或结果。

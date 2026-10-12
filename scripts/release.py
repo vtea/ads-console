@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import argparse
 from datetime import date, datetime, timezone
 import hashlib
 import importlib.util
@@ -20,6 +19,13 @@ from urllib.parse import unquote, urlsplit
 import uuid
 import zipfile
 
+# Source checkouts and installed skills both keep core beside scripts/.
+_CORE_PARENT = str(Path(__file__).resolve().parents[1])
+if _CORE_PARENT not in sys.path:
+    sys.path.insert(0, _CORE_PARENT)
+from claude_ads_core.cli_support import LocaleArgumentParser, cli_locale
+from claude_ads_core.i18n import locale_scope, t
+
 
 PACKAGE_PREFIXES = (
     ".claude-plugin/",
@@ -33,6 +39,12 @@ PACKAGE_PREFIXES = (
     "skills/",
 )
 PACKAGE_FILES = {
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODEX.md",
+    "GEMINI.md",
+    "CONTRIBUTING.md",
+    "CODE_OF_CONDUCT.md",
     "CHANGELOG.md",
     "CITATION.cff",
     "LICENSE",
@@ -101,6 +113,23 @@ PRIVATE_PATH_PATTERNS = {
         r"(?i)(?:/|\\)Desktop[/\\]Vaults[/\\]Brainstein(?:/|\\)"
     ),
 }
+SECRET_LABEL_KEYS = {
+    "private key": "maintenance.release.secret.private_key",
+    "AWS access key": "maintenance.release.secret.aws_access_key",
+    "GitHub token": "maintenance.release.secret.github_token",
+    "Google API key": "maintenance.release.secret.google_api_key",
+    "OpenAI API key": "maintenance.release.secret.openai_api_key",
+    "Slack token": "maintenance.release.secret.slack_token",
+    "JWT": "maintenance.release.secret.jwt",
+}
+PRIVATE_PATH_LABEL_KEYS = {
+    "Unix home path": "maintenance.release.private_path.unix_home",
+    "macOS home path": "maintenance.release.private_path.macos_home",
+    "Windows home path": "maintenance.release.private_path.windows_home",
+    "personal tilde path": "maintenance.release.private_path.personal_tilde",
+    "private Fable corpus path": "maintenance.release.private_path.fable",
+    "private Brainstein vault path": "maintenance.release.private_path.brainstein",
+}
 WINDOWS_RESERVED_NAMES = {
     "con",
     "prn",
@@ -164,7 +193,7 @@ def _load_local_module(root: Path, relative: str, module_name: str):
     path = root / relative
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
-        raise ReleaseError(f"cannot load release verifier: {relative}")
+        raise ReleaseError(t('maintenance.release.cannot_load_release_verifier', v0=relative))
     module = importlib.util.module_from_spec(spec)
     sys.modules[module_name] = module
     spec.loader.exec_module(module)
@@ -177,7 +206,7 @@ def _git(root: Path, *args: str) -> bytes:
     )
     if result.returncode:
         message = result.stderr.decode("utf-8", errors="replace").strip()
-        raise ReleaseError(f"git {' '.join(args)} failed: {message}")
+        raise ReleaseError(t('maintenance.release.git_failed', v0=' '.join(args), v1=message))
     return result.stdout
 
 
@@ -200,13 +229,13 @@ def package_files(paths: list[str]) -> list[str]:
 def _assert_clean_head_release_subject(root: Path) -> list[str]:
     status = _git(root, "status", "--porcelain=v1", "--untracked-files=all").decode("utf-8")
     if status:
-        raise ReleaseError("release packaging requires a clean index and worktree")
+        raise ReleaseError(t('maintenance.release.release_packaging_requires_a_clean_index_and_worktree'))
     head_paths = _git(root, "ls-tree", "-r", "--name-only", "HEAD").decode("utf-8").splitlines()
     selected = package_files(sorted(head_paths))
     for relative in selected:
         head_data = _git(root, "show", f"HEAD:{relative}")
         if not (root / relative).is_file() or (root / relative).read_bytes() != head_data:
-            raise ReleaseError(f"release input differs from HEAD-tracked content: {relative}")
+            raise ReleaseError(t('maintenance.release.release_input_differs_from_head_tracked_content', v0=relative))
     return selected
 
 
@@ -214,20 +243,20 @@ def validate_portable_path(path: str) -> list[str]:
     errors: list[str] = []
     pure = PurePosixPath(path)
     if not path or path.startswith(("/", "\\")) or pure.is_absolute():
-        errors.append("path is absolute or empty")
+        errors.append(t('maintenance.release.path_is_absolute_or_empty'))
     if "\\" in path:
-        errors.append("path contains a backslash")
+        errors.append(t('maintenance.release.path_contains_a_backslash'))
     if any(part in {"", ".", ".."} for part in pure.parts):
-        errors.append("path contains an empty, dot, or traversal segment")
+        errors.append(t('maintenance.release.path_contains_an_empty_dot_or_traversal_segment'))
     if any(ord(character) < 32 for character in path):
-        errors.append("path contains a control character")
+        errors.append(t('maintenance.release.path_contains_a_control_character'))
     for part in pure.parts:
         if re.search(r'[<>:"|?*]', part):
-            errors.append(f"path segment is not Windows-portable: {part!r}")
+            errors.append(t('maintenance.release.path_segment_is_not_windows_portable', v0=part))
         if part.endswith((" ", ".")):
-            errors.append(f"path segment has a trailing space or dot: {part!r}")
+            errors.append(t('maintenance.release.path_segment_has_a_trailing_space_or_dot', v0=part))
         if part.split(".", 1)[0].casefold() in WINDOWS_RESERVED_NAMES:
-            errors.append(f"path segment is reserved on Windows: {part!r}")
+            errors.append(t('maintenance.release.path_segment_is_reserved_on_windows', v0=part))
     return errors
 
 
@@ -240,31 +269,31 @@ def _read_text(path: Path) -> str | None:
     try:
         return path.read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
-        raise ReleaseError(f"text file is not valid UTF-8: {path}: {exc}") from exc
+        raise ReleaseError(t('maintenance.release.text_file_is_not_valid_utf_8', v0=path, v1=exc)) from exc
 
 
 def _parse_yaml(text: str, path: str) -> object:
     try:
         import yaml
     except ImportError as exc:  # pragma: no cover - exercised in dependency-free installs
-        raise ReleaseError("PyYAML is required for YAML and frontmatter audits") from exc
+        raise ReleaseError(t('maintenance.release.pyyaml_is_required_for_yaml_and_frontmatter_audits')) from exc
     try:
         return yaml.safe_load(text)
     except yaml.YAMLError as exc:
-        raise ReleaseError(f"invalid YAML in {path}: {exc}") from exc
+        raise ReleaseError(t('maintenance.release.invalid_yaml_in', v0=path, v1=exc)) from exc
 
 
 def _frontmatter(text: str, path: str) -> dict[str, object]:
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
-        raise ReleaseError(f"missing YAML frontmatter in {path}")
+        raise ReleaseError(t('maintenance.release.missing_yaml_frontmatter_in', v0=path))
     try:
         end = next(index for index, line in enumerate(lines[1:], 1) if line.strip() == "---")
     except StopIteration as exc:
-        raise ReleaseError(f"unterminated YAML frontmatter in {path}") from exc
+        raise ReleaseError(t('maintenance.release.unterminated_yaml_frontmatter_in', v0=path)) from exc
     value = _parse_yaml("\n".join(lines[1:end]), path)
     if not isinstance(value, dict):
-        raise ReleaseError(f"frontmatter must be an object in {path}")
+        raise ReleaseError(t('maintenance.release.frontmatter_must_be_an_object_in', v0=path))
     return value
 
 
@@ -273,25 +302,25 @@ def _audit_manifest_consistency(root: Path, tracked: set[str]) -> list[str]:
     plugin_path = ".claude-plugin/plugin.json"
     marketplace_path = ".claude-plugin/marketplace.json"
     if plugin_path not in tracked or marketplace_path not in tracked:
-        return ["plugin and marketplace manifests must both be tracked"]
+        return [t('maintenance.release.plugin_and_marketplace_manifests_must_both_be_tracked')]
     plugin = json.loads((root / plugin_path).read_text(encoding="utf-8"))
     marketplace = json.loads((root / marketplace_path).read_text(encoding="utf-8"))
     entries = marketplace.get("plugins") if isinstance(marketplace, dict) else None
     if not isinstance(entries, list) or len(entries) != 1 or not isinstance(entries[0], dict):
-        return ["marketplace manifest must contain exactly one plugin object"]
+        return [t('maintenance.release.marketplace_manifest_must_contain_exactly_one_plugin_object')]
     entry = entries[0]
     for field in ("name", "version", "license", "repository"):
         if plugin.get(field) != entry.get(field):
-            errors.append(f"plugin and marketplace disagree on {field!r}")
+            errors.append(t('maintenance.release.plugin_and_marketplace_disagree_on', v0=field))
     for skill_root in plugin.get("skills", []):
         if not isinstance(skill_root, str):
-            errors.append("plugin skills entries must be strings")
+            errors.append(t('maintenance.release.plugin_skills_entries_must_be_strings'))
             continue
         normalized = skill_root.removeprefix("./").rstrip("/")
         if normalized not in {"ads", "skills"}:
-            errors.append(f"unexpected plugin skill root: {skill_root!r}")
+            errors.append(t('maintenance.release.unexpected_plugin_skill_root', v0=skill_root))
         if not (root / normalized).is_dir():
-            errors.append(f"plugin skill root does not exist: {skill_root!r}")
+            errors.append(t('maintenance.release.plugin_skill_root_does_not_exist', v0=skill_root))
     return errors
 
 
@@ -307,25 +336,25 @@ def audit_repository(root: Path) -> list[str]:
             errors.append(f"{relative}: {issue}")
         collision = folded.setdefault(relative.casefold(), relative)
         if collision != relative:
-            errors.append(f"case-insensitive path collision: {collision!r} and {relative!r}")
+            errors.append(t('maintenance.release.case_insensitive_path_collision_and', v0=collision, v1=relative))
 
         pure = PurePosixPath(relative)
         filename = pure.name.casefold()
         if filename in SENSITIVE_FILENAMES or filename.startswith(".env."):
-            errors.append(f"sensitive filename must not be tracked: {relative}")
+            errors.append(t('maintenance.release.sensitive_filename_must_not_be_tracked', v0=relative))
         if filename.startswith(SENSITIVE_FILENAME_PREFIXES):
-            errors.append(f"sensitive filename must not be tracked: {relative}")
+            errors.append(t('maintenance.release.sensitive_filename_must_not_be_tracked', v0=relative))
         if pure.suffix.casefold() in SENSITIVE_ARTIFACT_SUFFIXES:
-            errors.append(f"sensitive artifact must not be tracked: {relative}")
+            errors.append(t('maintenance.release.sensitive_artifact_must_not_be_tracked', v0=relative))
         if pure.suffix.casefold() in {".key", ".p12", ".pfx", ".pem"}:
-            errors.append(f"credential-like file must not be tracked: {relative}")
+            errors.append(t('maintenance.release.credential_like_file_must_not_be_tracked', v0=relative))
 
         path = root / relative
         if path.is_symlink():
-            errors.append(f"tracked symlink is not release-safe: {relative}")
+            errors.append(t('maintenance.release.tracked_symlink_is_not_release_safe', v0=relative))
             continue
         if not path.is_file():
-            errors.append(f"tracked path is not a regular file: {relative}")
+            errors.append(t('maintenance.release.tracked_path_is_not_a_regular_file', v0=relative))
             continue
 
         raw = path.read_bytes()
@@ -341,7 +370,7 @@ def audit_repository(root: Path) -> list[str]:
             try:
                 json.loads(text)
             except json.JSONDecodeError as exc:
-                errors.append(f"invalid JSON in {relative}: {exc}")
+                errors.append(t('maintenance.release.invalid_json_in', v0=relative, v1=exc))
         if text is not None and relative.endswith((".yml", ".yaml", ".cff")):
             try:
                 _parse_yaml(text, relative)
@@ -361,31 +390,31 @@ def audit_repository(root: Path) -> list[str]:
                 description = frontmatter.get("description")
                 if name != expected_name:
                     errors.append(
-                        f"{relative}: frontmatter name {name!r} must equal {expected_name!r}"
+                        t('maintenance.release.frontmatter_name_must_equal', v0=relative, v1=name, v2=expected_name)
                     )
                 if not isinstance(description, str) or not description.strip():
-                    errors.append(f"{relative}: frontmatter description must be a non-empty string")
+                    errors.append(t('maintenance.release.frontmatter_description_must_be_a_non_empty_string', v0=relative))
                 if isinstance(name, str):
                     previous = skill_names.setdefault(name, relative)
                     if previous != relative:
-                        errors.append(f"duplicate skill name {name!r}: {previous} and {relative}")
+                        errors.append(t('maintenance.release.duplicate_skill_name_and', v0=name, v1=previous, v2=relative))
 
         for encoding, candidate_text in scan_texts.items():
-            suffix = "" if encoding == "utf-8" else f" ({encoding} text)"
+            suffix = "" if encoding == "utf-8" else t("maintenance.release.encoding_suffix", encoding=encoding)
             for label, pattern in SECRET_PATTERNS.items():
                 if pattern.search(candidate_text):
-                    errors.append(f"{relative}: possible {label}{suffix}")
+                    errors.append(t('maintenance.release.possible', v0=relative, v1=t(SECRET_LABEL_KEYS[label]), v2=suffix))
             for label, pattern in PRIVATE_PATH_PATTERNS.items():
                 if pattern.search(candidate_text):
-                    errors.append(f"{relative}: contains {label}{suffix}")
+                    errors.append(t('maintenance.release.contains', v0=relative, v1=t(PRIVATE_PATH_LABEL_KEYS[label]), v2=suffix))
 
     errors.extend(_audit_manifest_consistency(root, set(tracked)))
     selected = package_files(tracked)
     if not selected:
-        errors.append("public-safe package selection is empty")
+        errors.append(t('maintenance.release.public_safe_package_selection_is_empty'))
     for required in ("LICENSE", "README.md", ".claude-plugin/plugin.json", "ads/SKILL.md"):
         if required not in selected:
-            errors.append(f"required release file is missing or untracked: {required}")
+            errors.append(t('maintenance.release.required_release_file_is_missing_or_untracked', v0=required))
     return sorted(set(errors))
 
 
@@ -407,7 +436,7 @@ def _packaging_types():
         from packaging.requirements import Requirement
         from packaging.version import Version
     except ImportError as exc:  # pragma: no cover - release environments install pytest/packaging
-        raise ReleaseError("packaging is required to validate the dependency inventory") from exc
+        raise ReleaseError(t('maintenance.release.packaging_is_required_to_validate_the_dependency_inventory')) from exc
     return Marker, Requirement, Version
 
 
@@ -416,35 +445,35 @@ def _wheel_is_compatible(filename: str, target: dict[str, object], name: str, ve
     try:
         from packaging.utils import canonicalize_name, parse_wheel_filename
     except ImportError as exc:  # pragma: no cover
-        raise ReleaseError("packaging wheel utilities are required") from exc
+        raise ReleaseError(t('maintenance.release.packaging_wheel_utilities_are_required')) from exc
     try:
         distribution, wheel_version, _build, tags = parse_wheel_filename(filename)
     except Exception as exc:
-        raise ReleaseError(f"invalid wheel filename for {target['id']}/{name}: {filename}") from exc
+        raise ReleaseError(t('maintenance.release.invalid_wheel_filename_for', v0=target['id'], v1=name, v2=filename)) from exc
     if canonicalize_name(distribution) != name or str(wheel_version) != version:
-        raise ReleaseError(f"wheel identity mismatch for {target['id']}/{name}")
+        raise ReleaseError(t('maintenance.release.wheel_identity_mismatch_for', v0=target['id'], v1=name))
 
     # A universal wheel must explicitly include py3-none-any. Some legacy
     # universal wheels advertise py2.py3, which expands to include that tag.
     if all(tag.abi == "none" and tag.platform == "any" for tag in tags):
         if not any(tag.interpreter == "py3" for tag in tags):
-            raise ReleaseError(f"pure wheel is not py3-compatible: {target['id']}/{name}")
+            raise ReleaseError(t('maintenance.release.pure_wheel_is_not_py3_compatible', v0=target['id'], v1=name))
         return
     if any(tag.platform == "any" for tag in tags):
-        raise ReleaseError(f"wheel mixes pure and platform tags: {target['id']}/{name}")
+        raise ReleaseError(t('maintenance.release.wheel_mixes_pure_and_platform_tags', v0=target['id'], v1=name))
 
     target_minor = int(str(target["python_version"]).split(".")[1])
     for tag in tags:
         interpreter = tag.interpreter
         if tag.abi == "none":
             if interpreter != "py3":
-                raise ReleaseError(f"platform wheel is not py3-compatible: {target['id']}/{name}")
+                raise ReleaseError(t('maintenance.release.platform_wheel_is_not_py3_compatible', v0=target['id'], v1=name))
         elif tag.abi == "abi3":
             match = re.fullmatch(r"cp3(\d+)", interpreter)
             if not match or int(match.group(1)) > target_minor:
-                raise ReleaseError(f"wheel ABI is incompatible with {target['id']}/{name}")
+                raise ReleaseError(t('maintenance.release.wheel_abi_is_incompatible_with', v0=target['id'], v1=name))
         elif interpreter != target["abi"] or tag.abi != target["abi"]:
-            raise ReleaseError(f"wheel ABI is incompatible with {target['id']}/{name}")
+            raise ReleaseError(t('maintenance.release.wheel_abi_is_incompatible_with', v0=target['id'], v1=name))
 
     platforms = {tag.platform for tag in tags}
     os_name, arch = target["os"], target["arch"]
@@ -452,7 +481,7 @@ def _wheel_is_compatible(filename: str, target: dict[str, object], name: str, ve
         compatible_baseline = False
         for platform_tag in platforms:
             if "musllinux" in platform_tag or not platform_tag.endswith("_x86_64"):
-                raise ReleaseError(f"wheel platform is incompatible with {target['id']}/{name}")
+                raise ReleaseError(t('maintenance.release.wheel_platform_is_incompatible_with', v0=target['id'], v1=name))
             if platform_tag == "manylinux1_x86_64":
                 compatible_baseline = True
             elif platform_tag == "manylinux2010_x86_64":
@@ -462,24 +491,24 @@ def _wheel_is_compatible(filename: str, target: dict[str, object], name: str, ve
             else:
                 match = re.fullmatch(r"manylinux_(\d+)_(\d+)_x86_64", platform_tag)
                 if not match:
-                    raise ReleaseError(f"wheel platform is incompatible with {target['id']}/{name}")
+                    raise ReleaseError(t('maintenance.release.wheel_platform_is_incompatible_with', v0=target['id'], v1=name))
                 if (int(match.group(1)), int(match.group(2))) <= (2, 17):
                     compatible_baseline = True
         if not compatible_baseline:
-            raise ReleaseError(f"wheel requires a newer glibc baseline: {target['id']}/{name}")
+            raise ReleaseError(t('maintenance.release.wheel_requires_a_newer_glibc_baseline', v0=target['id'], v1=name))
     elif os_name == "macos":
         expected_arches = {"universal2", "arm64" if arch == "arm64" else "x86_64"}
         for platform_tag in platforms:
             match = re.fullmatch(r"macosx_(\d+)_(\d+)_(arm64|x86_64|universal2)", platform_tag)
             if not match or match.group(3) not in expected_arches:
-                raise ReleaseError(f"wheel platform is incompatible with {target['id']}/{name}")
+                raise ReleaseError(t('maintenance.release.wheel_platform_is_incompatible_with', v0=target['id'], v1=name))
             if (int(match.group(1)), int(match.group(2))) > (11, 0):
-                raise ReleaseError(f"wheel requires a newer macOS baseline: {target['id']}/{name}")
+                raise ReleaseError(t('maintenance.release.wheel_requires_a_newer_macos_baseline', v0=target['id'], v1=name))
     elif os_name == "windows":
         if platforms != {"win_amd64"}:
-            raise ReleaseError(f"wheel platform is incompatible with {target['id']}/{name}")
+            raise ReleaseError(t('maintenance.release.wheel_platform_is_incompatible_with', v0=target['id'], v1=name))
     else:  # pragma: no cover - target matrix validation rejects this first
-        raise ReleaseError(f"unknown wheel target OS: {os_name}")
+        raise ReleaseError(t('maintenance.release.unknown_wheel_target_os', v0=os_name))
 
 
 def _load_target_evidence(root: Path, target_id: str) -> tuple[dict[str, object], str]:
@@ -488,14 +517,14 @@ def _load_target_evidence(root: Path, target_id: str) -> tuple[dict[str, object]
         data = path.read_bytes()
         evidence = json.loads(data)
     except (OSError, json.JSONDecodeError) as exc:
-        raise ReleaseError(f"cannot load target resolver evidence for {target_id}: {exc}") from exc
+        raise ReleaseError(t('maintenance.release.cannot_load_target_resolver_evidence_for', v0=target_id, v1=exc)) from exc
     expected_fields = {
         "schema_version", "evidence_id", "resolved_at", "source_date_epoch",
         "source_report_sha256", "source_pip_version", "source_environment", "normalization_notes",
         "evidence_class", "environment", "resolver", "platform_policy", "components",
     }
     if not isinstance(evidence, dict) or set(evidence) != expected_fields:
-        raise ReleaseError(f"target resolver evidence fields mismatch: {target_id}")
+        raise ReleaseError(t('maintenance.release.target_resolver_evidence_fields_mismatch', v0=target_id))
     if (
         evidence.get("schema_version") != "1.0.0"
         or evidence.get("evidence_id") != target_id
@@ -509,7 +538,7 @@ def _load_target_evidence(root: Path, target_id: str) -> tuple[dict[str, object]
         or not isinstance(evidence.get("source_environment"), dict)
         or not isinstance(evidence.get("normalization_notes"), list)
     ):
-        raise ReleaseError(f"target resolver evidence header mismatch: {target_id}")
+        raise ReleaseError(t('maintenance.release.target_resolver_evidence_header_mismatch', v0=target_id))
     return evidence, _sha256(data)
 
 
@@ -524,7 +553,7 @@ def _declared_requirements(root: Path) -> list[dict[str, str]]:
             try:
                 requirement = Requirement(value)
             except Exception as exc:
-                raise ReleaseError(f"invalid direct requirement in {source}: {value}") from exc
+                raise ReleaseError(t('maintenance.release.invalid_direct_requirement_in', v0=source, v1=value)) from exc
             declared.append({"name": _canonical_package_name(requirement.name), "requirement": value, "source": source, "profile": profile})
     project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8")).get("project", {})
     for value in project.get("dependencies", []):
@@ -548,18 +577,18 @@ def _parse_hash_lock(path: Path) -> dict[str, dict[str, object]]:
         hashes = re.findall(r"--hash=sha256:([0-9a-f]{64})(?:\s|$)", value)
         requirement_text = re.sub(r"\s*--hash=sha256:[0-9a-f]{64}(?:\s|$)", " ", value).strip()
         if "--hash" in requirement_text:
-            raise ReleaseError(f"invalid lock hash in {path.name}")
+            raise ReleaseError(t('maintenance.release.invalid_lock_hash_in', v0=path.name))
         requirement = Requirement(requirement_text)
         name = _canonical_package_name(requirement.name)
         specs = list(requirement.specifier)
         if len(specs) != 1 or specs[0].operator != "==" or specs[0].version.endswith(".*"):
-            raise ReleaseError(f"{path.name} must use exact == pins: {requirement}")
+            raise ReleaseError(t('maintenance.release.must_use_exact_pins', v0=path.name, v1=requirement))
         Version(specs[0].version)
         if name in entries or not hashes or len(hashes) != len(set(hashes)):
-            raise ReleaseError(f"duplicate component or hash in {path.name}: {name}")
+            raise ReleaseError(t('maintenance.release.duplicate_component_or_hash_in', v0=path.name, v1=name))
         entries[name] = {"version": specs[0].version, "hashes": sorted(hashes), "marker": str(requirement.marker) if requirement.marker else None}
     if not entries:
-        raise ReleaseError(f"{path.name} is empty")
+        raise ReleaseError(t('maintenance.release.is_empty', v0=path.name))
     return entries
 
 
@@ -568,21 +597,21 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
     try:
         inventory = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise ReleaseError(f"cannot load dependency inventory: {exc}") from exc
+        raise ReleaseError(t('maintenance.release.cannot_load_dependency_inventory', v0=exc)) from exc
     required = {"schema_version", "inventory_id", "resolved_at", "resolution", "manifests", "direct_requirements", "targets", "component_catalog", "dependency_edges", "bundled_notices"}
     if not isinstance(inventory, dict) or set(inventory) != required:
-        raise ReleaseError("dependency inventory fields are incomplete or unknown")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_fields_are_incomplete_or_unknown'))
     if inventory.get("schema_version") != "1.0.0" or inventory.get("inventory_id") != "claude-ads-python-dependencies":
-        raise ReleaseError("dependency inventory identity/version mismatch")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_identity_version_mismatch'))
     resolution = inventory.get("resolution")
     if inventory.get("resolved_at") != INVENTORY_RESOLVED_AT:
-        raise ReleaseError("dependency inventory resolution timestamp mismatch")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_resolution_timestamp_mismatch'))
     try:
         parsed_resolved_at = datetime.fromisoformat(INVENTORY_RESOLVED_AT.replace("Z", "+00:00"))
     except ValueError as exc:  # pragma: no cover - constant is reviewed
-        raise ReleaseError("invalid verifier resolution timestamp") from exc
+        raise ReleaseError(t('maintenance.release.invalid_verifier_resolution_timestamp')) from exc
     if int(parsed_resolved_at.timestamp()) != INVENTORY_SOURCE_DATE_EPOCH:
-        raise ReleaseError("dependency inventory source epoch policy mismatch")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_source_epoch_policy_mismatch'))
     resolution = inventory.get("resolution")
     expected_resolution_keys = {
         "index", "managed_lock_python_range", "supported_python_versions", "implementation",
@@ -590,7 +619,7 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
         "third_party_notices_sha256", "target_evidence_class", "subject_binding",
     }
     if not isinstance(resolution, dict) or set(resolution) != expected_resolution_keys:
-        raise ReleaseError("dependency inventory resolution metadata is incomplete")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_resolution_metadata_is_incomplete'))
     if (
         resolution.get("index") != "https://pypi.org/simple"
         or resolution.get("managed_lock_python_range") != INVENTORY_PYTHON_REQUIRES
@@ -601,7 +630,7 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
         or resolution.get("subject_binding") != INVENTORY_SUBJECT_BINDING
         or resolution.get("target_evidence_class") != "cross-target-pip-resolution-requiring-native-ci-confirmation"
     ):
-        raise ReleaseError("dependency inventory resolution target policy mismatch")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_resolution_target_policy_mismatch'))
     notices_path = root / "THIRD_PARTY_NOTICES.md"
     if (
         not notices_path.is_file()
@@ -609,46 +638,46 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
         or resolution.get("third_party_notices_sha256") != EXPECTED_THIRD_PARTY_NOTICES_SHA256
         or not re.fullmatch(r"[0-9a-f]{64}", str(resolution.get("reviewed_metadata_sha256", "")))
     ):
-        raise ReleaseError("dependency inventory resolution evidence is incomplete")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_resolution_evidence_is_incomplete'))
     manifests = inventory["manifests"]
     expected_manifest_paths = {"requirements.txt", "requirements-dev.txt", "requirements.lock", "requirements-dev.lock", "pyproject.toml"}
     if not isinstance(manifests, list) or {item.get("path") for item in manifests if isinstance(item, dict)} != expected_manifest_paths or len(manifests) != len(expected_manifest_paths):
-        raise ReleaseError("dependency inventory manifest coverage is incomplete or duplicated")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_manifest_coverage_is_incomplete_or_duplicated'))
     for item in manifests:
         manifest_path = root / item["path"]
         if not manifest_path.is_file() or item.get("sha256") != _sha256(manifest_path.read_bytes()):
-            raise ReleaseError(f"dependency inventory manifest hash mismatch: {item.get('path')}")
+            raise ReleaseError(t('maintenance.release.dependency_inventory_manifest_hash_mismatch', v0=item.get('path')))
 
     catalog: dict[tuple[str, str], dict[str, object]] = {}
     names_to_version: dict[str, str] = {}
     for component in inventory["component_catalog"]:
         if not isinstance(component, dict):
-            raise ReleaseError("dependency catalog entries must be objects")
+            raise ReleaseError(t('maintenance.release.dependency_catalog_entries_must_be_objects'))
         name, component_version = component.get("name"), component.get("version")
         if not isinstance(name, str) or name != _canonical_package_name(name) or not isinstance(component_version, str) or not component_version.strip():
-            raise ReleaseError("dependency catalog contains an invalid name/version")
+            raise ReleaseError(t('maintenance.release.dependency_catalog_contains_an_invalid_name_version'))
         key = (name, component_version)
         if key in catalog or (name in names_to_version and names_to_version[name] != component_version):
-            raise ReleaseError(f"duplicate or multi-version dependency component: {name}")
+            raise ReleaseError(t('maintenance.release.duplicate_or_multi_version_dependency_component', v0=name))
         names_to_version[name] = component_version
         license_expression = component.get("license_expression")
         if license_expression != REVIEWED_LICENSE_EXPRESSIONS.get(name):
-            raise ReleaseError(f"dependency component lacks a reviewed license: {name}")
+            raise ReleaseError(t('maintenance.release.dependency_component_lacks_a_reviewed_license', v0=name))
         if component.get("purl") != f"pkg:pypi/{name}@{component_version}":
-            raise ReleaseError(f"dependency component purl mismatch: {name}")
+            raise ReleaseError(t('maintenance.release.dependency_component_purl_mismatch', v0=name))
         provenance = component.get("license_provenance")
         if not isinstance(provenance, dict) or set(provenance) != {"kind", "metadata_url", "evidence_sha256"} or provenance.get("kind") != "publisher-metadata-review" or provenance.get("metadata_url") != f"https://pypi.org/pypi/{name}/{component_version}/json" or not re.fullmatch(r"[0-9a-f]{64}", str(provenance.get("evidence_sha256", ""))):
-            raise ReleaseError(f"dependency component license provenance mismatch: {name}")
+            raise ReleaseError(t('maintenance.release.dependency_component_license_provenance_mismatch', v0=name))
         catalog[key] = component
     if set(REVIEWED_LICENSE_EXPRESSIONS) != set(names_to_version):
-        raise ReleaseError("reviewed license component coverage mismatch")
+        raise ReleaseError(t('maintenance.release.reviewed_license_component_coverage_mismatch'))
     reviewed_metadata = {name: catalog[(name, version)]["license_provenance"]["evidence_sha256"] for name, version in names_to_version.items()}
     if resolution["reviewed_metadata_sha256"] != _canonical_json_sha256(reviewed_metadata):
-        raise ReleaseError("reviewed publisher metadata binding mismatch")
+        raise ReleaseError(t('maintenance.release.reviewed_publisher_metadata_binding_mismatch'))
 
     targets = inventory["targets"]
     if not isinstance(targets, list) or len(targets) != 16:
-        raise ReleaseError("dependency inventory must contain the 16 verified targets")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_must_contain_the_16_verified_targets'))
     expected_targets = {
         f"runtime-{platform}-{abi}": ("runtime", python, os_name, arch, abi, 33)
         for platform, os_name, arch in (
@@ -672,46 +701,46 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
     for target in targets:
         target_id = target.get("id") if isinstance(target, dict) else None
         if not isinstance(target_id, str) or target_id in target_ids:
-            raise ReleaseError("dependency target IDs must be unique strings")
+            raise ReleaseError(t('maintenance.release.dependency_target_ids_must_be_unique_strings'))
         target_ids.add(target_id)
         expected = expected_targets.get(target_id)
         observed = (target.get("profile"), target.get("python_version"), target.get("os"), target.get("arch"), target.get("abi"), len(target.get("components", [])))
         if expected is None or observed != expected:
-            raise ReleaseError(f"dependency target matrix mismatch: {target_id}")
+            raise ReleaseError(t('maintenance.release.dependency_target_matrix_mismatch', v0=target_id))
         if target.get("implementation") != "CPython" or target.get("resolver") != "pip / PyPI" or target.get("platform_policy") != "Exact lowest-common lock with target-selected PyPI wheels" or not re.fullmatch(r"[0-9a-f]{64}", str(target.get("resolution_evidence_sha256", ""))):
-            raise ReleaseError(f"dependency target provenance mismatch: {target_id}")
+            raise ReleaseError(t('maintenance.release.dependency_target_provenance_mismatch', v0=target_id))
         evidence, evidence_sha256 = _load_target_evidence(root, target_id)
         expected_environment = {
             key: target[key]
             for key in ("profile", "python_version", "implementation", "os", "arch", "abi")
         }
         if evidence_sha256 != target["resolution_evidence_sha256"] or evidence["environment"] != expected_environment:
-            raise ReleaseError(f"dependency target resolver evidence binding mismatch: {target_id}")
+            raise ReleaseError(t('maintenance.release.dependency_target_resolver_evidence_binding_mismatch', v0=target_id))
         target_evidence[target_id] = evidence
         components: dict[str, dict[str, object]] = {}
         for component in target.get("components", []):
             name, component_version = component.get("name"), component.get("version")
             if name in components or (name, component_version) not in catalog:
-                raise ReleaseError(f"duplicate or unknown target component in {target_id}: {name}")
+                raise ReleaseError(t('maintenance.release.duplicate_or_unknown_target_component_in', v0=target_id, v1=name))
             artifact = component.get("artifact")
             if not isinstance(artifact, dict) or not re.fullmatch(r"[0-9a-f]{64}", str(artifact.get("sha256", ""))) or not str(artifact.get("url", "")).startswith("https://files.pythonhosted.org/"):
-                raise ReleaseError(f"target component lacks exact artifact evidence: {target_id}/{name}")
+                raise ReleaseError(t('maintenance.release.target_component_lacks_exact_artifact_evidence', v0=target_id, v1=name))
             if artifact.get("filename") != str(artifact.get("url")).rsplit("/", 1)[-1]:
-                raise ReleaseError(f"target component artifact filename mismatch: {target_id}/{name}")
+                raise ReleaseError(t('maintenance.release.target_component_artifact_filename_mismatch', v0=target_id, v1=name))
             parsed_url = urlsplit(str(artifact.get("url")))
             if parsed_url.scheme != "https" or parsed_url.netloc != "files.pythonhosted.org" or parsed_url.query or parsed_url.fragment or unquote(PurePosixPath(parsed_url.path).name) != artifact.get("filename"):
-                raise ReleaseError(f"target component artifact URL binding mismatch: {target_id}/{name}")
+                raise ReleaseError(t('maintenance.release.target_component_artifact_url_binding_mismatch', v0=target_id, v1=name))
             _wheel_is_compatible(artifact["filename"], target, name, component_version)
             if component.get("purl") != f"pkg:pypi/{name}@{component_version}":
-                raise ReleaseError(f"target component purl mismatch: {target_id}/{name}")
+                raise ReleaseError(t('maintenance.release.target_component_purl_mismatch', v0=target_id, v1=name))
             components[name] = component
             occurrence[(name, component_version)].add(target_id)
         target_components[target_id] = components
     if target_ids != set(expected_targets):
-        raise ReleaseError("dependency target matrix IDs are incomplete")
+        raise ReleaseError(t('maintenance.release.dependency_target_matrix_ids_are_incomplete'))
     for key, component in catalog.items():
         if sorted(occurrence[key]) != component.get("target_occurrences"):
-            raise ReleaseError(f"dependency target occurrence mismatch: {key[0]}")
+            raise ReleaseError(t('maintenance.release.dependency_target_occurrence_mismatch', v0=key[0]))
 
     declared = _declared_requirements(root)
     _, Requirement, Version = _packaging_types()
@@ -721,7 +750,7 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
         inventory_declared.append({"name": _canonical_package_name(requirement.name), "requirement": str(requirement), "source": item["source"], "profile": item["profile"]})
     normalized_declared = [{**item, "requirement": str(Requirement(item["requirement"]))} for item in declared]
     if sorted(inventory_declared, key=lambda item: (item["profile"], item["name"], item["source"])) != sorted(normalized_declared, key=lambda item: (item["profile"], item["name"], item["source"])):
-        raise ReleaseError("dependency inventory direct requirement coverage mismatch")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_direct_requirement_coverage_mismatch'))
     declared_names_by_profile = {
         profile: {item["name"] for item in normalized_declared if item["profile"] == profile}
         for profile in ("runtime", "development")
@@ -733,16 +762,16 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
         if observed_direct != declared_names_by_profile[profile] or any(
             not isinstance(component.get("direct"), bool) for component in components.values()
         ):
-            raise ReleaseError(f"direct component flags mismatch declared requirements: {target['id']}")
+            raise ReleaseError(t('maintenance.release.direct_component_flags_mismatch_declared_requirements', v0=target['id']))
         for item in normalized_declared:
             if item["profile"] != profile:
                 continue
             component = components.get(item["name"])
             if not component or not component.get("direct") or Version(component["version"]) not in Requirement(item["requirement"]).specifier:
-                raise ReleaseError(f"direct requirement is missing or constraint-mismatched in {target['id']}: {item['name']}")
+                raise ReleaseError(t('maintenance.release.direct_requirement_is_missing_or_constraint_mismatched_in', v0=target['id'], v1=item['name']))
     for target in targets:
         if target_evidence[target["id"]]["components"] != target["components"]:
-            raise ReleaseError(f"dependency target component evidence mismatch: {target['id']}")
+            raise ReleaseError(t('maintenance.release.dependency_target_component_evidence_mismatch', v0=target['id']))
 
     runtime_lock = _parse_hash_lock(root / "requirements.lock")
     development_lock = _parse_hash_lock(root / "requirements-dev.lock")
@@ -750,14 +779,14 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
         relevant = [target for target in targets if target["profile"] == profile]
         expected_names = {name for target in relevant for name in target_components[target["id"]]}
         if set(lock) != expected_names:
-            raise ReleaseError(f"{profile} lock component coverage mismatch")
+            raise ReleaseError(t('maintenance.release.lock_component_coverage_mismatch', v0=profile))
         for name, locked in lock.items():
             versions = {target_components[target["id"]][name]["version"] for target in relevant if name in target_components[target["id"]]}
             hashes = {target_components[target["id"]][name]["artifact"]["sha256"] for target in relevant if name in target_components[target["id"]]}
             if versions != {locked["version"]} or hashes != set(locked["hashes"]):
-                raise ReleaseError(f"{profile} lock target artifact mismatch: {name}")
+                raise ReleaseError(t('maintenance.release.lock_target_artifact_mismatch', v0=profile, v1=name))
             if name == "colorama" and locked["marker"] != 'sys_platform == "win32"':
-                raise ReleaseError("development lock must retain the win32-only colorama marker")
+                raise ReleaseError(t('maintenance.release.development_lock_must_retain_the_win32_only_colorama_marker'))
 
     catalog_names = set(names_to_version)
     edges_seen: set[tuple[str, str, str]] = set()
@@ -765,19 +794,19 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
     _, Requirement, Version = _packaging_types()
     for edge in inventory["dependency_edges"]:
         if not isinstance(edge, dict) or set(edge) != edge_fields:
-            raise ReleaseError("dependency graph edge fields mismatch")
+            raise ReleaseError(t('maintenance.release.dependency_graph_edge_fields_mismatch'))
         if edge.get("profile") not in {"runtime", "development"}:
-            raise ReleaseError("dependency graph edge profile mismatch")
+            raise ReleaseError(t('maintenance.release.dependency_graph_edge_profile_mismatch'))
         key = (edge["profile"], edge.get("from"), edge.get("requirement"))
         if key in edges_seen or edge.get("from") not in catalog_names or edge.get("to") not in catalog_names:
-            raise ReleaseError("dependency graph contains a duplicate or dangling edge")
+            raise ReleaseError(t('maintenance.release.dependency_graph_contains_a_duplicate_or_dangling_edge'))
         edges_seen.add(key)
         if not isinstance(edge.get("requirement"), str) or not edge["requirement"]:
-            raise ReleaseError("dependency graph requirement must be a nonempty string")
+            raise ReleaseError(t('maintenance.release.dependency_graph_requirement_must_be_a_nonempty_string'))
         try:
             requirement = Requirement(edge["requirement"])
         except Exception as exc:
-            raise ReleaseError("dependency graph contains an invalid publisher requirement") from exc
+            raise ReleaseError(t('maintenance.release.dependency_graph_contains_an_invalid_publisher_requirement')) from exc
         if (
             _canonical_package_name(requirement.name) != edge["to"]
             or str(requirement.specifier) != edge["specifier"]
@@ -787,14 +816,14 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
             or any(not isinstance(extra, str) or not re.fullmatch(r"[a-z0-9]+(?:[-_.][a-z0-9]+)*", extra) for extra in edge["extras"])
             or edge["publisher_metadata_sha256"] != catalog[(edge["from"], names_to_version[edge["from"]])]["license_provenance"]["evidence_sha256"]
         ):
-            raise ReleaseError("dependency graph publisher metadata mismatch")
+            raise ReleaseError(t('maintenance.release.dependency_graph_publisher_metadata_mismatch'))
     for profile in ("runtime", "development"):
         if not any(edge["profile"] == profile for edge in inventory["dependency_edges"]):
-            raise ReleaseError(f"dependency graph is empty for {profile}")
+            raise ReleaseError(t('maintenance.release.dependency_graph_is_empty_for', v0=profile))
     try:
         from packaging.markers import Marker, default_environment
     except ImportError as exc:  # pragma: no cover
-        raise ReleaseError("packaging markers are required for dependency graph validation") from exc
+        raise ReleaseError(t('maintenance.release.packaging_markers_are_required_for_dependency_graph_validation')) from exc
     for target in targets:
         profile = target["profile"]
         components = target_components[target["id"]]
@@ -822,9 +851,9 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
                     continue
                 dependency = edge["to"]
                 if dependency not in components:
-                    raise ReleaseError(f"dependency edge target absent from closure: {target['id']}/{dependency}")
+                    raise ReleaseError(t('maintenance.release.dependency_edge_target_absent_from_closure', v0=target['id'], v1=dependency))
                 if Version(components[dependency]["version"]) not in Requirement(edge["requirement"]).specifier:
-                    raise ReleaseError(f"dependency edge constraint mismatch: {target['id']}/{parent}->{dependency}")
+                    raise ReleaseError(t('maintenance.release.dependency_edge_constraint_mismatch', v0=target['id'], v1=parent, v2=dependency))
                 new_extras = set(edge["extras"]) - active_extras.get(dependency, set())
                 if dependency not in reachable or new_extras:
                     reachable.add(dependency)
@@ -832,11 +861,11 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
                     pending.append(dependency)
         if reachable != set(components):
             missing = ", ".join(sorted(set(components) - reachable))
-            raise ReleaseError(f"dependency graph has unreachable target components in {target['id']}: {missing}")
+            raise ReleaseError(t('maintenance.release.dependency_graph_has_unreachable_target_components_in', v0=target['id'], v1=missing))
     expected_notice_ids = {f"{name}-selected-wheel-documents" for name in names_to_version}
     notice_ids = {notice.get("id") for notice in inventory["bundled_notices"] if isinstance(notice, dict)}
     if notice_ids != expected_notice_ids or len(notice_ids) != len(inventory["bundled_notices"]):
-        raise ReleaseError("reviewed bundled notice set mismatch")
+        raise ReleaseError(t('maintenance.release.reviewed_bundled_notice_set_mismatch'))
     artifacts_by_component = {
         name: {
             component["artifact"]["sha256"]
@@ -848,20 +877,20 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
     }
     for notice in inventory["bundled_notices"]:
         if not isinstance(notice, dict) or set(notice) != {"id", "component", "summary", "documents", "documentless_artifact_sha256s"}:
-            raise ReleaseError("bundled notice fields mismatch")
+            raise ReleaseError(t('maintenance.release.bundled_notice_fields_mismatch'))
         expected_component = notice["id"].removesuffix("-selected-wheel-documents")
         expected_summary = f"Preserve every license/notice-like file embedded in each selected {expected_component} wheel; artifacts listed as documentless contain no matching embedded path."
         if notice["component"] != expected_component or notice["summary"] != expected_summary:
-            raise ReleaseError(f"reviewed bundled notice content mismatch: {notice['id']}")
+            raise ReleaseError(t('maintenance.release.reviewed_bundled_notice_content_mismatch', v0=notice['id']))
         documents = notice["documents"]
         documentless = notice["documentless_artifact_sha256s"]
         if not isinstance(documents, list) or not isinstance(documentless, list) or documentless != sorted(set(documentless)) or not set(documentless).issubset(artifacts_by_component[expected_component]):
-            raise ReleaseError(f"bundled notice documentless evidence mismatch: {notice['id']}")
+            raise ReleaseError(t('maintenance.release.bundled_notice_documentless_evidence_mismatch', v0=notice['id']))
         covered_artifacts: set[str] = set()
         document_keys: set[tuple[str, str]] = set()
         for document in documents:
             if not isinstance(document, dict) or set(document) != {"path", "sha256", "text", "artifact_sha256s"}:
-                raise ReleaseError(f"bundled notice document fields mismatch: {notice['id']}")
+                raise ReleaseError(t('maintenance.release.bundled_notice_document_fields_mismatch', v0=notice['id']))
             path_value, text_value = document["path"], document["text"]
             if (
                 not isinstance(path_value, str)
@@ -872,20 +901,20 @@ def _load_dependency_inventory(root: Path) -> dict[str, object]:
                 or document["artifact_sha256s"] != sorted(set(document["artifact_sha256s"]))
                 or not set(document["artifact_sha256s"]).issubset(artifacts_by_component[expected_component])
             ):
-                raise ReleaseError(f"bundled notice document evidence mismatch: {notice['id']}")
+                raise ReleaseError(t('maintenance.release.bundled_notice_document_evidence_mismatch', v0=notice['id']))
             key = (path_value, document["sha256"])
             if key in document_keys:
-                raise ReleaseError(f"duplicate bundled notice document: {notice['id']}")
+                raise ReleaseError(t('maintenance.release.duplicate_bundled_notice_document', v0=notice['id']))
             document_keys.add(key)
             covered_artifacts.update(document["artifact_sha256s"])
         if covered_artifacts & set(documentless) or covered_artifacts | set(documentless) != artifacts_by_component[expected_component]:
-            raise ReleaseError(f"bundled notice selected-wheel coverage mismatch: {notice['id']}")
+            raise ReleaseError(t('maintenance.release.bundled_notice_selected_wheel_coverage_mismatch', v0=notice['id']))
     for component in catalog.values():
         expected_ids = [f"{component['name']}-selected-wheel-documents"]
         if component.get("bundled_notice_ids") != expected_ids:
-            raise ReleaseError(f"component bundled notice assignment mismatch: {component['name']}")
+            raise ReleaseError(t('maintenance.release.component_bundled_notice_assignment_mismatch', v0=component['name']))
     if _sha256(path.read_bytes()) != EXPECTED_DEPENDENCY_INVENTORY_SHA256:
-        raise ReleaseError("dependency inventory differs from the exact independently reviewed document")
+        raise ReleaseError(t('maintenance.release.dependency_inventory_differs_from_the_exact_independently_reviewed_document'))
     return inventory
 
 
@@ -895,29 +924,29 @@ def _load_external_runtime_dependencies(root: Path) -> dict[str, object]:
         raw = path.read_bytes()
         document = json.loads(raw)
     except (OSError, json.JSONDecodeError) as exc:
-        raise ReleaseError(f"cannot load external runtime dependency manifest: {exc}") from exc
+        raise ReleaseError(t('maintenance.release.cannot_load_external_runtime_dependency_manifest', v0=exc)) from exc
     if _sha256(raw) != EXPECTED_EXTERNAL_RUNTIME_DEPENDENCIES_SHA256:
-        raise ReleaseError("external runtime dependency manifest differs from the reviewed document")
+        raise ReleaseError(t('maintenance.release.external_runtime_dependency_manifest_differs_from_the_reviewed_document'))
     if not isinstance(document, dict) or set(document) != {"schema_version", "subject", "scope", "sources", "dependencies"}:
-        raise ReleaseError("external runtime dependency manifest fields mismatch")
+        raise ReleaseError(t('maintenance.release.external_runtime_dependency_manifest_fields_mismatch'))
     if document["schema_version"] != "1.0.0" or document["subject"] != "claude-ads-external-runtime-dependencies":
-        raise ReleaseError("external runtime dependency manifest identity mismatch")
+        raise ReleaseError(t('maintenance.release.external_runtime_dependency_manifest_identity_mismatch'))
     sources = document["sources"]
     dependencies = document["dependencies"]
     expected_source_ids = {"playwright-python-intro", "playwright-browsers", "playwright-ci", "weasyprint-69-install", "cyclonedx-1.5-json"}
     if not isinstance(sources, list) or {item.get("id") for item in sources if isinstance(item, dict)} != expected_source_ids or len(sources) != len(expected_source_ids):
-        raise ReleaseError("external runtime dependency source coverage mismatch")
+        raise ReleaseError(t('maintenance.release.external_runtime_dependency_source_coverage_mismatch'))
     for source in sources:
         if set(source) != {"id", "url", "publisher", "accessed_at"} or not str(source["url"]).startswith("https://") or source["accessed_at"] != "2026-07-11" or not source["publisher"]:
-            raise ReleaseError("external runtime dependency source metadata mismatch")
+            raise ReleaseError(t('maintenance.release.external_runtime_dependency_source_metadata_mismatch'))
     if not isinstance(dependencies, list) or {item.get("id") for item in dependencies if isinstance(item, dict)} != {"playwright-browser-payload", "weasyprint-native-libraries"} or len(dependencies) != 2:
-        raise ReleaseError("external runtime dependency coverage mismatch")
+        raise ReleaseError(t('maintenance.release.external_runtime_dependency_coverage_mismatch'))
     for dependency in dependencies:
         if dependency.get("included_in_python_lock") is not False or dependency.get("included_in_python_sbom") is not False or dependency.get("cross_platform_feature_attestation") != "not-claimed":
-            raise ReleaseError("external runtime dependency boundary mismatch")
+            raise ReleaseError(t('maintenance.release.external_runtime_dependency_boundary_mismatch'))
         source_ids = dependency.get("source_ids")
         if not isinstance(source_ids, list) or not source_ids or not set(source_ids).issubset(expected_source_ids):
-            raise ReleaseError("external runtime dependency source binding mismatch")
+            raise ReleaseError(t('maintenance.release.external_runtime_dependency_source_binding_mismatch'))
     return document
 
 
@@ -996,14 +1025,14 @@ def build_sbom(root: Path, product_name: str, version: str) -> dict[str, object]
 
 
 def _json_bytes(value: object) -> bytes:
-    return (json.dumps(value, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    return (json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8")
 
 
 def _product(root: Path) -> tuple[str, str]:
     manifest = json.loads((root / ".claude-plugin/plugin.json").read_text(encoding="utf-8"))
     name, version = manifest.get("name"), manifest.get("version")
     if not isinstance(name, str) or not isinstance(version, str) or not name or not version:
-        raise ReleaseError("plugin manifest requires string name and version")
+        raise ReleaseError(t('maintenance.release.plugin_manifest_requires_string_name_and_version'))
     return name, version
 
 
@@ -1011,7 +1040,7 @@ def build_release(root: Path, output_dir: Path) -> dict[str, Path]:
     selected = _assert_clean_head_release_subject(root)
     errors = audit_repository(root)
     if errors:
-        raise ReleaseError("repository audit failed:\n- " + "\n- ".join(errors))
+        raise ReleaseError(t('maintenance.release.repository_audit_failed', v0='\n- '.join(errors)))
     _load_external_runtime_dependencies(root)
 
     name, version = _product(root)
@@ -1026,7 +1055,7 @@ def build_release(root: Path, output_dir: Path) -> dict[str, Path]:
         for relative in selected:
             path = root / relative
             if path.is_symlink() or not path.is_file():
-                raise ReleaseError(f"release input is not a regular file: {relative}")
+                raise ReleaseError(t('maintenance.release.release_input_is_not_a_regular_file', v0=relative))
             data = path.read_bytes()
             executable = bool(path.stat().st_mode & stat.S_IXUSR)
             mode = 0o755 if executable else 0o644
@@ -1080,9 +1109,9 @@ def build_release(root: Path, output_dir: Path) -> dict[str, Path]:
 
 def _verify_sbom_document(sbom: object, inventory: object, commit: str) -> None:
     if not isinstance(sbom, dict) or sbom.get("bomFormat") != "CycloneDX" or sbom.get("specVersion") != "1.5":
-        raise ReleaseError("SBOM is not a supported CycloneDX inventory")
+        raise ReleaseError(t('maintenance.release.sbom_is_not_a_supported_cyclonedx_inventory'))
     if not isinstance(inventory, dict):
-        raise ReleaseError("archived dependency inventory is invalid")
+        raise ReleaseError(t('maintenance.release.archived_dependency_inventory_is_invalid'))
     runtime_targets = [target for target in inventory.get("targets", []) if target.get("profile") == "runtime"]
     runtime_occurrences: dict[tuple[str, str], list[dict[str, object]]] = {}
     runtime_direct: set[str] = set()
@@ -1094,66 +1123,66 @@ def _verify_sbom_document(sbom: object, inventory: object, commit: str) -> None:
     catalog = {(item["name"], item["version"]): item for item in inventory.get("component_catalog", [])}
     components = sbom.get("components")
     if not isinstance(components, list) or len(components) != len(runtime_occurrences):
-        raise ReleaseError("SBOM runtime component coverage mismatch")
+        raise ReleaseError(t('maintenance.release.sbom_runtime_component_coverage_mismatch'))
     refs: set[str] = set()
     for component in components:
         if not isinstance(component, dict):
-            raise ReleaseError("SBOM component is not an object")
+            raise ReleaseError(t('maintenance.release.sbom_component_is_not_an_object'))
         key = (component.get("name"), component.get("version"))
         expected = catalog.get(key)
         if expected is None or component.get("purl") != expected.get("purl") or component.get("bom-ref") != expected.get("purl"):
-            raise ReleaseError(f"SBOM contains an unknown or mismatched component: {key[0]}")
+            raise ReleaseError(t('maintenance.release.sbom_contains_an_unknown_or_mismatched_component', v0=key[0]))
         if component["bom-ref"] in refs:
-            raise ReleaseError(f"SBOM contains a duplicate component: {key[0]}")
+            raise ReleaseError(t('maintenance.release.sbom_contains_a_duplicate_component', v0=key[0]))
         refs.add(component["bom-ref"])
         if component.get("licenses") != [{"expression": expected.get("license_expression")}]:
-            raise ReleaseError(f"SBOM component lacks the reviewed license: {key[0]}")
+            raise ReleaseError(t('maintenance.release.sbom_component_lacks_the_reviewed_license', v0=key[0]))
         expected_hashes = sorted({item["artifact"]["sha256"] for item in runtime_occurrences[key]})
         observed_hashes = sorted(item.get("content") for item in component.get("hashes", []) if item.get("alg") == "SHA-256")
         if observed_hashes != expected_hashes:
-            raise ReleaseError(f"SBOM artifact hash coverage mismatch: {key[0]}")
+            raise ReleaseError(t('maintenance.release.sbom_artifact_hash_coverage_mismatch', v0=key[0]))
     metadata = sbom.get("metadata")
     properties = metadata.get("properties", []) if isinstance(metadata, dict) else []
     property_map = {item.get("name"): item.get("value") for item in properties if isinstance(item, dict)}
     if property_map.get("claude-ads:source-commit") != commit:
-        raise ReleaseError("SBOM source commit binding mismatch")
+        raise ReleaseError(t('maintenance.release.sbom_source_commit_binding_mismatch'))
     dependencies = sbom.get("dependencies")
     if not isinstance(dependencies, list) or len(dependencies) != len(refs) + 1:
-        raise ReleaseError("SBOM dependency graph coverage mismatch")
+        raise ReleaseError(t('maintenance.release.sbom_dependency_graph_coverage_mismatch'))
     dependency_refs = [item.get("ref") for item in dependencies if isinstance(item, dict)]
     if len(dependency_refs) != len(set(dependency_refs)):
-        raise ReleaseError("SBOM dependency graph has duplicate refs")
+        raise ReleaseError(t('maintenance.release.sbom_dependency_graph_has_duplicate_refs'))
     allowed_refs = refs | {metadata["component"]["bom-ref"]}
     if set(dependency_refs) != allowed_refs:
-        raise ReleaseError("SBOM dependency graph refs are incomplete")
+        raise ReleaseError(t('maintenance.release.sbom_dependency_graph_refs_are_incomplete'))
     for dependency in dependencies:
         if not set(dependency.get("dependsOn", [])).issubset(refs):
-            raise ReleaseError("SBOM dependency graph contains a dangling ref")
+            raise ReleaseError(t('maintenance.release.sbom_dependency_graph_contains_a_dangling_ref'))
     app = next(item for item in dependencies if item["ref"] == metadata["component"]["bom-ref"])
     expected_direct = sorted(catalog[(name, next(version for candidate, version in runtime_occurrences if candidate == name))]["purl"] for name in runtime_direct)
     if app.get("dependsOn") != expected_direct:
-        raise ReleaseError("SBOM application dependency set includes non-runtime or missing direct components")
+        raise ReleaseError(t('maintenance.release.sbom_application_dependency_set_includes_non_runtime_or_missing_direct_components'))
 
 
 def verify_release(output_dir: Path, expected_commit: str, repository_root: Path) -> None:
     if not isinstance(expected_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", expected_commit):
-        raise ReleaseError("trusted expected commit must be a full lowercase Git SHA-1")
+        raise ReleaseError(t('maintenance.release.trusted_expected_commit_must_be_a_full_lowercase_git_sha_1'))
     repository_root = repository_root.resolve()
     trusted_paths = package_files(sorted(_git(repository_root, "ls-tree", "-r", "--name-only", expected_commit).decode("utf-8").splitlines()))
     manifest_path = output_dir / "release-manifest.json"
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise ReleaseError(f"release manifest is missing or invalid: {exc}") from exc
+        raise ReleaseError(t('maintenance.release.release_manifest_is_missing_or_invalid', v0=exc)) from exc
     if not isinstance(manifest, dict) or set(manifest) != {"schema_version", "product", "source", "archive", "files"} or manifest.get("schema_version") != "1.0.0":
-        raise ReleaseError("release manifest fields/schema mismatch")
+        raise ReleaseError(t('maintenance.release.release_manifest_fields_schema_mismatch'))
     product, source, archive_meta, records = manifest["product"], manifest["source"], manifest["archive"], manifest["files"]
     if not isinstance(product, dict) or set(product) != {"name", "version"} or not all(isinstance(product.get(key), str) and product[key] for key in ("name", "version")):
-        raise ReleaseError("release manifest product mismatch")
+        raise ReleaseError(t('maintenance.release.release_manifest_product_mismatch'))
     try:
         trusted_plugin = json.loads(_git(repository_root, "show", f"{expected_commit}:.claude-plugin/plugin.json"))
     except json.JSONDecodeError as exc:
-        raise ReleaseError("trusted Git commit contains an invalid plugin manifest") from exc
+        raise ReleaseError(t('maintenance.release.trusted_git_commit_contains_an_invalid_plugin_manifest')) from exc
     if (
         not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", product["name"])
         or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?", product["version"])
@@ -1161,48 +1190,48 @@ def verify_release(output_dir: Path, expected_commit: str, repository_root: Path
         or trusted_plugin.get("name") != product["name"]
         or trusted_plugin.get("version") != product["version"]
     ):
-        raise ReleaseError("release manifest product differs from the trusted Git plugin identity")
+        raise ReleaseError(t('maintenance.release.release_manifest_product_differs_from_the_trusted_git_plugin_identity'))
     if not isinstance(source, dict) or set(source) != {"commit"} or source.get("commit") != expected_commit:
-        raise ReleaseError("release manifest does not bind the trusted expected commit")
+        raise ReleaseError(t('maintenance.release.release_manifest_does_not_bind_the_trusted_expected_commit'))
     if not isinstance(archive_meta, dict) or set(archive_meta) != {"file", "root", "sha256", "size"}:
-        raise ReleaseError("release manifest archive fields mismatch")
+        raise ReleaseError(t('maintenance.release.release_manifest_archive_fields_mismatch'))
     expected_root = f"{product['name']}-{product['version']}"
     if archive_meta.get("root") != expected_root or archive_meta.get("file") != f"{expected_root}.zip" or not re.fullmatch(r"[0-9a-f]{64}", str(archive_meta.get("sha256", ""))) or type(archive_meta.get("size")) is not int or archive_meta["size"] <= 0:
-        raise ReleaseError("release manifest archive identity/type mismatch")
+        raise ReleaseError(t('maintenance.release.release_manifest_archive_identity_type_mismatch'))
     if not isinstance(records, list) or not records:
-        raise ReleaseError("release manifest files must be a nonempty array")
+        raise ReleaseError(t('maintenance.release.release_manifest_files_must_be_a_nonempty_array'))
     record_paths: list[str] = []
     for record in records:
         if not isinstance(record, dict) or set(record) != {"path", "sha256", "size", "mode"} or not isinstance(record.get("path"), str) or validate_portable_path(record["path"]) or not re.fullmatch(r"[0-9a-f]{64}", str(record.get("sha256", ""))) or type(record.get("size")) is not int or record["size"] < 0 or record.get("mode") not in {"0644", "0755"}:
-            raise ReleaseError("release manifest file record mismatch")
+            raise ReleaseError(t('maintenance.release.release_manifest_file_record_mismatch'))
         record_paths.append(record["path"])
     if record_paths != sorted(set(record_paths)):
-        raise ReleaseError("release manifest file paths are duplicated or unordered")
+        raise ReleaseError(t('maintenance.release.release_manifest_file_paths_are_duplicated_or_unordered'))
     if record_paths != trusted_paths:
-        raise ReleaseError("release manifest file list differs from the trusted Git commit")
+        raise ReleaseError(t('maintenance.release.release_manifest_file_list_differs_from_the_trusted_git_commit'))
 
     checksums_path = output_dir / "SHA256SUMS"
     if not checksums_path.is_file():
-        raise ReleaseError("SHA256SUMS is missing")
+        raise ReleaseError(t('maintenance.release.sha256sums_is_missing'))
     checksum_records: dict[str, str] = {}
     for line in checksums_path.read_text(encoding="utf-8").splitlines():
         match = re.fullmatch(r"([0-9a-f]{64})  ([^/\\]+)", line)
         if not match:
-            raise ReleaseError(f"invalid SHA256SUMS line: {line!r}")
+            raise ReleaseError(t('maintenance.release.invalid_sha256sums_line', v0=line))
         expected, filename = match.groups()
         if filename in checksum_records:
-            raise ReleaseError(f"duplicate SHA256SUMS filename: {filename}")
+            raise ReleaseError(t('maintenance.release.duplicate_sha256sums_filename', v0=filename))
         checksum_records[filename] = expected
         path = output_dir / filename
         if not path.is_file() or _sha256(path.read_bytes()) != expected:
-            raise ReleaseError(f"checksum mismatch: {filename}")
+            raise ReleaseError(t('maintenance.release.checksum_mismatch', v0=filename))
 
     expected_checksum_files = {archive_meta["file"], "release-manifest.json", "sbom.cdx.json"}
     if set(checksum_records) != expected_checksum_files:
-        raise ReleaseError("SHA256SUMS file set mismatch")
+        raise ReleaseError(t('maintenance.release.sha256sums_file_set_mismatch'))
     archive_path = output_dir / archive_meta["file"]
     if not archive_path.is_file() or archive_path.stat().st_size != archive_meta["size"] or _sha256(archive_path.read_bytes()) != archive_meta["sha256"]:
-        raise ReleaseError("archive digest disagrees with release manifest")
+        raise ReleaseError(t('maintenance.release.archive_digest_disagrees_with_release_manifest'))
 
     expected_records = {record["path"]: record for record in records}
     root = archive_meta["root"]
@@ -1211,23 +1240,23 @@ def verify_release(output_dir: Path, expected_commit: str, repository_root: Path
         names = archive.namelist()
         expected_names = [f"{root}/{path}" for path in expected_records]
         if names != expected_names:
-            raise ReleaseError("archive paths or order disagree with release manifest")
+            raise ReleaseError(t('maintenance.release.archive_paths_or_order_disagree_with_release_manifest'))
         for name in names:
             relative = name.removeprefix(f"{root}/")
             for issue in validate_portable_path(relative):
-                raise ReleaseError(f"unsafe archive path {name!r}: {issue}")
+                raise ReleaseError(t('maintenance.release.unsafe_archive_path', v0=name, v1=issue))
             record = expected_records[relative]
             data = archive.read(name)
             if len(data) != record["size"] or _sha256(data) != record["sha256"]:
-                raise ReleaseError(f"archive member disagrees with manifest: {relative}")
+                raise ReleaseError(t('maintenance.release.archive_member_disagrees_with_manifest', v0=relative))
             observed_mode = f"{(archive.getinfo(name).external_attr >> 16) & 0o7777:04o}"
             if observed_mode != record["mode"]:
-                raise ReleaseError(f"archive member mode disagrees with manifest: {relative}")
+                raise ReleaseError(t('maintenance.release.archive_member_mode_disagrees_with_manifest', v0=relative))
             trusted_data = _git(repository_root, "show", f"{expected_commit}:{relative}")
             trusted_tree = _git(repository_root, "ls-tree", expected_commit, "--", relative).decode("utf-8").strip()
             trusted_mode = "0755" if trusted_tree.startswith("100755 ") else "0644" if trusted_tree.startswith("100644 ") else None
             if data != trusted_data or record["mode"] != trusted_mode:
-                raise ReleaseError(f"archive member differs from trusted Git commit: {relative}")
+                raise ReleaseError(t('maintenance.release.archive_member_differs_from_trusted_git_commit', v0=relative))
             if relative in {
                 "requirements.txt", "requirements-dev.txt", "requirements.lock",
                 "requirements-dev.lock", "pyproject.toml", "THIRD_PARTY_NOTICES.md",
@@ -1252,21 +1281,21 @@ def verify_release(output_dir: Path, expected_commit: str, repository_root: Path
         },
     }
     if set(archived_dependency_files) != required_archived:
-        raise ReleaseError("release archive lacks dependency inventory inputs")
+        raise ReleaseError(t('maintenance.release.release_archive_lacks_dependency_inventory_inputs'))
     try:
         archived_plugin = json.loads(archived_dependency_files[".claude-plugin/plugin.json"])
     except json.JSONDecodeError as exc:
-        raise ReleaseError("archived plugin manifest is invalid") from exc
+        raise ReleaseError(t('maintenance.release.archived_plugin_manifest_is_invalid')) from exc
     if not isinstance(archived_plugin, dict) or archived_plugin.get("name") != product["name"] or archived_plugin.get("version") != product["version"]:
-        raise ReleaseError("release product identity disagrees with archived plugin manifest")
+        raise ReleaseError(t('maintenance.release.release_product_identity_disagrees_with_archived_plugin_manifest'))
     inventory = json.loads(archived_dependency_files["control-plane/manifests/dependency-inventory.json"])
     manifest_records = inventory.get("manifests", []) if isinstance(inventory, dict) else []
     if len(manifest_records) != 5:
-        raise ReleaseError("archived dependency manifest coverage is incomplete")
+        raise ReleaseError(t('maintenance.release.archived_dependency_manifest_coverage_is_incomplete'))
     for record in manifest_records:
         content = archived_dependency_files.get(record.get("path"))
         if content is None or record.get("sha256") != _sha256(content):
-            raise ReleaseError(f"archived dependency manifest hash mismatch: {record.get('path')}")
+            raise ReleaseError(t('maintenance.release.archived_dependency_manifest_hash_mismatch', v0=record.get('path')))
     with tempfile.TemporaryDirectory(prefix="claude-ads-release-verify-") as temporary:
         dependency_root = Path(temporary)
         for relative, content in archived_dependency_files.items():
@@ -1276,11 +1305,11 @@ def verify_release(output_dir: Path, expected_commit: str, repository_root: Path
         verified_inventory = _load_dependency_inventory(dependency_root)
         _load_external_runtime_dependencies(dependency_root)
     if verified_inventory != inventory:
-        raise ReleaseError("archived dependency inventory semantic verification mismatch")
+        raise ReleaseError(t('maintenance.release.archived_dependency_inventory_semantic_verification_mismatch'))
     properties = sbom.get("metadata", {}).get("properties", []) if isinstance(sbom, dict) else []
     property_map = {item.get("name"): item.get("value") for item in properties if isinstance(item, dict)}
     if property_map.get("claude-ads:dependency-inventory-sha256") != _sha256(archived_dependency_files["control-plane/manifests/dependency-inventory.json"]):
-        raise ReleaseError("SBOM dependency inventory binding mismatch")
+        raise ReleaseError(t('maintenance.release.sbom_dependency_inventory_binding_mismatch'))
     _verify_sbom_document(sbom, inventory, expected_commit)
     expected_sbom = _build_sbom_from_inventory(
         inventory,
@@ -1290,36 +1319,36 @@ def verify_release(output_dir: Path, expected_commit: str, repository_root: Path
         _sha256(archived_dependency_files["control-plane/manifests/dependency-inventory.json"]),
     )
     if sbom != expected_sbom:
-        raise ReleaseError("SBOM does not equal the canonical archived-inventory projection")
+        raise ReleaseError(t('maintenance.release.sbom_does_not_equal_the_canonical_archived_inventory_projection'))
 
 
 def _json_object(path: Path, label: str) -> dict[str, object]:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise ReleaseError(f"cannot read {label}: {exc}") from exc
+        raise ReleaseError(t('maintenance.release.cannot_read', v0=label, v1=exc)) from exc
     if not isinstance(value, dict):
-        raise ReleaseError(f"{label} must be a JSON object")
+        raise ReleaseError(t('maintenance.release.must_be_a_json_object', v0=label))
     return value
 
 
 def _check_grounding_and_capabilities(root: Path, as_of: date) -> dict[str, object]:
     source_doc = _json_object(
-        root / "control-plane/manifests/source-ledger.json", "source ledger"
+        root / "control-plane/manifests/source-ledger.json", t('maintenance.release.source_ledger')
     )
     claim_doc = _json_object(
-        root / "control-plane/manifests/claim-ledger.json", "claim ledger"
+        root / "control-plane/manifests/claim-ledger.json", t('maintenance.release.claim_ledger')
     )
     capability_doc = _json_object(
-        root / "control-plane/manifests/capability-manifest.json", "capability manifest"
+        root / "control-plane/manifests/capability-manifest.json", t('maintenance.release.capability_manifest')
     )
     sources_raw = source_doc.get("sources")
     claims_raw = claim_doc.get("claims")
     platforms_raw = capability_doc.get("platforms")
     if not isinstance(sources_raw, list) or not isinstance(claims_raw, list):
-        raise ReleaseError("source and claim ledgers require arrays")
+        raise ReleaseError(t('maintenance.release.source_and_claim_ledgers_require_arrays'))
     if not isinstance(platforms_raw, list):
-        raise ReleaseError("capability manifest requires a platforms array")
+        raise ReleaseError(t('maintenance.release.capability_manifest_requires_a_platforms_array'))
     sources = {
         item.get("id"): item
         for item in sources_raw
@@ -1331,76 +1360,76 @@ def _check_grounding_and_capabilities(root: Path, as_of: date) -> dict[str, obje
         if isinstance(item, dict) and isinstance(item.get("id"), str)
     }
     if len(sources) != len(sources_raw) or len(claims) != len(claims_raw):
-        raise ReleaseError("source or claim ledger contains an invalid or duplicate ID")
+        raise ReleaseError(t('maintenance.release.source_or_claim_ledger_contains_an_invalid_or_duplicate_id'))
     load_bearing = 0
     load_bearing_source_ids: set[str] = set()
     for claim_id, claim in claims.items():
         source_ids = claim.get("source_ids")
         if not isinstance(source_ids, list) or not source_ids:
-            raise ReleaseError(f"claim {claim_id} has no sources")
+            raise ReleaseError(t('maintenance.release.claim_has_no_sources', v0=claim_id))
         for source_id in source_ids:
             source = sources.get(source_id)
             if source is None or claim_id not in source.get("claim_ids", []):
-                raise ReleaseError(f"claim/source reciprocity failed: {claim_id} -> {source_id}")
+                raise ReleaseError(t('maintenance.release.claim_source_reciprocity_failed', v0=claim_id, v1=source_id))
         if claim.get("load_bearing") is True:
             load_bearing += 1
             if claim.get("verdict") != "verified":
-                raise ReleaseError(f"load-bearing claim is not verified: {claim_id}")
+                raise ReleaseError(t('maintenance.release.load_bearing_claim_is_not_verified', v0=claim_id))
             try:
                 verified = date.fromisoformat(str(claim["last_verified"]))
                 due = date.fromisoformat(str(claim["refresh_due"]))
             except (KeyError, ValueError) as exc:
-                raise ReleaseError(f"load-bearing claim has invalid refresh date: {claim_id}") from exc
+                raise ReleaseError(t('maintenance.release.load_bearing_claim_has_invalid_refresh_date', v0=claim_id)) from exc
             if verified > as_of or due < verified:
                 raise ReleaseError(
-                    f"load-bearing claim has an invalid verification window: {claim_id}"
+                    t('maintenance.release.load_bearing_claim_has_an_invalid_verification_window', v0=claim_id)
                 )
             if due < as_of:
-                raise ReleaseError(f"load-bearing claim is stale: {claim_id}")
+                raise ReleaseError(t('maintenance.release.load_bearing_claim_is_stale', v0=claim_id))
             load_bearing_source_ids.update(source_ids)
     if load_bearing == 0:
-        raise ReleaseError("no load-bearing claims are registered")
+        raise ReleaseError(t('maintenance.release.no_load_bearing_claims_are_registered'))
     for source_id, source in sources.items():
         for claim_id in source.get("claim_ids", []):
             if claim_id not in claims or source_id not in claims[claim_id].get("source_ids", []):
-                raise ReleaseError(f"source/claim reciprocity failed: {source_id} -> {claim_id}")
+                raise ReleaseError(t('maintenance.release.source_claim_reciprocity_failed', v0=source_id, v1=claim_id))
         if not source.get("license") or source.get("redistribution") == "prohibited":
-            raise ReleaseError(f"source lacks releasable license metadata: {source_id}")
+            raise ReleaseError(t('maintenance.release.source_lacks_releasable_license_metadata', v0=source_id))
         if source_id in load_bearing_source_ids:
             try:
                 retrieved = date.fromisoformat(str(source["retrieved_at"]))
                 due = date.fromisoformat(str(source["refresh_due"]))
             except (KeyError, ValueError) as exc:
                 raise ReleaseError(
-                    f"load-bearing source has invalid refresh date: {source_id}"
+                    t('maintenance.release.load_bearing_source_has_invalid_refresh_date', v0=source_id)
                 ) from exc
             if retrieved > as_of or due < retrieved:
                 raise ReleaseError(
-                    f"load-bearing source has an invalid verification window: {source_id}"
+                    t('maintenance.release.load_bearing_source_has_an_invalid_verification_window', v0=source_id)
                 )
             if due < as_of:
-                raise ReleaseError(f"load-bearing source is stale: {source_id}")
+                raise ReleaseError(t('maintenance.release.load_bearing_source_is_stale', v0=source_id))
 
     verified_capabilities = 0
     disabled_capabilities = 0
     platform_ids: set[str] = set()
     for platform in platforms_raw:
         if not isinstance(platform, dict) or not isinstance(platform.get("id"), str):
-            raise ReleaseError("capability platform is invalid")
+            raise ReleaseError(t('maintenance.release.capability_platform_is_invalid'))
         platform_id = platform["id"]
         if platform_id in platform_ids:
-            raise ReleaseError(f"duplicate capability platform: {platform_id}")
+            raise ReleaseError(t('maintenance.release.duplicate_capability_platform', v0=platform_id))
         platform_ids.add(platform_id)
         capabilities = platform.get("capabilities")
         if not isinstance(capabilities, list) or not capabilities:
-            raise ReleaseError(f"platform has no capabilities: {platform_id}")
+            raise ReleaseError(t('maintenance.release.platform_has_no_capabilities', v0=platform_id))
         capability_ids: set[str] = set()
         for capability in capabilities:
             if not isinstance(capability, dict) or not isinstance(capability.get("id"), str):
-                raise ReleaseError(f"invalid capability for {platform_id}")
+                raise ReleaseError(t('maintenance.release.invalid_capability_for', v0=platform_id))
             capability_id = capability["id"]
             if capability_id in capability_ids:
-                raise ReleaseError(f"duplicate {platform_id} capability: {capability_id}")
+                raise ReleaseError(t('maintenance.release.duplicate_capability', v0=platform_id, v1=capability_id))
             capability_ids.add(capability_id)
             status = capability.get("status")
             implementation = capability.get("implementation_paths", [])
@@ -1410,27 +1439,27 @@ def _check_grounding_and_capabilities(root: Path, as_of: date) -> dict[str, obje
             for relative in [*implementation, *fixtures, *tests]:
                 if not isinstance(relative, str) or not (root / relative).is_file():
                     raise ReleaseError(
-                        f"{platform_id}.{capability_id} evidence path is missing: {relative!r}"
+                        t('maintenance.release.evidence_path_is_missing', v0=platform_id, v1=capability_id, v2=relative)
                     )
             for source_id in source_ids:
                 if source_id not in sources:
                     raise ReleaseError(
-                        f"{platform_id}.{capability_id} references unknown source {source_id}"
+                        t('maintenance.release.references_unknown_source', v0=platform_id, v1=capability_id, v2=source_id)
                     )
             if status == "fixture-verified":
                 if not implementation or not fixtures or not tests or not source_ids:
                     raise ReleaseError(
-                        f"fixture-verified capability lacks complete evidence: {platform_id}.{capability_id}"
+                        t('maintenance.release.fixture_verified_capability_lacks_complete_evidence', v0=platform_id, v1=capability_id)
                     )
                 verified_capabilities += 1
             elif status == "disabled":
                 if not capability.get("disabled_reason"):
                     raise ReleaseError(
-                        f"disabled capability lacks reason: {platform_id}.{capability_id}"
+                        t('maintenance.release.disabled_capability_lacks_reason', v0=platform_id, v1=capability_id)
                     )
                 disabled_capabilities += 1
     if len(platform_ids) != 12:
-        raise ReleaseError(f"capability manifest covers {len(platform_ids)} platforms, expected 12")
+        raise ReleaseError(t('maintenance.release.capability_manifest_covers_platforms_expected_12', v0=len(platform_ids)))
     root_on_path = str(root)
     inserted_path = root_on_path not in sys.path
     if inserted_path:
@@ -1439,11 +1468,11 @@ def _check_grounding_and_capabilities(root: Path, as_of: date) -> dict[str, obje
         try:
             from claude_ads_core.control_registry import RegistryError, load_control_registry
         except ImportError as exc:
-            raise ReleaseError(f"control registry loader is unavailable: {exc}") from exc
+            raise ReleaseError(t('maintenance.release.control_registry_loader_is_unavailable', v0=exc)) from exc
         try:
             registry = load_control_registry(root)
         except RegistryError as exc:
-            raise ReleaseError(f"control registry integrity failed: {exc}") from exc
+            raise ReleaseError(t('maintenance.release.control_registry_integrity_failed', v0=exc)) from exc
     finally:
         if inserted_path:
             sys.path.remove(root_on_path)
@@ -1471,10 +1500,10 @@ def _check_vulnerability_exceptions(root: Path, as_of: date) -> dict[str, object
     try:
         records, scope = module.load_exceptions(root, as_of)
     except module.DependencyAuditError as exc:
-        raise ReleaseError(f"vulnerability exception integrity failed: {exc}") from exc
+        raise ReleaseError(t('maintenance.release.vulnerability_exception_integrity_failed', v0=exc)) from exc
     document = _json_object(
         root / "control-plane/manifests/vulnerability-exceptions.json",
-        "vulnerability exception ledger",
+        t('maintenance.release.vulnerability_exception_ledger'),
     )
     evidence_paths = sorted(
         {
@@ -1494,8 +1523,7 @@ def _check_vulnerability_exceptions(root: Path, as_of: date) -> dict[str, object
     )
     if excluded:
         raise ReleaseError(
-            "vulnerability evidence is excluded from the release package: "
-            + ", ".join(excluded)
+            t('maintenance.release.vulnerability_evidence_is_excluded_from_the_release_package', v0=', '.join(excluded))
         )
     packages = sorted({record.package for record in records.values()})
     return {
@@ -1512,47 +1540,47 @@ def _schema_contract(
 ) -> dict[str, object]:
     definitions = schema.get("$defs")
     if not isinstance(definitions, dict) or not isinstance(definitions.get(definition), dict):
-        raise ReleaseError(f"repository review schema lacks {definition!r}")
+        raise ReleaseError(t('maintenance.release.repository_review_schema_lacks', v0=definition))
     contract = definitions[definition]
     required = contract.get("required")
     properties = contract.get("properties")
     if not isinstance(required, list) or not isinstance(properties, dict):
-        raise ReleaseError(f"repository review schema definition is invalid: {definition}")
+        raise ReleaseError(t('maintenance.release.repository_review_schema_definition_is_invalid', v0=definition))
     if not isinstance(value, dict):
-        raise ReleaseError(f"{label} must be an object")
+        raise ReleaseError(t('maintenance.release.must_be_an_object', v0=label))
     fields = set(value)
     missing = sorted(set(required) - fields)
     extra = sorted(fields - set(properties))
     if missing or extra:
-        raise ReleaseError(f"{label} violates schema fields; missing={missing}, extra={extra}")
+        raise ReleaseError(t('maintenance.release.violates_schema_fields_missing_extra', v0=label, v1=missing, v2=extra))
     return value
 
 
 def _check_repository_review_ledger(root: Path) -> dict[str, object]:
     schema = _json_object(
         root / "control-plane/schemas/repository-review-ledger.schema.json",
-        "repository review schema",
+        t('maintenance.release.repository_review_schema'),
     )
     document = _json_object(
         root / "control-plane/manifests/repository-review-ledger.json",
-        "repository review ledger",
+        t('maintenance.release.repository_review_ledger'),
     )
     if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
-        raise ReleaseError("repository review schema must use JSON Schema Draft 2020-12")
+        raise ReleaseError(t('maintenance.release.repository_review_schema_must_use_json_schema_draft_2020_12'))
     if not str(schema.get("$id", "")).endswith("repository-review-ledger.v1.json"):
-        raise ReleaseError("repository review schema ID is not the v1 contract")
+        raise ReleaseError(t('maintenance.release.repository_review_schema_id_is_not_the_v1_contract'))
     required = schema.get("required")
     properties = schema.get("properties")
     if not isinstance(required, list) or not isinstance(properties, dict):
-        raise ReleaseError("repository review schema has no top-level field contract")
+        raise ReleaseError(t('maintenance.release.repository_review_schema_has_no_top_level_field_contract'))
     if set(document) != set(required) or set(document) != set(properties):
-        raise ReleaseError("repository review ledger does not match its top-level schema")
+        raise ReleaseError(t('maintenance.release.repository_review_ledger_does_not_match_its_top_level_schema'))
     if document.get("schema_version") != "1.0.0":
-        raise ReleaseError("repository review ledger schema version is unsupported")
+        raise ReleaseError(t('maintenance.release.repository_review_ledger_schema_version_is_unsupported'))
     if document.get("reviewed_at") != "2026-07-11":
-        raise ReleaseError("repository review ledger is not the required 2026-07-11 audit")
+        raise ReleaseError(t('maintenance.release.repository_review_ledger_is_not_the_required_2026_07_11_audit'))
     if document.get("clean_room_policy") != "concepts-only-no-code-or-prose":
-        raise ReleaseError("repository review ledger violates the clean-room policy")
+        raise ReleaseError(t('maintenance.release.repository_review_ledger_violates_the_clean_room_policy'))
 
     definitions = schema.get("$defs")
     disposition_contract = (
@@ -1564,14 +1592,14 @@ def _check_repository_review_ledger(root: Path) -> dict[str, object]:
         else set()
     )
     if dispositions != {"adopt", "already-addressed", "defer", "reject"}:
-        raise ReleaseError("repository review disposition vocabulary is incomplete")
+        raise ReleaseError(t('maintenance.release.repository_review_disposition_vocabulary_is_incomplete'))
     semantics = document.get("disposition_semantics")
     if not isinstance(semantics, dict) or set(semantics) != dispositions:
-        raise ReleaseError("repository review disposition semantics are incomplete")
+        raise ReleaseError(t('maintenance.release.repository_review_disposition_semantics_are_incomplete'))
 
     repositories_raw = document.get("repositories")
     if not isinstance(repositories_raw, list) or len(repositories_raw) != 33:
-        raise ReleaseError("repository review ledger must contain all 33 pinned repositories")
+        raise ReleaseError(t('maintenance.release.repository_review_ledger_must_contain_all_33_pinned_repositories'))
     repository_ids: set[str] = set()
     repository_names: set[str] = set()
     concept_ids: set[str] = set()
@@ -1580,27 +1608,27 @@ def _check_repository_review_ledger(root: Path) -> dict[str, object]:
     unlicensed_repositories = 0
     for index, raw_review in enumerate(repositories_raw):
         review = _schema_contract(
-            schema, "repository_review", raw_review, f"repository review {index}"
+            schema, "repository_review", raw_review, t('maintenance.release.repository_review', v0=index)
         )
         review_id = review.get("id")
         repository = review.get("repository")
         if not isinstance(review_id, str) or review_id in repository_ids:
-            raise ReleaseError(f"invalid or duplicate repository review ID: {review_id!r}")
+            raise ReleaseError(t('maintenance.release.invalid_or_duplicate_repository_review_id', v0=review_id))
         if not isinstance(repository, str) or repository in repository_names:
-            raise ReleaseError(f"invalid or duplicate reviewed repository: {repository!r}")
+            raise ReleaseError(t('maintenance.release.invalid_or_duplicate_reviewed_repository', v0=repository))
         repository_ids.add(review_id)
         repository_names.add(repository)
         if review.get("source_url") != f"https://github.com/{repository}":
-            raise ReleaseError(f"repository source URL is not canonical: {review_id}")
+            raise ReleaseError(t('maintenance.release.repository_source_url_is_not_canonical', v0=review_id))
         if not re.fullmatch(r"[0-9a-f]{40}", str(review.get("reviewed_head_sha", ""))):
-            raise ReleaseError(f"repository head is not pinned: {review_id}")
+            raise ReleaseError(t('maintenance.release.repository_head_is_not_pinned', v0=review_id))
         if review.get("reviewed_at") != document["reviewed_at"]:
-            raise ReleaseError(f"repository review date is inconsistent: {review_id}")
+            raise ReleaseError(t('maintenance.release.repository_review_date_is_inconsistent', v0=review_id))
         if review.get("copy_policy") != document["clean_room_policy"]:
-            raise ReleaseError(f"repository copy policy is unsafe: {review_id}")
+            raise ReleaseError(t('maintenance.release.repository_copy_policy_is_unsafe', v0=review_id))
         disposition = review.get("primary_disposition")
         if disposition not in dispositions:
-            raise ReleaseError(f"repository disposition is missing: {review_id}")
+            raise ReleaseError(t('maintenance.release.repository_disposition_is_missing', v0=review_id))
 
         relationship = review.get("relationship")
         license_spdx = review.get("license_spdx")
@@ -1608,7 +1636,7 @@ def _check_repository_review_ledger(root: Path) -> dict[str, object]:
         if license_spdx == "NOASSERTION":
             unlicensed_repositories += 1
             if license_use != "unverified-metadata-only" or disposition == "adopt":
-                raise ReleaseError(f"unlicensed repository is not fail-closed: {review_id}")
+                raise ReleaseError(t('maintenance.release.unlicensed_repository_is_not_fail_closed', v0=review_id))
         elif license_spdx in {"MIT", "Apache-2.0"}:
             expected_use = (
                 "same-project-metadata-only"
@@ -1616,23 +1644,23 @@ def _check_repository_review_ledger(root: Path) -> dict[str, object]:
                 else "compatible-metadata-only"
             )
             if license_use != expected_use:
-                raise ReleaseError(f"repository license use is inconsistent: {review_id}")
+                raise ReleaseError(t('maintenance.release.repository_license_use_is_inconsistent', v0=review_id))
         else:
-            raise ReleaseError(f"repository license is unsupported: {review_id}")
+            raise ReleaseError(t('maintenance.release.repository_license_is_unsupported', v0=review_id))
 
         head_review = _schema_contract(
-            schema, "head_review", review.get("head_review"), f"head review {review_id}"
+            schema, "head_review", review.get("head_review"), t('maintenance.release.head_review', v0=review_id)
         )
         if not isinstance(head_review.get("surfaces"), list) or not head_review["surfaces"]:
-            raise ReleaseError(f"repository head review has no surfaces: {review_id}")
+            raise ReleaseError(t('maintenance.release.repository_head_review_has_no_surfaces', v0=review_id))
         if relationship == "fork":
             fork_ids.add(review_id)
             status = head_review.get("compare_status")
             if status not in {"ahead", "diverged", "no-common-ancestor"}:
-                raise ReleaseError(f"fork lacks compare evidence: {review_id}")
+                raise ReleaseError(t('maintenance.release.fork_lacks_compare_evidence', v0=review_id))
             if status == "no-common-ancestor":
                 if head_review.get("method") != "github-rest-compare-plus-tree":
-                    raise ReleaseError(f"unrelated fork lacks tree evidence: {review_id}")
+                    raise ReleaseError(t('maintenance.release.unrelated_fork_lacks_tree_evidence', v0=review_id))
             else:
                 required_compare = {
                     "upstream_base_sha",
@@ -1645,34 +1673,34 @@ def _check_repository_review_ledger(root: Path) -> dict[str, object]:
                     "deletions",
                 }
                 if not required_compare <= set(head_review):
-                    raise ReleaseError(f"fork compare evidence is incomplete: {review_id}")
+                    raise ReleaseError(t('maintenance.release.fork_compare_evidence_is_incomplete', v0=review_id))
         elif relationship != "external":
-            raise ReleaseError(f"repository relationship is invalid: {review_id}")
+            raise ReleaseError(t('maintenance.release.repository_relationship_is_invalid', v0=review_id))
 
         concepts = review.get("actionable_concepts")
         if not isinstance(concepts, list) or not concepts:
-            raise ReleaseError(f"repository has no actionable concepts: {review_id}")
+            raise ReleaseError(t('maintenance.release.repository_has_no_actionable_concepts', v0=review_id))
         for raw_concept in concepts:
             concept = _schema_contract(
-                schema, "actionable_concept", raw_concept, f"concept for {review_id}"
+                schema, "actionable_concept", raw_concept, t('maintenance.release.concept_for', v0=review_id)
             )
             concept_id = concept.get("id")
             if not isinstance(concept_id, str) or concept_id in concept_ids:
-                raise ReleaseError(f"invalid or duplicate repository concept: {concept_id!r}")
+                raise ReleaseError(t('maintenance.release.invalid_or_duplicate_repository_concept', v0=concept_id))
             concept_ids.add(concept_id)
             concept_disposition = concept.get("disposition")
             if concept_disposition not in dispositions:
-                raise ReleaseError(f"concept disposition is missing: {concept_id}")
+                raise ReleaseError(t('maintenance.release.concept_disposition_is_missing', v0=concept_id))
             requirement_ids = concept.get("requirement_ids")
             if not isinstance(requirement_ids, list) or not requirement_ids:
-                raise ReleaseError(f"concept lacks requirement traceability: {concept_id}")
+                raise ReleaseError(t('maintenance.release.concept_lacks_requirement_traceability', v0=concept_id))
             if concept_disposition == "adopt":
                 adopted_concepts += 1
                 if license_spdx == "NOASSERTION":
-                    raise ReleaseError(f"unlicensed concept cannot be adopted: {concept_id}")
+                    raise ReleaseError(t('maintenance.release.unlicensed_concept_cannot_be_adopted', v0=concept_id))
 
     survey = _schema_contract(
-        schema, "fork_survey", document.get("fork_survey"), "fork survey"
+        schema, "fork_survey", document.get("fork_survey"), t('maintenance.release.fork_survey')
     )
     if (
         survey.get("upstream_repository") != "AgriciDaniel/claude-ads"
@@ -1682,88 +1710,88 @@ def _check_repository_review_ledger(root: Path) -> dict[str, object]:
         or survey.get("non_ancestor_count") != 17
         or survey.get("completeness") != "complete"
     ):
-        raise ReleaseError("fork survey does not prove the required complete census")
+        raise ReleaseError(t('maintenance.release.fork_survey_does_not_prove_the_required_complete_census'))
     if survey["ancestor_or_equal_count"] + survey["non_ancestor_count"] != survey["paginated_fork_count"]:
-        raise ReleaseError("fork survey arithmetic is inconsistent")
+        raise ReleaseError(t('maintenance.release.fork_survey_arithmetic_is_inconsistent'))
     non_ancestor_ids = survey.get("non_ancestor_repository_ids")
     if not isinstance(non_ancestor_ids, list) or len(non_ancestor_ids) != len(set(non_ancestor_ids)):
-        raise ReleaseError("fork survey divergent IDs are invalid or duplicated")
+        raise ReleaseError(t('maintenance.release.fork_survey_divergent_ids_are_invalid_or_duplicated'))
     if set(non_ancestor_ids) != fork_ids or len(fork_ids) != 17:
-        raise ReleaseError("fork survey does not reconcile to all divergent reviews")
+        raise ReleaseError(t('maintenance.release.fork_survey_does_not_reconcile_to_all_divergent_reviews'))
 
     tracker_items_raw = document.get("tracker_items")
     tracker_scopes_raw = document.get("tracker_scopes")
     if not isinstance(tracker_items_raw, list) or not isinstance(tracker_scopes_raw, list):
-        raise ReleaseError("repository tracker evidence is missing")
+        raise ReleaseError(t('maintenance.release.repository_tracker_evidence_is_missing'))
     tracker_items: dict[str, dict[str, object]] = {}
     tracker_keys: set[tuple[object, object, object]] = set()
     for index, raw_item in enumerate(tracker_items_raw):
-        item = _schema_contract(schema, "tracker_item", raw_item, f"tracker item {index}")
+        item = _schema_contract(schema, "tracker_item", raw_item, t('maintenance.release.tracker_item', v0=index))
         item_id = item.get("id")
         key = (item.get("repository"), item.get("kind"), item.get("number"))
         if not isinstance(item_id, str) or item_id in tracker_items or key in tracker_keys:
-            raise ReleaseError(f"invalid or duplicate tracker item: {item_id!r}")
+            raise ReleaseError(t('maintenance.release.invalid_or_duplicate_tracker_item', v0=item_id))
         tracker_items[item_id] = item
         tracker_keys.add(key)
         if item.get("repository") not in repository_names:
-            raise ReleaseError(f"tracker repository was not reviewed: {item_id}")
+            raise ReleaseError(t('maintenance.release.tracker_repository_was_not_reviewed', v0=item_id))
         if item.get("disposition") not in dispositions:
-            raise ReleaseError(f"tracker disposition is missing: {item_id}")
+            raise ReleaseError(t('maintenance.release.tracker_disposition_is_missing', v0=item_id))
         links = item.get("linked_concept_ids")
         if not isinstance(links, list) or not links or not set(links) <= concept_ids:
-            raise ReleaseError(f"tracker concept links are incomplete: {item_id}")
+            raise ReleaseError(t('maintenance.release.tracker_concept_links_are_incomplete', v0=item_id))
         if item.get("merged") is True and (
             item.get("kind") != "pull-request" or item.get("state") != "closed"
         ):
-            raise ReleaseError(f"tracker merge state is inconsistent: {item_id}")
+            raise ReleaseError(t('maintenance.release.tracker_merge_state_is_inconsistent', v0=item_id))
 
     covered_tracker_ids: set[str] = set()
     scoped_repositories: set[str] = set()
     for index, raw_scope in enumerate(tracker_scopes_raw):
-        scope = _schema_contract(schema, "tracker_scope", raw_scope, f"tracker scope {index}")
+        scope = _schema_contract(schema, "tracker_scope", raw_scope, t('maintenance.release.tracker_scope', v0=index))
         repository = scope.get("repository")
         if not isinstance(repository, str) or repository in scoped_repositories:
-            raise ReleaseError(f"invalid or duplicate tracker scope: {repository!r}")
+            raise ReleaseError(t('maintenance.release.invalid_or_duplicate_tracker_scope', v0=repository))
         scoped_repositories.add(repository)
         if scope.get("state_filter") != "all" or scope.get("completeness") != "complete":
-            raise ReleaseError(f"tracker scope is not exhaustive: {repository}")
+            raise ReleaseError(t('maintenance.release.tracker_scope_is_not_exhaustive', v0=repository))
         item_ids = scope.get("item_ids")
         if not isinstance(item_ids, list) or len(item_ids) != len(set(item_ids)):
-            raise ReleaseError(f"tracker scope IDs are invalid: {repository}")
+            raise ReleaseError(t('maintenance.release.tracker_scope_ids_are_invalid', v0=repository))
         if covered_tracker_ids & set(item_ids):
-            raise ReleaseError(f"tracker item appears in multiple scopes: {repository}")
+            raise ReleaseError(t('maintenance.release.tracker_item_appears_in_multiple_scopes', v0=repository))
         scoped_items = [tracker_items.get(item_id) for item_id in item_ids]
         if any(item is None or item.get("repository") != repository for item in scoped_items):
-            raise ReleaseError(f"tracker scope does not resolve: {repository}")
+            raise ReleaseError(t('maintenance.release.tracker_scope_does_not_resolve', v0=repository))
         issue_count = sum(item.get("kind") == "issue" for item in scoped_items if item)
         pull_count = sum(item.get("kind") == "pull-request" for item in scoped_items if item)
         if scope.get("issue_count") != issue_count or scope.get("pull_request_count") != pull_count:
-            raise ReleaseError(f"tracker scope arithmetic is inconsistent: {repository}")
+            raise ReleaseError(t('maintenance.release.tracker_scope_arithmetic_is_inconsistent', v0=repository))
         covered_tracker_ids.update(item_ids)
     if covered_tracker_ids != set(tracker_items) or len(tracker_items) != 14:
-        raise ReleaseError("tracker scopes do not cover the complete 14-item review")
+        raise ReleaseError(t('maintenance.release.tracker_scopes_do_not_cover_the_complete_14_item_review'))
 
     blockers_raw = document.get("critical_blockers")
     if not isinstance(blockers_raw, list):
-        raise ReleaseError("repository critical-blocker register is missing")
+        raise ReleaseError(t('maintenance.release.repository_critical_blocker_register_is_missing'))
     blocker_ids: set[str] = set()
     open_blockers: list[str] = []
     for index, raw_blocker in enumerate(blockers_raw):
         blocker = _schema_contract(
-            schema, "critical_blocker", raw_blocker, f"critical blocker {index}"
+            schema, "critical_blocker", raw_blocker, t('maintenance.release.critical_blocker', v0=index)
         )
         blocker_id = blocker.get("id")
         if not isinstance(blocker_id, str) or blocker_id in blocker_ids:
-            raise ReleaseError(f"invalid or duplicate repository blocker: {blocker_id!r}")
+            raise ReleaseError(t('maintenance.release.invalid_or_duplicate_repository_blocker', v0=blocker_id))
         blocker_ids.add(blocker_id)
         if blocker.get("severity") != "critical":
-            raise ReleaseError(f"repository blocker severity is invalid: {blocker_id}")
+            raise ReleaseError(t('maintenance.release.repository_blocker_severity_is_invalid', v0=blocker_id))
         if blocker.get("status") == "open":
             open_blockers.append(blocker_id)
         elif blocker.get("status") == "resolved":
             evidence_paths = blocker.get("evidence_paths")
             if not isinstance(evidence_paths, list) or not evidence_paths:
-                raise ReleaseError(f"resolved repository blocker lacks evidence: {blocker_id}")
+                raise ReleaseError(t('maintenance.release.resolved_repository_blocker_lacks_evidence', v0=blocker_id))
             for relative in evidence_paths:
                 if (
                     not isinstance(relative, str)
@@ -1771,12 +1799,12 @@ def _check_repository_review_ledger(root: Path) -> dict[str, object]:
                     or not (root / relative).is_file()
                 ):
                     raise ReleaseError(
-                        f"repository blocker evidence path is missing: {blocker_id}: {relative!r}"
+                        t('maintenance.release.repository_blocker_evidence_path_is_missing', v0=blocker_id, v1=relative)
                     )
         else:
-            raise ReleaseError(f"repository blocker status is invalid: {blocker_id}")
+            raise ReleaseError(t('maintenance.release.repository_blocker_status_is_invalid', v0=blocker_id))
     if open_blockers:
-        raise ReleaseError(f"critical repository review blockers remain open: {open_blockers}")
+        raise ReleaseError(t('maintenance.release.critical_repository_review_blockers_remain_open', v0=open_blockers))
 
     return {
         "repository_count": len(repositories_raw),
@@ -1794,7 +1822,7 @@ def _check_repository_review_ledger(root: Path) -> dict[str, object]:
 def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]:
     document = _json_object(
         root / "control-plane/manifests/ecosystem-dispositions.json",
-        "ecosystem disposition ledger",
+        t('maintenance.release.ecosystem_disposition_ledger'),
     )
     if set(document) != {
         "schema_version",
@@ -1803,16 +1831,16 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
         "canonical_snapshot",
         "entries",
     }:
-        raise ReleaseError("ecosystem disposition ledger has unsupported or missing fields")
+        raise ReleaseError(t('maintenance.release.ecosystem_disposition_ledger_has_unsupported_or_missing_fields'))
     if document.get("schema_version") != "2.0.0":
-        raise ReleaseError("ecosystem disposition ledger schema version is unsupported")
+        raise ReleaseError(t('maintenance.release.ecosystem_disposition_ledger_schema_version_is_unsupported'))
     try:
         reviewed_at = date.fromisoformat(str(document["reviewed_at"]))
     except ValueError as exc:
-        raise ReleaseError("ecosystem disposition review date is invalid") from exc
+        raise ReleaseError(t('maintenance.release.ecosystem_disposition_review_date_is_invalid')) from exc
     as_of = as_of or datetime.now(timezone.utc).date()
     if reviewed_at > as_of or (as_of - reviewed_at).days > 30:
-        raise ReleaseError("ecosystem disposition review is stale or future-dated")
+        raise ReleaseError(t('maintenance.release.ecosystem_disposition_review_is_stale_or_future_dated'))
 
     snapshot_fields = {
         "repository",
@@ -1834,7 +1862,7 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
         expected_url = f"https://github.com/{expected_repository}"
         if not isinstance(snapshot, dict) or set(snapshot) != snapshot_fields:
             raise ReleaseError(
-                f"{label} ecosystem snapshot has unsupported or missing fields"
+                t('maintenance.release.ecosystem_snapshot_has_unsupported_or_missing_fields', v0=label)
             )
         if (
             snapshot.get("repository") != expected_repository
@@ -1842,7 +1870,7 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
             or snapshot.get("observed_at") != document["reviewed_at"]
         ):
             raise ReleaseError(
-                f"{label} ecosystem snapshot identity or date is inconsistent"
+                t('maintenance.release.ecosystem_snapshot_identity_or_date_is_inconsistent', v0=label)
             )
 
         def numbers(name: str, *, required: bool) -> list[int]:
@@ -1853,7 +1881,7 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
                 or any(type(value) is not int or value < 1 for value in values)
                 or values != sorted(set(values))
             ):
-                raise ReleaseError(f"{label} ecosystem snapshot {name} is invalid")
+                raise ReleaseError(t('maintenance.release.ecosystem_snapshot_is_invalid', v0=label, v1=name))
             return values
 
         issues = numbers("issue_numbers", required=require_issues)
@@ -1867,7 +1895,7 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
                 for sha in heads.values()
             )
         ):
-            raise ReleaseError(f"{label} pull-request head snapshot is invalid")
+            raise ReleaseError(t('maintenance.release.pull_request_head_snapshot_is_invalid', v0=label))
         return snapshot, issues, pulls
 
     public_snapshot, public_issues, public_pulls = validated_snapshot(
@@ -1878,7 +1906,7 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
     )
     entries = document.get("entries")
     if not isinstance(entries, list) or not entries:
-        raise ReleaseError("ecosystem disposition ledger is empty")
+        raise ReleaseError(t('maintenance.release.ecosystem_disposition_ledger_is_empty'))
     required_fields = {
         "id",
         "repository",
@@ -1920,9 +1948,9 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
             or set(entry) - allowed_fields
             or not isinstance(entry.get("id"), str)
         ):
-            raise ReleaseError("ecosystem disposition entry is invalid")
+            raise ReleaseError(t('maintenance.release.ecosystem_disposition_entry_is_invalid'))
         if entry["id"] in ids:
-            raise ReleaseError(f"duplicate ecosystem disposition: {entry['id']}")
+            raise ReleaseError(t('maintenance.release.duplicate_ecosystem_disposition', v0=entry['id']))
         ids.add(entry["id"])
         if (
             entry.get("kind") not in {"issue", "pull-request"}
@@ -1944,7 +1972,7 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
             )
             or len(entry["requirement_ids"]) != len(set(entry["requirement_ids"]))
         ):
-            raise ReleaseError(f"ecosystem entry remains pending: {entry['id']}")
+            raise ReleaseError(t('maintenance.release.ecosystem_entry_remains_pending', v0=entry['id']))
         regression_tests = entry.get("regression_tests")
         if regression_tests is not None and (
             not isinstance(regression_tests, list)
@@ -1952,13 +1980,13 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
             or not all(isinstance(item, str) and item.strip() for item in regression_tests)
             or len(regression_tests) != len(set(regression_tests))
         ):
-            raise ReleaseError(f"ecosystem regression evidence is invalid: {entry['id']}")
+            raise ReleaseError(t('maintenance.release.ecosystem_regression_evidence_is_invalid', v0=entry['id']))
         repository = entry.get("repository")
         if repository not in snapshots:
-            raise ReleaseError(f"ecosystem entry repository is not snapshotted: {entry['id']}")
+            raise ReleaseError(t('maintenance.release.ecosystem_entry_repository_is_not_snapshotted', v0=entry['id']))
         item = (entry["kind"], entry["number"])
         if item in observed_items[repository]:
-            raise ReleaseError(f"duplicate ecosystem tracker item: {repository}/{item}")
+            raise ReleaseError(t('maintenance.release.duplicate_ecosystem_tracker_item', v0=repository, v1=item))
         observed_items[repository].add(item)
         snapshot = snapshots[repository][0]
         item_path = "issues" if entry["kind"] == "issue" else "pull"
@@ -1967,7 +1995,7 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
             "metadata-only" if entry["kind"] == "issue" else "same-project-mit"
         )
         if entry.get("url") != expected_url or entry.get("license_review") != expected_license:
-            raise ReleaseError(f"ecosystem entry URL or license is invalid: {entry['id']}")
+            raise ReleaseError(t('maintenance.release.ecosystem_entry_url_or_license_is_invalid', v0=entry['id']))
 
     for repository, (_, issues, pulls) in snapshots.items():
         expected_items = {
@@ -1978,8 +2006,7 @@ def _check_ecosystem(root: Path, as_of: date | None = None) -> dict[str, object]
             missing = sorted(expected_items - observed_items[repository])
             extra = sorted(observed_items[repository] - expected_items)
             raise ReleaseError(
-                f"{repository} ecosystem snapshot coverage mismatch; "
-                f"missing={missing}, extra={extra}"
+                t('maintenance.release.ecosystem_snapshot_coverage_mismatch_missing_extra', v0=repository, v1=missing, v2=extra)
             )
     repository_evidence = _check_repository_review_ledger(root)
     return {
@@ -2003,23 +2030,23 @@ def _gh_json(root: Path, endpoint: str) -> dict[str, object]:
         text=True,
     )
     if result.returncode:
-        raise ReleaseError(f"GitHub evidence query failed for {endpoint}")
+        raise ReleaseError(t('maintenance.release.github_evidence_query_failed_for', v0=endpoint))
     try:
         value = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
-        raise ReleaseError(f"GitHub evidence is not JSON for {endpoint}") from exc
+        raise ReleaseError(t('maintenance.release.github_evidence_is_not_json_for', v0=endpoint)) from exc
     if not isinstance(value, dict):
-        raise ReleaseError(f"GitHub evidence must be an object for {endpoint}")
+        raise ReleaseError(t('maintenance.release.github_evidence_must_be_an_object_for', v0=endpoint))
     return value
 
 
 def verify_github_run(root: Path, run_id: str, commit_sha: str) -> dict[str, object]:
     if not re.fullmatch(r"[1-9][0-9]*", run_id):
-        raise ReleaseError("GitHub Actions run ID must be a positive integer")
+        raise ReleaseError(t('maintenance.release.github_actions_run_id_must_be_a_positive_integer'))
     repository = "AI-Marketing-Hub/claude-ads"
     repo = _gh_json(root, f"repos/{repository}")
     if repo.get("visibility") != "private" or repo.get("private") is not True:
-        raise ReleaseError("canonical repository is not private")
+        raise ReleaseError(t('maintenance.release.canonical_repository_is_not_private'))
     run = _gh_json(root, f"repos/{repository}/actions/runs/{run_id}")
     if (
         run.get("head_sha") != commit_sha
@@ -2028,19 +2055,18 @@ def verify_github_run(root: Path, run_id: str, commit_sha: str) -> dict[str, obj
         or run.get("path") != ".github/workflows/ci.yml"
         or run.get("head_branch") != "v2"
     ):
-        raise ReleaseError("GitHub Actions run does not prove the exact private v2 subject")
+        raise ReleaseError(t('maintenance.release.github_actions_run_does_not_prove_the_exact_private_v2_subject'))
     # Only workflow_dispatch runs execute the live ecosystem reconciliation in
     # strict mode; push and pull_request runs downgrade drift to warnings, so a
     # green run of either event is not release evidence.
     if run.get("event") != "workflow_dispatch":
         raise ReleaseError(
-            "GitHub Actions run must be a workflow_dispatch run so that the live "
-            "ecosystem reconciliation is strict"
+            t('maintenance.release.github_actions_run_must_be_a_workflow_dispatch_run_so_that')
         )
     jobs_doc = _gh_json(root, f"repos/{repository}/actions/runs/{run_id}/jobs?per_page=100")
     jobs = jobs_doc.get("jobs")
     if not isinstance(jobs, list):
-        raise ReleaseError("GitHub Actions jobs evidence is missing")
+        raise ReleaseError(t('maintenance.release.github_actions_jobs_evidence_is_missing'))
     required = {
         "Live ecosystem reconciliation",
         "Repository audit",
@@ -2067,7 +2093,7 @@ def verify_github_run(root: Path, run_id: str, commit_sha: str) -> dict[str, obj
     failed = sorted(name for name in required if conclusions.get(name) != "success")
     if missing or failed:
         raise ReleaseError(
-            f"required GitHub jobs are incomplete; missing={missing}, non_success={failed}"
+            t('maintenance.release.required_github_jobs_are_incomplete_missing_non_success', v0=missing, v1=failed)
         )
     return {
         "repository": repository,
@@ -2102,7 +2128,10 @@ def evaluate_release_gate(
             evidence = operation()
             checks.append({"id": check_id, "status": "pass", "evidence": evidence})
         except Exception as exc:  # each independent gate must remain visible
-            checks.append({"id": check_id, "status": "fail", "error": str(exc)})
+            message = str(exc) if isinstance(exc, ReleaseError) else t(
+                "maintenance.release.external_gate_error", error=exc
+            )
+            checks.append({"id": check_id, "status": "fail", "error": message})
 
     check(
         "repository-audit",
@@ -2110,7 +2139,7 @@ def evaluate_release_gate(
             {"tracked_file_count": len(tracked_files(root))}
             if not audit_repository(root)
             else (_ for _ in ()).throw(
-                ReleaseError("repository audit failed: " + "; ".join(audit_repository(root)))
+                ReleaseError(t('maintenance.release.repository_audit_failed_2', v0='; '.join(audit_repository(root))))
             )
         ),
     )
@@ -2119,7 +2148,7 @@ def evaluate_release_gate(
         lambda: (
             {"commit_sha": commit_sha, "tree_sha": tree_sha}
             if not _git(root, "status", "--porcelain").strip()
-            else (_ for _ in ()).throw(ReleaseError("release subject worktree is not clean"))
+            else (_ for _ in ()).throw(ReleaseError(t('maintenance.release.release_subject_worktree_is_not_clean')))
         ),
     )
     check(
@@ -2137,7 +2166,7 @@ def evaluate_release_gate(
 
     def model_evidence() -> dict[str, object]:
         if model_report is None or not model_report.is_file():
-            raise ReleaseError("canonical Claude model-gate report is required")
+            raise ReleaseError(t('maintenance.release.canonical_claude_model_gate_report_is_required'))
         module = _load_local_module(root, "evals/model_eval_gate.py", "claude_ads_model_gate")
         return module.verify_release_report(
             model_report,
@@ -2153,7 +2182,7 @@ def evaluate_release_gate(
 
     def independent_reviews() -> dict[str, object]:
         if review_evidence_dir is None:
-            raise ReleaseError("external signed review evidence directory is required")
+            raise ReleaseError(t('maintenance.release.external_signed_review_evidence_directory_is_required'))
         module = _load_local_module(
             root, "scripts/review_evidence.py", "claude_ads_review_gate"
         )
@@ -2171,7 +2200,7 @@ def evaluate_release_gate(
         "remote-ci",
         lambda: verify_github_run(root, github_run_id or "", commit_sha)
         if github_run_id
-        else (_ for _ in ()).throw(ReleaseError("GitHub Actions run ID is required")),
+        else (_ for _ in ()).throw(ReleaseError(t('maintenance.release.github_actions_run_id_is_required'))),
     )
     satisfied = all(item["status"] == "pass" for item in checks)
     return {
@@ -2193,29 +2222,35 @@ def _root(value: str | None) -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", help="repository root (defaults to script parent)")
+    with locale_scope(cli_locale(argv)):
+        return _main(argv)
+
+
+def _main(argv: list[str] | None = None) -> int:
+    parser = LocaleArgumentParser(description=t('maintenance.release.audit_and_reproducibly_package_the_public_safe_claude_ads_release_surface'))
+    parser.add_argument("--root", help=t('maintenance.release.repository_root_defaults_to_script_parent'))
     subparsers = parser.add_subparsers(dest="command", required=True)
-    subparsers.add_parser("audit", help="audit tracked repository files")
-    package_parser = subparsers.add_parser("package", help="build deterministic artifacts")
-    package_parser.add_argument("--output-dir", default="dist")
-    verify_parser = subparsers.add_parser("verify", help="verify built artifacts")
-    verify_parser.add_argument("--output-dir", default="dist")
-    verify_parser.add_argument("--expected-commit", required=True, help="trusted full Git commit expected in the release")
+    subparsers.add_parser("audit", help=t('maintenance.release.audit_tracked_repository_files'))
+    package_parser = subparsers.add_parser("package", help=t('maintenance.release.build_deterministic_artifacts'))
+    package_parser.add_argument("--output-dir", default="dist", help=t("maintenance.release.output_dir_help"))
+    verify_parser = subparsers.add_parser("verify", help=t('maintenance.release.verify_built_artifacts'))
+    verify_parser.add_argument("--output-dir", default="dist", help=t("maintenance.release.output_dir_help"))
+    verify_parser.add_argument("--expected-commit", required=True, help=t('maintenance.release.trusted_full_git_commit_expected_in_the_release'))
     gate_parser = subparsers.add_parser(
-        "gate", help="evaluate the exact candidate against every release gate"
+        "gate", help=t('maintenance.release.evaluate_the_exact_candidate_against_every_release_gate')
     )
     gate_parser.add_argument(
-        "--model-report", default="evals/results/canonical-model-gate.json"
+        "--model-report", default="evals/results/canonical-model-gate.json", help=t("maintenance.release.model_report_help")
     )
     gate_parser.add_argument(
         "--review-evidence-dir",
         default=os.environ.get("CLAUDE_ADS_REVIEW_EVIDENCE_DIR"),
+        help=t("maintenance.release.review_evidence_help"),
     )
-    gate_parser.add_argument("--github-run-id", default=os.environ.get("GITHUB_RUN_ID"))
+    gate_parser.add_argument("--github-run-id", default=os.environ.get("GITHUB_RUN_ID"), help=t("maintenance.release.github_run_help"))
     gate_parser.add_argument(
         "--output",
-        help="optional repository-relative path for the redacted gate assessment",
+        help=t('maintenance.release.optional_repository_relative_path_for_the_redacted_gate_assessment'),
     )
     args = parser.parse_args(argv)
     root = _root(args.root)
@@ -2224,16 +2259,16 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "audit":
             errors = audit_repository(root)
             if errors:
-                raise ReleaseError("repository audit failed:\n- " + "\n- ".join(errors))
-            print(f"release audit passed ({len(tracked_files(root))} tracked files)")
+                raise ReleaseError(t('maintenance.release.repository_audit_failed', v0='\n- '.join(errors)))
+            print(t('maintenance.release.release_audit_passed_tracked_files', v0=len(tracked_files(root))))
         elif args.command == "package":
             artifacts = build_release(root, (root / args.output_dir).resolve())
             verify_release((root / args.output_dir).resolve(), _git(root, "rev-parse", "HEAD").decode("ascii").strip(), root)
             for kind, path in artifacts.items():
-                print(f"{kind}: {path}")
+                print(f"{t('maintenance.release.artifact.' + kind)}: {path}")
         elif args.command == "verify":
             verify_release((root / args.output_dir).resolve(), args.expected_commit, root)
-            print("release artifacts verified")
+            print(t('maintenance.release.release_artifacts_verified'))
         else:
             report = evaluate_release_gate(
                 root,
@@ -2259,22 +2294,22 @@ def main(argv: list[str] | None = None) -> int:
             if args.output:
                 issues = validate_portable_path(args.output)
                 if issues:
-                    raise ReleaseError("unsafe gate output path: " + "; ".join(issues))
+                    raise ReleaseError(t('maintenance.release.unsafe_gate_output_path', v0='; '.join(issues)))
                 output = (root / args.output).resolve()
                 try:
                     output.relative_to(root)
                 except ValueError as exc:
-                    raise ReleaseError("gate output escapes repository root") from exc
+                    raise ReleaseError(t('maintenance.release.gate_output_escapes_repository_root')) from exc
                 parent = output.parent
                 parent.mkdir(parents=True, exist_ok=True)
                 if any(path.is_symlink() for path in (parent, output) if path.exists()):
-                    raise ReleaseError("gate output path must not be a symlink")
+                    raise ReleaseError(t('maintenance.release.gate_output_path_must_not_be_a_symlink'))
                 output.write_text(rendered, encoding="utf-8", newline="\n")
             print(rendered, end="")
             if not report["release_gate_satisfied"]:
                 return 1
     except (OSError, KeyError, TypeError, ValueError, ReleaseError, zipfile.BadZipFile) as exc:
-        print(f"release error: {exc}", file=sys.stderr)
+        print(t('maintenance.release.release_error', v0=exc), file=sys.stderr)
         return 1
     return 0
 

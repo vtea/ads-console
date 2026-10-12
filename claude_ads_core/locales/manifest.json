@@ -1,0 +1,776 @@
+{
+  "schema_version": 1,
+  "default_locale": "zh-CN",
+  "locales": [
+    "zh-CN",
+    "en"
+  ],
+  "documents": [
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "source_sha256": "25d4485aa9a63fce78dd5db3ce3359eb734a54e3a47276fbd1e5b4795bf84c75",
+      "publish": true,
+      "generated_sha256": "0a5c3aa841b7f7b21580c61e94982651735224d7ec823b33246b25f33d12c21f"
+    },
+    {
+      "path": "AGENTS.md",
+      "source_sha256": "6dcfd2682167cfe5f010c2a7538146dbfa95f7b0d78ca15f1631c6243ef6ac9a",
+      "publish": true,
+      "generated_sha256": "33659ddc802601387a92a55935025b8fafa5ee72e3fb3cdd8fd99849f93dd8e5"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "source_sha256": "e44c0a168e3c25c9e2ed2778c8a3b58fe9a2f11fb47ed6b355eef1bba00ad1c2",
+      "publish": true,
+      "generated_sha256": "1ea269e5f97ef1e3d9ea5cc17cf98ab41ffedc1f7115d50b4d554188c4606f5f"
+    },
+    {
+      "path": "CLAUDE.md",
+      "source_sha256": "fb35b7e08a2e8e10ec4b5b4373990bda3075e1e40742860ae08745eef7163b9a",
+      "publish": true,
+      "generated_sha256": "4ae92acf1255bbe19bf1ab0836d883da9065b2cfa421efee86fc69ba687eaefe"
+    },
+    {
+      "path": "CODEX.md",
+      "source_sha256": "752a24f69b072208735eaf0387eaa5fcc76a2e8d85f6d44077fed42f587ff60e",
+      "publish": true,
+      "generated_sha256": "5bf448ebb037401a7a65fb97bd129fe08d54a9e3f55cfa26b3322410bffaac5b"
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "source_sha256": "3b03dec2b603ec0ea4b2317f4fe204fea9931121d84cffba424c2c8800a85fde",
+      "publish": true,
+      "generated_sha256": "2658f7417684b20857fb276b6a1df77da63abe242e7c37a220f2d121ec0c03c7"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "source_sha256": "fec49c86280bc6643808a231dd3ce1df01c45f404ca074c963327c2f708e6401",
+      "publish": true,
+      "generated_sha256": "0139392b602e34611d47099eaf85fc7b1d4e01979a1010cfbf541d5ce3299653"
+    },
+    {
+      "path": "GEMINI.md",
+      "source_sha256": "b8af6dddf2e4e18874bb0d7d0d4dca48b442433cbfac3ff7843216e561ca188f",
+      "publish": true,
+      "generated_sha256": "6cbbe6da6d2e89e927b264ca7731c749f21bca470b4890b07ee31530de95e769"
+    },
+    {
+      "path": "README.md",
+      "source_sha256": "20a618f971851b1a2a0330486a072b739acec0cc6422a5e9c719ae0869408d03",
+      "publish": true,
+      "generated_sha256": "a161d3a01076807586428e67f2f45fc0cf8ae062018c2ade26d157495c070491"
+    },
+    {
+      "path": "SECURITY.md",
+      "source_sha256": "7bf66645d083143737b90d9d56c2afa5bc5dc34ba28c272dca5477f4ea29e3d2",
+      "publish": true,
+      "generated_sha256": "80c447855a09fb3f77a57542b136f90dc748390c2b701521a38c3d5dfe475f8d"
+    },
+    {
+      "path": "SUPPORT.md",
+      "source_sha256": "99b82e1058c8837b7d273a59cb5a36334feab02286280d080f0b07cde6db8a0d",
+      "publish": true,
+      "generated_sha256": "1f15b999e15db7dd550020ab9a3a7e45f704b9d4c5712ebb313725f2951f8244"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "source_sha256": "b90c38b4cce60c06c0090be31ee721d3482640923d9ff6f3c711c047317746d0",
+      "publish": false
+    },
+    {
+      "path": "ads/SKILL.md",
+      "source_sha256": "ab62ecc33f6fb47911ee74ea591b4852f5d9faf7a37677e8a2f312743527b94d",
+      "publish": true,
+      "generated_sha256": "8f92b9956f322e9fcf6d1842b4240ca77c09e36c946742de1eff27f07066f9df"
+    },
+    {
+      "path": "ads/references/additional-platforms.md",
+      "source_sha256": "0008ac1fa05a8a91a0db9877022603a7b4c33019c5ff01658612aadad06e1f33",
+      "publish": true,
+      "generated_sha256": "bf1af3460d4a375680605107b067ccdd691d4a464c839ba85255021f3e450e39"
+    },
+    {
+      "path": "ads/references/amazon-audit.md",
+      "source_sha256": "5ee2ffbb3180eb683a34fa38df70f597a3b9aaec9ee01683f01f7a99bc168f2a",
+      "publish": true,
+      "generated_sha256": "5e72b624fcc9efe8f99958aa73320ac2f7c1c4cb1af07fc00e4961948cd4db90"
+    },
+    {
+      "path": "ads/references/apple-audit.md",
+      "source_sha256": "f114dd8b8af0bd39c439935a51c831b39fa62412fd13baacd3e4f22a3076c930",
+      "publish": true,
+      "generated_sha256": "9d5d1b5eb280150f298a085c2e5c0659d21286c365d4bfa494dd21203c8a67c4"
+    },
+    {
+      "path": "ads/references/automation-tier-classifier.md",
+      "source_sha256": "acac058a3365556c17e18b503224b7d0adb0f706e23108cbd42c3e59b1da4d73",
+      "publish": true,
+      "generated_sha256": "194ec24a336dd8efe8a5ef7ae086796d3e5dfdf521abcfb6ebc2f342c3e699aa"
+    },
+    {
+      "path": "ads/references/benchmarks.md",
+      "source_sha256": "793ac2554ca74c79aefad49297ddb0c35de099aa0202ee43e5646b4214e90394",
+      "publish": true,
+      "generated_sha256": "1d03443941bf91b4b3d35b32e511216ec82aa46d56d370d9b6c05822fbcd52df"
+    },
+    {
+      "path": "ads/references/bidding-strategies.md",
+      "source_sha256": "45d8d51476dfd8bb4863142c0722cfa80e83621890b69197933d75fcce382eb0",
+      "publish": true,
+      "generated_sha256": "402d4a9b834e1d21e6d3702d8716a06d04b41570f9c2923c30b8b2be04e8255e"
+    },
+    {
+      "path": "ads/references/budget-allocation.md",
+      "source_sha256": "db57270f15f26658210e2cd4992c083eb4fabadd74f7c81876f6824e48b89130",
+      "publish": true,
+      "generated_sha256": "4e726d9ac782cb074ff069139c908b07e24c87ecafc97f257ba1ae3584b2a532"
+    },
+    {
+      "path": "ads/references/compliance-requirements.md",
+      "source_sha256": "7be84847ac0cd559eb3a1cf01830b52578d7815e13189815868f65adb4b9e53d",
+      "publish": true,
+      "generated_sha256": "5f09ec5dc8fdd1eda316db438f07f8913ce1b28165f2f09746ce7321579e6ff9"
+    },
+    {
+      "path": "ads/references/compliance.md",
+      "source_sha256": "b2067d84522244b14319b89674ab44eec3f45e06f573619a45f3fb8f213f7d26",
+      "publish": true,
+      "generated_sha256": "5f32e3f537522bf023720f3db267fa6f528b4de70a6230d54dfef3b5d7f82bf8"
+    },
+    {
+      "path": "ads/references/conversion-tracking.md",
+      "source_sha256": "eb54840465a3e6debf870062b1bdc534b5ff6bbfb87a7ccc3b42d68cca397992",
+      "publish": true,
+      "generated_sha256": "5b08eb7986909e8e2a846ff2258b44103d50ba8f489cdb4e62ab28899b15755f"
+    },
+    {
+      "path": "ads/references/copy-frameworks.md",
+      "source_sha256": "f3acff06cc46703c7e819a70034d97ea62ca2c2690ddb571e5bca688c4474b60",
+      "publish": true,
+      "generated_sha256": "05a1ed92ea3ae6e0ad8ab13ff6c0fc6ec3e1b713a33d5a31de688636a47991ce"
+    },
+    {
+      "path": "ads/references/creative-source-registry.md",
+      "source_sha256": "028ae0f17379d7fa504964bc9222b73c30883811f1c9908f3fbfd821b3e097f8",
+      "publish": true,
+      "generated_sha256": "91b9fd3fc09ba8f8d4e5fd0df63303dfb6025a8e38d24b57f0e320e519f1ee20"
+    },
+    {
+      "path": "ads/references/gaql-notes.md",
+      "source_sha256": "2860285f983b6e88b61fc03afaabb6f9300411dddfbee3376b16b6cfb7e4afb1",
+      "publish": true,
+      "generated_sha256": "f7773154c06a237ba6a0c0634dfc2b086028c7e210425150e50b1dc9abf89f70"
+    },
+    {
+      "path": "ads/references/google-audit.md",
+      "source_sha256": "f2ca2a41634e5f972b22f4f7fb2e056108fedc579bc2c191c214aa1392970f9e",
+      "publish": true,
+      "generated_sha256": "e9af97b88ab63be2f2301891d43d44ffffabe18bbb8f67fcfe03d4fa53e22880"
+    },
+    {
+      "path": "ads/references/google-creative-specs.md",
+      "source_sha256": "19dc49b02cb5fb987e5dbc8fcfba45ab8266fd00d8328b6c1e9d03656b64b51e",
+      "publish": true,
+      "generated_sha256": "181dfed3a7e3761da7dcd8da6b5b6b8e2b1c4fd7293dd9cf6d87f5ebd7472866"
+    },
+    {
+      "path": "ads/references/image-providers.md",
+      "source_sha256": "3a750ef89d3407556adb6fd486b09be7f06b3a39bb6f0c53ca764dfb9221a607",
+      "publish": true,
+      "generated_sha256": "a2944c008db9f8b0e045652918144ae56f97b3673eddc2629f4e7d88b92a41e1"
+    },
+    {
+      "path": "ads/references/linkedin-audit.md",
+      "source_sha256": "5d046f150a34dd205913f363951952ff011bc1cdf7ea4d2a5257ef2308eb5459",
+      "publish": true,
+      "generated_sha256": "76782e534cf1972ddd8f709b7dc02766c5dd7774d1ccaae905d342596ac3e7c7"
+    },
+    {
+      "path": "ads/references/linkedin-creative-specs.md",
+      "source_sha256": "2d05a0979d5242ab4e5569b12298f8cd98e759061896c7d8e17a05c3958cd6b7",
+      "publish": true,
+      "generated_sha256": "62b860c255c34d983382ca816ae301ad258b57226ac5f6b33f5b16211698c33f"
+    },
+    {
+      "path": "ads/references/mcp-integration.md",
+      "source_sha256": "0739e2e9e691b4551da516a0b924ebf3e9e67c7b0e54a1637acc71731733983f",
+      "publish": true,
+      "generated_sha256": "f96915635247f067d10cc705b2fa2008a71d510b52674d66f6338ecc61e216bd"
+    },
+    {
+      "path": "ads/references/meta-ai-stack.md",
+      "source_sha256": "1fa0d2c9b52e4f784069de1b5ef7a5f2c1c2e6a464264c2da2cf4eb014f88ee4",
+      "publish": true,
+      "generated_sha256": "5cacb40f944cf84bb7c4a9d00c99ae741e38579a6886fff9d4a1cf20c691f49e"
+    },
+    {
+      "path": "ads/references/meta-audit.md",
+      "source_sha256": "26979ad229332f2ed888e21df9b7052a5f826f45bd902910bb7091b1e46f3cef",
+      "publish": true,
+      "generated_sha256": "34113e8b72a7a362771eb279d4384ed97ea4523a1a80df1132efc1d7f37406c9"
+    },
+    {
+      "path": "ads/references/meta-creative-specs.md",
+      "source_sha256": "8b32cbc92f9353686d2dd89e3e437971a7af65421b85ee40be13389cb24bb5c9",
+      "publish": true,
+      "generated_sha256": "bf53013f45669b5737f41b702640ee3e1ab9533db1d0bf256e3e5dacb0b40570"
+    },
+    {
+      "path": "ads/references/microsoft-audit.md",
+      "source_sha256": "c8502d348c18e40f89954fd492d98e12eb865f10051b16df49125d4b7a8dc41d",
+      "publish": true,
+      "generated_sha256": "23847367e3e0d543029d674f35dfb5cf16eea12247f3101804fc81fbe09351c0"
+    },
+    {
+      "path": "ads/references/microsoft-creative-specs.md",
+      "source_sha256": "132f15475f6bd64a7f3819956429bafd0b45e3d1d04bf9a4ff2c355cafc423f0",
+      "publish": true,
+      "generated_sha256": "597e6586029854683935e1aae181227c62cd877649546a0eb4130cfdc0857eee"
+    },
+    {
+      "path": "ads/references/pinterest-audit.md",
+      "source_sha256": "18a5101c5eac6a6e24846bb43efa8ea0943b150f88fc8b931ec661391e055e8b",
+      "publish": true,
+      "generated_sha256": "8c2e55d2fa7fc84276a2080ba07931112b6ef3245f9f1c4df700137f0d0796b0"
+    },
+    {
+      "path": "ads/references/platform-specs.md",
+      "source_sha256": "95c78d0f75af61f80d34855943856be6f2c335fc94b44afcb257ac8a9b74259b",
+      "publish": true,
+      "generated_sha256": "8280eb6222d7eb0d5c6344cde66d540550ec8c683e9082a54d5620b7fb9514c4"
+    },
+    {
+      "path": "ads/references/prompt-patterns.md",
+      "source_sha256": "46a543c20c930ec62b2f60257c12b27a56e8cf0c1c98cdb40a241827c813765c",
+      "publish": true,
+      "generated_sha256": "161061cb887f2d69d3dc836c2311d4d4c728fc900e5f15c94b581f9bb2bf1121"
+    },
+    {
+      "path": "ads/references/reddit-audit.md",
+      "source_sha256": "6b1bbb44c7cc237143051ce6fdb729fc4d94e534bea3deac60eecb7f15cbe65c",
+      "publish": true,
+      "generated_sha256": "bb0fff17c347029117d8f6cfe1167078633355a1528d19811dc9581cc6cfd591"
+    },
+    {
+      "path": "ads/references/scoring-system.md",
+      "source_sha256": "65830c4d54252d768450ec709e8a6480fb04db828dbc28bcee775ffaa9c510a2",
+      "publish": true,
+      "generated_sha256": "256f2aa690a0dcb8106b57e4ebb3a353f22af555225392ce065dfb0737c52998"
+    },
+    {
+      "path": "ads/references/snapchat-audit.md",
+      "source_sha256": "bb5b345ce08b51f9b2f78e25cf162f947c2f60a8dc9cbc14c2dc9a6ffc29e1ea",
+      "publish": true,
+      "generated_sha256": "9e89366d251909e1a4bdf19505e117a9ef0735b2097074244e2cc6a1d9e97449"
+    },
+    {
+      "path": "ads/references/status-contract.md",
+      "source_sha256": "4563012dd531092d2e5f80cd0202b5e5c739d103f3c0330eae77613511aa5d62",
+      "publish": true,
+      "generated_sha256": "9d4fd67d307732229e9fb9abe9005e0a755b242199d39a5f034ffefda9974493"
+    },
+    {
+      "path": "ads/references/thinking-framework.md",
+      "source_sha256": "dcf617715b2c807b84a52d076efc85c463e9ed3ed29ee8a02f07a8aaa5441bc6",
+      "publish": true,
+      "generated_sha256": "495f6c79fac4331e57ea1243ecc96549a2a8c135d2d6ca1e59d0ff8b4cbddf1b"
+    },
+    {
+      "path": "ads/references/tiktok-audit.md",
+      "source_sha256": "8858fd5749bcef308373d37ebc9d64c69eebd235318f1746258a0563bcd18c49",
+      "publish": true,
+      "generated_sha256": "0241dbb6f2755d5380ac298087d22844c877540693d013f28bef9d7f400e857e"
+    },
+    {
+      "path": "ads/references/tiktok-creative-specs.md",
+      "source_sha256": "860d1aa9b7cd93b4ad621a35d3784ca162bc5e5c87164e672850421112ad0b96",
+      "publish": true,
+      "generated_sha256": "84990ecd3c279def13f838bfb5c7d4207d00a4986fd70bd3e8e30087c4242fa0"
+    },
+    {
+      "path": "ads/references/voice-to-style.md",
+      "source_sha256": "1ff93c3da63fb27278b7388c2de106163ed799be831399c6094463d0357aa8c5",
+      "publish": true,
+      "generated_sha256": "41c9e5e275bce12403832a2fb0df7a97bcfb40bc8e00e4a1a585cde985e2f61e"
+    },
+    {
+      "path": "ads/references/x-audit.md",
+      "source_sha256": "92fa5a98ff1e0c1a43d8e7b667494cb49eedca53ae46db553f5c37195ad9e500",
+      "publish": true,
+      "generated_sha256": "e8a7f9ec5382f680a6fb47b46be2957165852e36dddc254841535c4aec359f4b"
+    },
+    {
+      "path": "ads/references/youtube-audit.md",
+      "source_sha256": "b795934abdc3a03118bcfc261b27d48c278fb1b8faf4d6fa2cfb8dd93daa7b70",
+      "publish": true,
+      "generated_sha256": "1efe4ffe01c5d605265949d35fd275d83f94028c96f38dcfaf041590f32c7575"
+    },
+    {
+      "path": "ads/references/youtube-creative-specs.md",
+      "source_sha256": "698ac98fcd9ad7c6cc6a61d4ff6682efeeff5f9a68b05a82d0b030037bd14c66",
+      "publish": true,
+      "generated_sha256": "c7643e9ae84cc2bac1ef935e81689395c71537d9a785b24cc27c78e972af6bd3"
+    },
+    {
+      "path": "agents/audit-amazon.md",
+      "source_sha256": "a43400eadb64283c776aef7035de5e6a03f8adf4bffda09fa1780a8399c3f74f",
+      "publish": true,
+      "generated_sha256": "8053510bd3ed2c2c1a590ee9b67579452ae752d731bcb00b3599c658f425d9db"
+    },
+    {
+      "path": "agents/audit-apple.md",
+      "source_sha256": "9b8e608ac2c246d55e30784616a2e8badff36a1ed0a27e7036cf73662691d158",
+      "publish": true,
+      "generated_sha256": "d4801fe310b58c49a6d2bcde016da89467ab5fea90eb64b00e62590109a79660"
+    },
+    {
+      "path": "agents/audit-budget.md",
+      "source_sha256": "b9f0f78d5bd2dc9185430ac11773636ffbcc602cb8255065a1f4f5a7ff56fee4",
+      "publish": true,
+      "generated_sha256": "de9c8428a0fb7ff765d5ba73f55bd05ef9463dc89a9b20ad4cfd8bf0bfdbe650"
+    },
+    {
+      "path": "agents/audit-creative.md",
+      "source_sha256": "29c0c78a728e4fe0bba00d8a03e776a478be2aecdf4384c8d02f348eadb06ba5",
+      "publish": true,
+      "generated_sha256": "38a635421bee09b3dafdf62485f967387cd1f6f893b69dfd9fd70b20d0f3cece"
+    },
+    {
+      "path": "agents/audit-google.md",
+      "source_sha256": "947587a2e29cbcd3a7a79a8c245298b6bd3bef0ef45b3231e3b4fb635bd5ce3c",
+      "publish": true,
+      "generated_sha256": "60c615ca3c31171b6c940bea69ed44c16cd351cd2dd053ba9241f75afb0c2b89"
+    },
+    {
+      "path": "agents/audit-linkedin.md",
+      "source_sha256": "c3813300e464194713d059e4c1155b8a68f316b1b014a1c905b069781a339dda",
+      "publish": true,
+      "generated_sha256": "9d6d36e1d61f0936b50abf609090c91b805d9b19a1eb04fbb9d375a0c3d1a5a6"
+    },
+    {
+      "path": "agents/audit-meta.md",
+      "source_sha256": "a6be52a89be8957d9d5401c509b7543afc7cfb26327b95a67cbe9ac6d6f7cc62",
+      "publish": true,
+      "generated_sha256": "a2efca1675ad20b19fe4e3f41ab72a185f06fb472b64344abb0b8eeb587cde81"
+    },
+    {
+      "path": "agents/audit-microsoft.md",
+      "source_sha256": "7c729af7543fb91cf887d18d29cbe5130e1447ae3370501fa37ef42957a982b5",
+      "publish": true,
+      "generated_sha256": "5337d59e7532a3c9495019325ac289cf6581100a691e0bb3700e7debbd05d735"
+    },
+    {
+      "path": "agents/audit-pinterest.md",
+      "source_sha256": "44da1e0280cc801a3ca593d0ad8896aa4690e623999c5da1bc5728fafc164263",
+      "publish": true,
+      "generated_sha256": "46518bfbde048479c912437d83c2e0e7ee020ff5a3a4c66017cd7037d4d31bf0"
+    },
+    {
+      "path": "agents/audit-policy-compliance.md",
+      "source_sha256": "fa1cc1fb27a506f560f2f15ada63f7e1367f190f3298ea7c0fddf15c07c17082",
+      "publish": true,
+      "generated_sha256": "62e2e607fd7057624827372046634ce72324a8151d4c238552a99f1b079f770e"
+    },
+    {
+      "path": "agents/audit-reddit.md",
+      "source_sha256": "20c28d456fa308c79a165d9d13d77659bf0f96c7c34e34e7e686789a6104ee7b",
+      "publish": true,
+      "generated_sha256": "ecfa5d4902848caa105f36055f3d3b9a778adc7afbfd95a3683a35afffbff6ea"
+    },
+    {
+      "path": "agents/audit-regulatory-compliance.md",
+      "source_sha256": "b607e42f00ca5ba6343278fe9ff160d23b4b199954cf1047a185da820d947ddc",
+      "publish": true,
+      "generated_sha256": "c6f17fd574d24faecbd5aa1faae5b3e2e545115c8a25deac9a8d627513909607"
+    },
+    {
+      "path": "agents/audit-snapchat.md",
+      "source_sha256": "e74269a5cdb3673da40122e8c7a3d9004726cf8f86400a3b48bdfd3e2e536945",
+      "publish": true,
+      "generated_sha256": "dd7583d3208e8fd20f1ef3c89ee1237f12ef9d3c82f9e8f2e0b767debc886219"
+    },
+    {
+      "path": "agents/audit-tiktok.md",
+      "source_sha256": "a1be9ef8d9867da2214b4822dd5e99a3e8779ce6dfaf34db74f409a00af4e36c",
+      "publish": true,
+      "generated_sha256": "21669aab5787bd3d7fbae177e992b626734caf0b4469ea7c30f5ba531b4f5877"
+    },
+    {
+      "path": "agents/audit-tracking.md",
+      "source_sha256": "90fe39499592f33b210fafe4995169059e221130985b84a8281fd4215b7ebc46",
+      "publish": true,
+      "generated_sha256": "3bf08367025d0da798547234a2bef0c950dab6de5027734efe2099ff52ff7747"
+    },
+    {
+      "path": "agents/audit-x.md",
+      "source_sha256": "49f3324c38d6319849d90770d3ce3f3683123ba03809679c290fb06b18922e58",
+      "publish": true,
+      "generated_sha256": "c3938e3b8ceb08000e77851ddfa90accf360387df0eb99248ec3e9799e129909"
+    },
+    {
+      "path": "agents/audit-youtube.md",
+      "source_sha256": "3907127516641ac77e132c709ab7e0c994ad9c15d78d93b2c4c24e1af10cfcf3",
+      "publish": true,
+      "generated_sha256": "83fdc32e7b1998d14b2219c057c4c73bb8e095938857c38f93d3add56293db96"
+    },
+    {
+      "path": "agents/copy-writer.md",
+      "source_sha256": "91cdbb5ecfddfe30f1adaa5b23d16ffb676f2d25ac00f52731469280686c2edb",
+      "publish": true,
+      "generated_sha256": "7774276c93b8e8da2a4e01ab2843153592682e7427522bb97a183c5befe0e44e"
+    },
+    {
+      "path": "agents/creative-strategist.md",
+      "source_sha256": "1c447651728fa4745784c87151d9d015825b33a81f094996dc5bdf8a8d8f869d",
+      "publish": true,
+      "generated_sha256": "40dd721014458d555b9c51fe7401118a4ce05f700a28b18f37ca5b2ae1bddca7"
+    },
+    {
+      "path": "agents/format-adapter.md",
+      "source_sha256": "1317df03c5a6a4526471d2b4eb87904f85c7bd9438ccd8c0273c407f876dafa7",
+      "publish": true,
+      "generated_sha256": "6c5e8a98537e623fcfe5e091a341a3c61695eaa0c5411061bf2e6343c9789889"
+    },
+    {
+      "path": "agents/release-verifier.md",
+      "source_sha256": "679ac50ee0a5e394b78bd57c7deaa1834ac1776e8ed0c50f0d35aae6d6b25e8f",
+      "publish": true,
+      "generated_sha256": "fb2e48745875b91a4f4399b2dbfd2aec984bb2f886f92191e8c2b9df02399132"
+    },
+    {
+      "path": "agents/research-worker.md",
+      "source_sha256": "d80b2b55bb57ddd3c5b6d05101608b44f01ffcdd7b5793be4aa11a1cc6b9b69f",
+      "publish": true,
+      "generated_sha256": "a21386cfcc05a8f22815434d662062361db5615f1e32fd3b1f10bb43269419b9"
+    },
+    {
+      "path": "agents/skill-reviewer.md",
+      "source_sha256": "08619058e947b69976e9c4f6dab8084afb77496a2be55e37a9a6f8d768615b0b",
+      "publish": true,
+      "generated_sha256": "37bb954e36f429a2a5e85d0292b7edeca713c46f9cc6f42d9505f23b13bf546e"
+    },
+    {
+      "path": "agents/source-verifier.md",
+      "source_sha256": "eea307d95889378a09aa1ce79e0f66438a9c24bbf5fd6dd74623a678c793e08e",
+      "publish": true,
+      "generated_sha256": "9d3e3aa849606d76f0c13d3687b811232d0e8bbfe47cae542ace74ed5165a18e"
+    },
+    {
+      "path": "agents/visual-designer.md",
+      "source_sha256": "fa0cb98d22fb6bad2d50172eff6c26fde3213fc0fd4ca090bab02a7100ea570a",
+      "publish": true,
+      "generated_sha256": "d77059073b1d3372b8b7123f2aef4c161e71214926ce264016866e7f84bf7ed5"
+    },
+    {
+      "path": "control-plane/PRODUCT_BOUNDARIES.md",
+      "source_sha256": "a488c13f4611663eca92556850d545b826cb565da77a1d241b02aab990339cb6",
+      "publish": true,
+      "generated_sha256": "15ba2464c1d51304eb2d572cda12aeb03265087754b40ce675a433075620c0fd"
+    },
+    {
+      "path": "control-plane/PUBLISHING_POLICY.md",
+      "source_sha256": "4a8113ca5021b0a36d7608f985fcb6a6548a954ee99204d9efa855d5cf02a546",
+      "publish": true,
+      "generated_sha256": "62e47899bd0cc3d21aecdb6a16c745da69f4ddec69582c3b4e59ab7502233f5f"
+    },
+    {
+      "path": "control-plane/README.md",
+      "source_sha256": "7d1b917442dfa81c04961a9b2913d6bfeb10fd0d5f2da326bf0ea16c606ce924",
+      "publish": true,
+      "generated_sha256": "25b6aca0ba1c655081c42a1f5140585c1f9829359851ff3705ad1648f0431457"
+    },
+    {
+      "path": "control-plane/RELEASE_REQUIREMENTS.md",
+      "source_sha256": "84ba3afaab48c98165f1a53b1765219d48b103bf4b94760408ec8473141e5733",
+      "publish": true,
+      "generated_sha256": "3f498ff2ef9b63e51281745631e5ec6be0a3ae5fb2a3b91f191282bc11746d47"
+    },
+    {
+      "path": "control-plane/REQUIREMENT_INDEX.md",
+      "source_sha256": "45758b497b11c6711220d1375e6519020802929bd222f80065cc0d1bb258e060",
+      "publish": true,
+      "generated_sha256": "d73b227931d4738d33e4f1fa70e7a2264e0340dcf2411959340e87a1a287193f"
+    },
+    {
+      "path": "control-plane/migrations/control-schemas-v1-to-v2.md",
+      "source_sha256": "232448d3531b350f9b29923bc47b4cd679bbe569ba159b45280dd777e82bc287",
+      "publish": true,
+      "generated_sha256": "f8bac90f8ea3af05ec1e9f79951e872fcb1ba17d9c54c20d7ce99241344475b9"
+    },
+    {
+      "path": "skills/ads-amazon/SKILL.md",
+      "source_sha256": "3e45ddc8e71df5d5b76c387aab31d935ad95a58cbaa4ec3524d529f93a0c42f2",
+      "publish": true,
+      "generated_sha256": "9ecd6072d2d77d7217f2311205d54b0a1fdeb913896d99a9e1b3b4571d6792f5"
+    },
+    {
+      "path": "skills/ads-apple/SKILL.md",
+      "source_sha256": "3624c8848d7e833c4ae2cd7a33a856c639d0fd882eae91090744d2441b1d0d42",
+      "publish": true,
+      "generated_sha256": "8604d981f6873c0558de4495673b5ed1f5a73110ae18468417a4752366e50b0c"
+    },
+    {
+      "path": "skills/ads-attribution/SKILL.md",
+      "source_sha256": "e121015d4c2e09278c94954e959d3683e3a06ad3ea3259f972a358cf327896b4",
+      "publish": true,
+      "generated_sha256": "298ba0f5396e12ddb56dc7db5b3b8dc36b26006102dbdba4ee9b16e4cac102aa"
+    },
+    {
+      "path": "skills/ads-audit/SKILL.md",
+      "source_sha256": "d599927da30b8752ccf8091e7f07d70d8cba00dbde79b3d97a471aea68f9c515",
+      "publish": true,
+      "generated_sha256": "b8845030e760176a45e244cec3e6a4286289f5e07600e14e2d7337271eb4b7c5"
+    },
+    {
+      "path": "skills/ads-budget/SKILL.md",
+      "source_sha256": "4d5db971dee2dcf8fb37dc1e3d238d31c65d2dd83bf9ab6fd8640f77aa9bb80e",
+      "publish": true,
+      "generated_sha256": "b6600af6dcbf4d9a040be8a8722be4c884c47e3583c28632eed9661d39571e29"
+    },
+    {
+      "path": "skills/ads-competitor/SKILL.md",
+      "source_sha256": "c91b9061ea7f24b93292365c39631d15afabcb9d6b3e994a75cf172ab1752bd1",
+      "publish": true,
+      "generated_sha256": "81d7ea08def9049a032e6d4b43231ffc5377474baf4d13883637690ebca3f088"
+    },
+    {
+      "path": "skills/ads-create/SKILL.md",
+      "source_sha256": "c0d440623877bc52bd97e7a197df09c49b014b7aa63bf2335e025806d98974dc",
+      "publish": true,
+      "generated_sha256": "e02c15dffa1d2057111d5dad25ab140acbf71409109c53da2635a1c0308fa74f"
+    },
+    {
+      "path": "skills/ads-creative/SKILL.md",
+      "source_sha256": "4cf88555061246505d007be0014f57a5c8df11593599f53aa3d908235c56bfd4",
+      "publish": true,
+      "generated_sha256": "4c4a8453a2dd1febabd9ddf2a1cfdc0ed967f60fb8f9f660e0c1f8a655084b81"
+    },
+    {
+      "path": "skills/ads-dna/SKILL.md",
+      "source_sha256": "99d62bffb751501af4b1ed58d58fb605e8778e9e493515a86f809eb72800d805",
+      "publish": true,
+      "generated_sha256": "2d20d18148075eb653a700a44c11ca0d55bfa9bef55a3adc8c4002491d67a3b1"
+    },
+    {
+      "path": "skills/ads-generate/SKILL.md",
+      "source_sha256": "c7bf32613cd6a3f161115d9330785a005ebcb46939c711c261e6b05f9cd93849",
+      "publish": true,
+      "generated_sha256": "37eed3b7172df2139ce3d8f2e26c7d8c3f64878d2c90aea758addfe6c3741287"
+    },
+    {
+      "path": "skills/ads-google/SKILL.md",
+      "source_sha256": "0cf60bf1e579fce3250bee339b7e4c79a9ab31ce596d466e87880add99cdf4f9",
+      "publish": true,
+      "generated_sha256": "b7a36addb04d3f7192d43da0f5581ce73310c4becb1bde33ef8fcf6a736dfd7a"
+    },
+    {
+      "path": "skills/ads-landing/SKILL.md",
+      "source_sha256": "3411fc6abc824fcff4946809eccf505853910d1433ef3c4d302d60a49ff543a8",
+      "publish": true,
+      "generated_sha256": "f888325640aa6b71c1a8c54a9a550326a7910fb6b238314681057d5997c0bbee"
+    },
+    {
+      "path": "skills/ads-launch/SKILL.md",
+      "source_sha256": "b1614308347ac705982ebeb54bb5e753251db3e4a71d15042ac6e8ab01d4667b",
+      "publish": true,
+      "generated_sha256": "87318cc0c06cb06afc47d59963ffbe65a3363194bb27147271f7891a75c40e71"
+    },
+    {
+      "path": "skills/ads-linkedin/SKILL.md",
+      "source_sha256": "c62438c210727b929ea329cdb5275554fae63327a7248f542ea8d60e635f5269",
+      "publish": true,
+      "generated_sha256": "6ef8f16d6f9209a42de303e62c368644eadc189f1282e6510bbce38dc9f3a584"
+    },
+    {
+      "path": "skills/ads-math/SKILL.md",
+      "source_sha256": "b129b371f983c8f42e2ae8a22eb780b8248121dbf7128e00e9425a9947317fbf",
+      "publish": true,
+      "generated_sha256": "5a8f88aa65f3813e5bbe0555f83d10d16689b4caa08ad4ab2fe19c11a8d47333"
+    },
+    {
+      "path": "skills/ads-meta/SKILL.md",
+      "source_sha256": "f907448e602beba288368df17a64d7a3c1def3469a8807db1fe4fd99c07a1e4c",
+      "publish": true,
+      "generated_sha256": "5a1eaa4624bf1b424b4120925416cd160530e558f132dd62c20f75ad55c014e3"
+    },
+    {
+      "path": "skills/ads-microsoft/SKILL.md",
+      "source_sha256": "32dd374016aa75e5904790ecbbbcecdf1b6c730f47b659bdc3df10c60f85e73c",
+      "publish": true,
+      "generated_sha256": "16330da53d3c1703b537d9f7f731900123e4805ac1274e94215cdcadd012a4ef"
+    },
+    {
+      "path": "skills/ads-monitor/SKILL.md",
+      "source_sha256": "0f90d9d08718be0e5340a6301949976b87838fa1bafdaa06c7994790035b5972",
+      "publish": true,
+      "generated_sha256": "2b882c84a593b0b6237c0737ae21e4a8cc1fce200538c3c0ed857b14ff6b480a"
+    },
+    {
+      "path": "skills/ads-optimize/SKILL.md",
+      "source_sha256": "0f8548e97be960827e14a06c6fff3fb3a40f84ec303ceb99c36706d3bda473d6",
+      "publish": true,
+      "generated_sha256": "e76fe394c8ea067b080e8b029708f4f2054761ae005d27d0457c713f405f3ad1"
+    },
+    {
+      "path": "skills/ads-photoshoot/SKILL.md",
+      "source_sha256": "ac42a9c63510e3ba734b0e162736535b3f6143f98375606793752438f4bf9ef0",
+      "publish": true,
+      "generated_sha256": "92245586387a7ce3d6ebfdc451932ae6ce29ca31188a9b9435a9a6bbf850f7b4"
+    },
+    {
+      "path": "skills/ads-pinterest/SKILL.md",
+      "source_sha256": "bc9f711acea287e27933580b832395ecaa6bd8ba6ae8ac2dddcc0cc6b896c007",
+      "publish": true,
+      "generated_sha256": "0946540d266a15e8f3989c57778811870d5fc0f4e4e892ce2f87036d397acf30"
+    },
+    {
+      "path": "skills/ads-plan/SKILL.md",
+      "source_sha256": "ac2617f0d4761e5cd1b8b09144cdc67a6c72c793a26303034d0931d86c23b79f",
+      "publish": true,
+      "generated_sha256": "04a63aca9d6689d4881db135015f9b8f8c97d912fdf734c9d0d3cfa507d0d3eb"
+    },
+    {
+      "path": "skills/ads-plan/assets/agency.md",
+      "source_sha256": "d375e7ee92b22f99e9986b098fa3337ee1a13b4b107b69a0e79760b768bcac10",
+      "publish": true,
+      "generated_sha256": "41c7d33be15e8dc9b54925440edd22a02c511d319e8d7150411e20477a8567a1"
+    },
+    {
+      "path": "skills/ads-plan/assets/b2b-enterprise.md",
+      "source_sha256": "9c74043f81e51bfe79373d80faa3ebc4658dd1eb0f6ca813b11152c34e71dcd4",
+      "publish": true,
+      "generated_sha256": "012436536839e5b97187ebff480b04d0ee5383683bb7b13523d7caaf381f223c"
+    },
+    {
+      "path": "skills/ads-plan/assets/ecommerce-creative.md",
+      "source_sha256": "0699d4ec5c24dee1dd8c2abe9d41d8d574559d261dec75c7bee57bc2d6ccbaaa",
+      "publish": true,
+      "generated_sha256": "0b1bfe93b9a7f7bd871f0e538d80b863c7e2c0b8edaad39fe0c188cc311ddea8"
+    },
+    {
+      "path": "skills/ads-plan/assets/ecommerce.md",
+      "source_sha256": "ceef8bd791a8c83512ca6b2ab948c6326778faf7dd8d9d941db03a8dfc92f488",
+      "publish": true,
+      "generated_sha256": "c537fd1b4733caf22aaa3ab9265f0b9e5c9f97089dc2ada435a141fd87f78d49"
+    },
+    {
+      "path": "skills/ads-plan/assets/finance.md",
+      "source_sha256": "d317bf65173cd221291085039a2f41f7172b9c5ec42b140ab8ce5486aeccd5d3",
+      "publish": true,
+      "generated_sha256": "b2441cd9d6d07afa6bd9b6e65ebd30011b27bd566f56f5c2cccbfab85ad6805d"
+    },
+    {
+      "path": "skills/ads-plan/assets/generic.md",
+      "source_sha256": "55fd1afcae04d6e805f0c648722934bfbf80972d03d61157d63b7580c89e85d5",
+      "publish": true,
+      "generated_sha256": "d10a118100ef3904705101ad34f7b6a373147350f67ca05acc4b75281d507f28"
+    },
+    {
+      "path": "skills/ads-plan/assets/healthcare.md",
+      "source_sha256": "36a19ce76365ca7f9a044aec390db702c1f01cda1f48972074f15065af85dff9",
+      "publish": true,
+      "generated_sha256": "d0f4ebda4a5eecc31153452c4c19984edaaf679c9b2edbdd3acafc2571544bdc"
+    },
+    {
+      "path": "skills/ads-plan/assets/info-products.md",
+      "source_sha256": "7d677e2e5c206fc34c951d032a573450665f3bdefcc34e2160eba1ef4f2a507c",
+      "publish": true,
+      "generated_sha256": "766654a4e13e876f736cb1803819638b4d1432f32ab7e15cf5f15b27e36de423"
+    },
+    {
+      "path": "skills/ads-plan/assets/local-service.md",
+      "source_sha256": "01e35477ec0b0051f49a900cd7a0728b40cf17c2a09c7643380f81831e114bcd",
+      "publish": true,
+      "generated_sha256": "6469e27eda4d711ad06b43d38a5ce3144112d063bfb26030d2514c4cc7f94907"
+    },
+    {
+      "path": "skills/ads-plan/assets/mobile-app.md",
+      "source_sha256": "6c431dbea2b190719c35bd96d304e3382c5f3902a8deb66865e4f1acb216d411",
+      "publish": true,
+      "generated_sha256": "fd393866cfbd3c47c78394042f1e35abf1810eace245999092449a0e5b635acc"
+    },
+    {
+      "path": "skills/ads-plan/assets/real-estate.md",
+      "source_sha256": "cc0ce261d791f89a1a52eb565e96d6373a5070c87a6fbb6d55820e9bb0dc4ee7",
+      "publish": true,
+      "generated_sha256": "9b01dd0a10a7c316bfd42f06cb05eea875ed1221328c0da4f75ca8699da90fa0"
+    },
+    {
+      "path": "skills/ads-plan/assets/saas.md",
+      "source_sha256": "4f2d348bd5e754a117c5b603a45e61e51258e18d2f9f99d07e0a32e437a9094c",
+      "publish": true,
+      "generated_sha256": "52541b31c44953dca2ca3d83e3e7b253aa3338193b28b95b33477bfba819e37a"
+    },
+    {
+      "path": "skills/ads-reddit/SKILL.md",
+      "source_sha256": "4adf69f0a8cffef7a843b4f779ea32e59d21489eebfd66c42d7f9e0aa3d5f19b",
+      "publish": true,
+      "generated_sha256": "f8f34fb22943b6a1f80e7b3f87ced1cef7c96271528613ac16172c0c77c1a2b4"
+    },
+    {
+      "path": "skills/ads-report/SKILL.md",
+      "source_sha256": "3174b83b076cd5490f2ad5b9e731fc44f9b41b134ce689207162f4719ff9627d",
+      "publish": true,
+      "generated_sha256": "3dd416ec692d081f70c22dfb380ce66b2abadd066401aea6abc1bb80720d3a7a"
+    },
+    {
+      "path": "skills/ads-research/SKILL.md",
+      "source_sha256": "3438ddc3e7c45e23c93222328f97f0a0b319c4c39c195873d989b62b50286fe5",
+      "publish": true,
+      "generated_sha256": "9d2ac2d2534eedff91d6846f32f40b3e79f7d771a0997bc1d086fe5d49e8dc77"
+    },
+    {
+      "path": "skills/ads-server-side-tracking/SKILL.md",
+      "source_sha256": "a0c090d8ec07d7f04f6f0029ad8704836985ce313d2e955351f3c6747e1beacf",
+      "publish": true,
+      "generated_sha256": "af8bb565ec63ea4a115ba5d0512443e056fee1e61efb2f095b58489a7650327b"
+    },
+    {
+      "path": "skills/ads-setup/SKILL.md",
+      "source_sha256": "a3d2763cc2034e6fbb001b2e1bbfbc1780943f894b944ceb9447fb08ca076163",
+      "publish": true,
+      "generated_sha256": "699cfa069e7b591c60eb9a3545650af77252109f744fd851e3a8fcc2e13a2c75"
+    },
+    {
+      "path": "skills/ads-snapchat/SKILL.md",
+      "source_sha256": "6720862c9d0a2c7daa463083d80ff2eba5a3eaa15ea9407e839cbf088d5241e5",
+      "publish": true,
+      "generated_sha256": "77ef195605420a5c32bb653269a58591fe08d1b51646fe4eda0675537f39b94d"
+    },
+    {
+      "path": "skills/ads-test/SKILL.md",
+      "source_sha256": "5f1a0c5580f598927197b513540ef02570e2f14e5d045316ef10d779842ee0b4",
+      "publish": true,
+      "generated_sha256": "686a91375f1787233d8cffe53ea4aed8dd770cbaef73430e1f163d8f874305a4"
+    },
+    {
+      "path": "skills/ads-tiktok/SKILL.md",
+      "source_sha256": "793841c65be017a25344a531b6092dd7cbdf126b4062743956264211e5d68671",
+      "publish": true,
+      "generated_sha256": "3485f0566fd3b99de03581b36b888af0a000980c09a3e830c81d49766c2dfd35"
+    },
+    {
+      "path": "skills/ads-validate/SKILL.md",
+      "source_sha256": "ce1dba27a7f99ff78be30a050f492748a4a76bfe2b8b4c926a93cd9e621af9ce",
+      "publish": true,
+      "generated_sha256": "4f5fb9fb917e9b52aa5171c38ff6d0186cd9c5ef0a8b05442c3fbbaa95dedcb0"
+    },
+    {
+      "path": "skills/ads-x/SKILL.md",
+      "source_sha256": "d3df9f01d2c02fd42992e8c92adc2b86d12980044674312161cd80cdccc2d449",
+      "publish": true,
+      "generated_sha256": "38a03c1685be2c7ac718026ebde1b57f983acd789863fb0d34e2d35b8dbcbce7"
+    },
+    {
+      "path": "skills/ads-youtube/SKILL.md",
+      "source_sha256": "097147e4ae0efe062ac99cbe0fede874c5f94a6cc1ae6a486b9e50d02123558f",
+      "publish": true,
+      "generated_sha256": "7d84cb4ddf88d7b6e5d6a7f47be601c243a92a86b064ab1520c740519a162230"
+    },
+    {
+      "path": "tests/fixtures/reports/sanitized-report.md",
+      "source_sha256": "e9f703c96809f86a37e28b341f8e9b7fc6327f050cce49fa01bc8e1ed15bad8d",
+      "publish": false
+    }
+  ]
+}

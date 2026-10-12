@@ -12,6 +12,8 @@ from datetime import date, datetime
 from typing import Any, Callable, Mapping, Sequence
 from urllib.parse import urlsplit
 
+from .errors import LocalizedError
+
 
 SCHEMA_VERSION = "1.0.0"
 PLATFORMS = {
@@ -37,13 +39,13 @@ WORKFLOW_CONTRACT_NAMES = (
 )
 
 
-class WorkflowContractError(ValueError):
+class WorkflowContractError(LocalizedError, ValueError):
     """Raised when a workflow artifact is structurally invalid."""
 
 
 def _object(value: Any, path: str) -> Mapping[str, Any]:
     if not isinstance(value, Mapping):
-        raise WorkflowContractError(f"{path} must be an object")
+        raise WorkflowContractError('core.validation.object', path=path)
     return value
 
 
@@ -56,18 +58,18 @@ def _exact(
     obj = _object(value, path)
     missing = [key for key in required if key not in obj]
     if missing:
-        raise WorkflowContractError(f"{path} missing required field(s): {', '.join(missing)}")
+        raise WorkflowContractError('core.validation.required_fields', path=path, value2=', '.join(missing))
     unknown = sorted(set(obj) - set(required) - set(optional))
     if unknown:
-        raise WorkflowContractError(f"{path} has unknown field(s): {', '.join(unknown)}")
+        raise WorkflowContractError('core.validation.unknown_fields', path=path, value2=', '.join(unknown))
     return obj
 
 
 def _string(value: Any, path: str, *, pattern: str | None = None) -> str:
     if not isinstance(value, str) or not value.strip():
-        raise WorkflowContractError(f"{path} must be a non-empty string")
+        raise WorkflowContractError('core.validation.nonempty_string', path=path)
     if pattern and not re.fullmatch(pattern, value):
-        raise WorkflowContractError(f"{path} has an invalid format")
+        raise WorkflowContractError('core.validation.format', path=path)
     return value
 
 
@@ -79,24 +81,24 @@ def _nullable_string(value: Any, path: str) -> str | None:
 
 def _enum(value: Any, path: str, choices: set[str]) -> str:
     if value not in choices:
-        raise WorkflowContractError(f"{path} must be one of: {', '.join(sorted(choices))}")
+        raise WorkflowContractError('core.validation.enum', path=path, value2=', '.join(sorted(choices)))
     return str(value)
 
 
 def _bool(value: Any, path: str) -> bool:
     if not isinstance(value, bool):
-        raise WorkflowContractError(f"{path} must be a boolean")
+        raise WorkflowContractError('core.validation.boolean', path=path)
     return value
 
 
 def _number(value: Any, path: str, *, minimum: float | None = None) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise WorkflowContractError(f"{path} must be a number")
+        raise WorkflowContractError('core.validation.number', path=path)
     result = float(value)
     if not math.isfinite(result):
-        raise WorkflowContractError(f"{path} must be finite")
+        raise WorkflowContractError('core.validation.finite', path=path)
     if minimum is not None and result < minimum:
-        raise WorkflowContractError(f"{path} must be >= {minimum}")
+        raise WorkflowContractError('core.validation.minimum', path=path, minimum=minimum)
     return result
 
 
@@ -109,17 +111,17 @@ def _integer(value: Any, path: str, *, minimum: int | None = None) -> int:
     """
 
     if isinstance(value, bool) or not isinstance(value, int):
-        raise WorkflowContractError(f"{path} must be an integer")
+        raise WorkflowContractError('core.validation.integer', path=path)
     if minimum is not None and value < minimum:
-        raise WorkflowContractError(f"{path} must be >= {minimum}")
+        raise WorkflowContractError('core.validation.minimum', path=path, minimum=minimum)
     return value
 
 
 def _list(value: Any, path: str, *, minimum: int = 0) -> list[Any]:
     if not isinstance(value, list):
-        raise WorkflowContractError(f"{path} must be an array")
+        raise WorkflowContractError('core.validation.array', path=path)
     if len(value) < minimum:
-        raise WorkflowContractError(f"{path} must contain at least {minimum} item(s)")
+        raise WorkflowContractError('core.validation.minimum_items', path=path, minimum=minimum)
     return value
 
 
@@ -127,7 +129,7 @@ def _strings(value: Any, path: str, *, minimum: int = 0, unique: bool = True) ->
     items = _list(value, path, minimum=minimum)
     result = [_string(item, f"{path}[{index}]") for index, item in enumerate(items)]
     if unique and len(result) != len(set(result)):
-        raise WorkflowContractError(f"{path} must contain unique values")
+        raise WorkflowContractError('core.validation.unique', path=path)
     return result
 
 
@@ -136,9 +138,9 @@ def _datetime(value: Any, path: str) -> str:
     try:
         parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
     except ValueError as exc:
-        raise WorkflowContractError(f"{path} must be an ISO 8601 date-time") from exc
+        raise WorkflowContractError('core.validation.datetime', path=path) from exc
     if parsed.tzinfo is None:
-        raise WorkflowContractError(f"{path} must include a UTC offset")
+        raise WorkflowContractError('core.validation.utc_offset', path=path)
     return text
 
 
@@ -147,7 +149,7 @@ def _date(value: Any, path: str) -> str:
     try:
         date.fromisoformat(text)
     except ValueError as exc:
-        raise WorkflowContractError(f"{path} must be an ISO 8601 date") from exc
+        raise WorkflowContractError('core.validation.date', path=path) from exc
     return text
 
 
@@ -161,9 +163,9 @@ def _id(value: Any, path: str) -> str:
 
 def _base(payload: Mapping[str, Any], artifact_type: str) -> None:
     if payload["schema_version"] != SCHEMA_VERSION:
-        raise WorkflowContractError(f"$.schema_version must equal {SCHEMA_VERSION!r}")
+        raise WorkflowContractError('core.validation.schema_version', SCHEMA_VERSION=SCHEMA_VERSION)
     if payload["artifact_type"] != artifact_type:
-        raise WorkflowContractError(f"$.artifact_type must equal {artifact_type!r}")
+        raise WorkflowContractError('core.workflow.artifact_type', artifact_type=artifact_type)
     _id(payload["run_id"], "$.run_id")
     _datetime(payload["created_at"], "$.created_at")
 
@@ -182,7 +184,7 @@ def _validate_data_lifecycle_at(value: Any, path: str) -> Mapping[str, Any]:
     )
     doc = _exact(value, path, required)
     if doc["schema_version"] != SCHEMA_VERSION:
-        raise WorkflowContractError(f"{path}.schema_version must equal {SCHEMA_VERSION!r}")
+        raise WorkflowContractError('core.workflow.schema_version', path=path, SCHEMA_VERSION=SCHEMA_VERSION)
     _id(doc["lifecycle_id"], f"{path}.lifecycle_id")
     classification = _enum(doc["classification"], f"{path}.classification", PRIVACY_CLASSES)
 
@@ -198,16 +200,16 @@ def _validate_data_lifecycle_at(value: Any, path: str) -> Mapping[str, Any]:
     _string(retention["purpose"], f"{path}.retention.purpose")
     exception_reason = _nullable_string(retention["exception_reason"], f"{path}.retention.exception_reason")
     if classification != "public" and mode != "exception" and delete_after is None:
-        raise WorkflowContractError(f"{path}.retention.delete_after is required for non-public data")
+        raise WorkflowContractError('core.workflow.retention_deadline', path=path)
     if mode == "exception" and not exception_reason:
-        raise WorkflowContractError(f"{path}.retention.exception_reason is required for an exception")
+        raise WorkflowContractError('core.workflow.retention_exception', path=path)
 
     encryption = _exact(doc["encryption"], f"{path}.encryption", ("at_rest", "in_transit", "evidence_refs"))
     at_rest = _enum(encryption["at_rest"], f"{path}.encryption.at_rest", {"verified", "not-applicable"})
     in_transit = _enum(encryption["in_transit"], f"{path}.encryption.in_transit", {"verified", "not-applicable"})
     encryption_evidence = _strings(encryption["evidence_refs"], f"{path}.encryption.evidence_refs")
     if classification != "public" and (at_rest != "verified" or in_transit != "verified" or not encryption_evidence):
-        raise WorkflowContractError(f"{path}.encryption requires verified at-rest and in-transit controls with evidence for non-public data")
+        raise WorkflowContractError('core.workflow.encryption', path=path)
 
     access = _exact(doc["access"], f"{path}.access", ("owner", "authorized_roles", "access_log_locator"))
     _string(access["owner"], f"{path}.access.owner")
@@ -222,12 +224,12 @@ def _validate_data_lifecycle_at(value: Any, path: str) -> Mapping[str, Any]:
     deletion_status = _enum(deletion["status"], f"{path}.deletion.status", {"scheduled", "verified", "exception"})
     _string(deletion["method"], f"{path}.deletion.method")
     if not _bool(deletion["verification_required"], f"{path}.deletion.verification_required"):
-        raise WorkflowContractError(f"{path}.deletion.verification_required must be true")
+        raise WorkflowContractError('core.workflow.deletion_verification', path=path)
     locator = deletion["verification_artifact_locator"]
     if locator is not None:
         _relative_path(locator, f"{path}.deletion.verification_artifact_locator")
     if deletion_status == "verified" and locator is None:
-        raise WorkflowContractError(f"{path}.deletion.verified status requires a verification artifact")
+        raise WorkflowContractError('core.workflow.deletion_artifact', path=path)
 
     incident = _exact(doc["incident"], f"{path}.incident", ("owner", "reporting_channel", "status", "record_locator"))
     _string(incident["owner"], f"{path}.incident.owner")
@@ -236,7 +238,7 @@ def _validate_data_lifecycle_at(value: Any, path: str) -> Mapping[str, Any]:
     if incident["record_locator"] is not None:
         _relative_path(incident["record_locator"], f"{path}.incident.record_locator")
     if incident_status != "not-triggered" and incident["record_locator"] is None:
-        raise WorkflowContractError(f"{path}.incident.record_locator is required after an incident is triggered")
+        raise WorkflowContractError('core.workflow.incident_record', path=path)
     return doc
 
 
@@ -272,7 +274,7 @@ def _validate_setup(payload: Mapping[str, Any]) -> None:
         source = _exact(item, f"$.data_sources[{index}]", ("id", "kind", "platform", "status"))
         source_id = _id(source["id"], f"$.data_sources[{index}].id")
         if source_id in source_ids:
-            raise WorkflowContractError("$.data_sources IDs must be unique")
+            raise WorkflowContractError('core.workflow.source_ids')
         source_ids.add(source_id)
         _enum(source["kind"], f"$.data_sources[{index}].kind", {"export", "api", "screenshot", "manual"})
         if source["platform"] != "cross-platform":
@@ -280,11 +282,11 @@ def _validate_setup(payload: Mapping[str, Any]) -> None:
         _enum(source["status"], f"$.data_sources[{index}].status", {"available", "missing", "unverified"})
     _enum(doc["privacy_class"], "$.privacy_class", PRIVACY_CLASSES)
     if doc["privacy_class"] != doc["data_lifecycle"]["classification"]:
-        raise WorkflowContractError("$.privacy_class must match $.data_lifecycle.classification")
+        raise WorkflowContractError('core.contract.privacy_match')
     authority = _enum(doc["mutation_authority"], "$.mutation_authority", {"none", "draft-only", "approved-plan-required"})
     approvers = _strings(doc["approver_ids"], "$.approver_ids")
     if authority == "approved-plan-required" and not approvers:
-        raise WorkflowContractError("$.approver_ids is required for approved-plan-required authority")
+        raise WorkflowContractError('core.workflow.approvers')
     _strings(doc["assumptions"], "$.assumptions")
 
 
@@ -303,18 +305,18 @@ def _validate_brand(payload: Mapping[str, Any]) -> None:
     if url:
         parsed = urlsplit(url)
         if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
-            raise WorkflowContractError("$.website_url must be a public-style HTTPS URL without userinfo")
+            raise WorkflowContractError('core.workflow.website_url')
     for field, inferred in (("observations", False), ("inferences", True)):
         for index, item in enumerate(_list(doc[field], f"$.{field}")):
             keys = ("field", "value", "evidence_refs", "confidence") + (("approval_status",) if inferred else ())
             record = _exact(item, f"$.{field}[{index}]", keys)
             _string(record["field"], f"$.{field}[{index}].field")
             if not isinstance(record["value"], (str, int, float, bool, list, dict)) and record["value"] is not None:
-                raise WorkflowContractError(f"$.{field}[{index}].value must be JSON-compatible")
+                raise WorkflowContractError('core.workflow.json_value', field=field, index=index)
             evidence = _strings(record["evidence_refs"], f"$.{field}[{index}].evidence_refs")
             _enum(record["confidence"], f"$.{field}[{index}].confidence", {"high", "medium", "low", "none"})
             if not inferred and not evidence:
-                raise WorkflowContractError(f"$.{field}[{index}].evidence_refs must not be empty")
+                raise WorkflowContractError('core.workflow.evidence', field=field, index=index)
             if inferred:
                 _enum(record["approval_status"], f"$.{field}[{index}].approval_status", {"pending", "approved", "rejected"})
     _strings(doc["source_ids"], "$.source_ids")
@@ -344,7 +346,7 @@ def _validate_media_plan(payload: Mapping[str, Any]) -> None:
         action = _exact(item, f"$.actions[{index}]", ("id", "description", "owner", "timing", "dependencies", "evidence_refs", "success_measure", "rollback_or_exit"))
         action_id = _id(action["id"], f"$.actions[{index}].id")
         if action_id in action_ids:
-            raise WorkflowContractError("$.actions IDs must be unique")
+            raise WorkflowContractError('core.workflow.action_ids')
         action_ids.add(action_id)
         for field in ("description", "owner", "timing", "success_measure", "rollback_or_exit"):
             _string(action[field], f"$.actions[{index}].{field}")
@@ -371,7 +373,7 @@ def _validate_creative(payload: Mapping[str, Any]) -> None:
         hypothesis = _exact(item, f"$.hypotheses[{index}]", ("id", "insight", "promise", "hook", "cta", "platforms", "experiment_hypothesis"))
         hypothesis_id = _id(hypothesis["id"], f"$.hypotheses[{index}].id")
         if hypothesis_id in hypothesis_ids:
-            raise WorkflowContractError("$.hypotheses IDs must be unique")
+            raise WorkflowContractError('core.workflow.hypothesis_ids')
         hypothesis_ids.add(hypothesis_id)
         for field in ("insight", "promise", "hook", "cta", "experiment_hypothesis"):
             _string(hypothesis[field], f"$.hypotheses[{index}].{field}")
@@ -379,7 +381,7 @@ def _validate_creative(payload: Mapping[str, Any]) -> None:
     for index, item in enumerate(_list(doc["copy_deck"], "$.copy_deck")):
         copy = _exact(item, f"$.copy_deck[{index}]", ("hypothesis_id", "platform", "placement", "fields"))
         if copy["hypothesis_id"] not in hypothesis_ids:
-            raise WorkflowContractError(f"$.copy_deck[{index}].hypothesis_id is unknown")
+            raise WorkflowContractError('core.workflow.copy_hypothesis', index=index)
         _enum(copy["platform"], f"$.copy_deck[{index}].platform", PLATFORMS)
         _string(copy["placement"], f"$.copy_deck[{index}].placement")
         names: set[str] = set()
@@ -387,12 +389,12 @@ def _validate_creative(payload: Mapping[str, Any]) -> None:
             field = _exact(item_field, f"$.copy_deck[{index}].fields[{field_index}]", ("name", "value"))
             name = _string(field["name"], f"$.copy_deck[{index}].fields[{field_index}].name")
             if name in names:
-                raise WorkflowContractError(f"$.copy_deck[{index}].fields names must be unique")
+                raise WorkflowContractError('core.workflow.copy_field_names', index=index)
             names.add(name)
             _string(field["value"], f"$.copy_deck[{index}].fields[{field_index}].value")
     sources = _strings(doc["specification_source_ids"], "$.specification_source_ids")
     if doc["copy_deck"] and not sources:
-        raise WorkflowContractError("$.specification_source_ids is required when copy_deck is present")
+        raise WorkflowContractError('core.workflow.copy_sources')
     _enum(doc["human_review"], "$.human_review", {"pending", "approved", "rejected"})
     _enum(doc["status"], "$.status", ARTIFACT_STATUSES)
 
@@ -425,7 +427,7 @@ def _validate_generation(payload: Mapping[str, Any]) -> None:
         _string(output["prompt_version"], f"$.outputs[{index}].prompt_version")
         _sha256(output["prompt_sha256"], f"$.outputs[{index}].prompt_sha256")
         if output["prompt_summary"] != "[redacted: raw prompt is ephemeral and is not persisted]":
-            raise WorkflowContractError(f"$.outputs[{index}].prompt_summary must use the canonical redaction marker")
+            raise WorkflowContractError('core.workflow.prompt_redaction', index=index)
         _enum(output["status"], f"$.outputs[{index}].status", {"generated", "validated", "rejected"})
         if output["cost"] is not None:
             cost = _exact(output["cost"], f"$.outputs[{index}].cost", ("currency", "amount"))
@@ -442,7 +444,7 @@ def _validate_generation(payload: Mapping[str, Any]) -> None:
 def _relative_path(value: Any, path: str) -> str:
     text = _string(value, path)
     if text.startswith(("/", "\\")) or "\\" in text or any(part in {"", ".", ".."} for part in text.split("/")):
-        raise WorkflowContractError(f"{path} must be a contained POSIX relative path")
+        raise WorkflowContractError('core.validation.relative_path', path=path)
     return text
 
 
@@ -455,7 +457,7 @@ def _validate_monitoring(payload: Mapping[str, Any]) -> None:
     start = _date(window["start"], "$.window.start")
     end = _date(window["end"], "$.window.end")
     if end < start:
-        raise WorkflowContractError("$.window.end must not precede start")
+        raise WorkflowContractError('core.workflow.window_order')
     _string(window["timezone"], "$.window.timezone")
     for index, item in enumerate(_list(doc["checkpoints"], "$.checkpoints")):
         checkpoint = _exact(item, f"$.checkpoints[{index}]", ("checkpoint_id", "platform", "observed_at", "control_id", "status", "evidence_refs", "observation", "recovery_hint"))
@@ -466,14 +468,14 @@ def _validate_monitoring(payload: Mapping[str, Any]) -> None:
         status = _enum(checkpoint["status"], f"$.checkpoints[{index}].status", {"normal", "warning", "critical", "unknown"})
         refs = _strings(checkpoint["evidence_refs"], f"$.checkpoints[{index}].evidence_refs")
         if status != "unknown" and not refs:
-            raise WorkflowContractError(f"$.checkpoints[{index}].evidence_refs must not be empty")
+            raise WorkflowContractError('core.workflow.checkpoint_evidence', index=index)
         _string(checkpoint["observation"], f"$.checkpoints[{index}].observation")
         _string(checkpoint["recovery_hint"], f"$.checkpoints[{index}].recovery_hint")
     _strings(doc["missing_inputs"], "$.missing_inputs")
     _strings(doc["contradictions"], "$.contradictions")
     completeness = _enum(doc["completeness"], "$.completeness", {"complete", "partial", "failed"})
     if doc["missing_inputs"] and completeness == "complete":
-        raise WorkflowContractError("$.completeness cannot be complete with missing inputs")
+        raise WorkflowContractError('core.workflow.missing_inputs')
 
 
 def _validate_experiment(payload: Mapping[str, Any]) -> None:
@@ -490,7 +492,7 @@ def _validate_experiment(payload: Mapping[str, Any]) -> None:
     _strings(design["exclusions"], "$.design.exclusions")
     if stage == "setup":
         if doc["result"] is not None or doc["decision"] is not None:
-            raise WorkflowContractError("setup artifacts must not contain result or decision")
+            raise WorkflowContractError('core.workflow.setup_result')
     else:
         result = _exact(doc["result"], "$.result", ("assignment_integrity", "data_complete", "effect_estimate", "uncertainty", "evidence_refs"))
         _bool(result["assignment_integrity"], "$.result.assignment_integrity")
@@ -513,18 +515,18 @@ def _validate_mutation(payload: Mapping[str, Any]) -> None:
     _string(doc["object_id"], "$.object_id")
     operation = _string(doc["operation"], "$.operation").casefold().replace("-", "_")
     if "delete" in operation:
-        raise WorkflowContractError("$.operation permanent deletion is outside the contract")
+        raise WorkflowContractError('core.workflow.permanent_deletion')
     before = _object(doc["before"], "$.before")
     after = _object(doc["after"], "$.after")
     if before == after:
-        raise WorkflowContractError("$.before and $.after must differ")
+        raise WorkflowContractError('core.workflow.changed_state')
     for field in ("reason", "blast_radius", "idempotency_key"):
         _string(doc[field], f"$.{field}")
     for index, item in enumerate(_list(doc["ceilings"], "$.ceilings", minimum=1)):
         ceiling = _exact(item, f"$.ceilings[{index}]", ("name", "value", "unit"))
         _string(ceiling["name"], f"$.ceilings[{index}].name")
         if not isinstance(ceiling["value"], (str, int, float)) or isinstance(ceiling["value"], bool):
-            raise WorkflowContractError(f"$.ceilings[{index}].value must be a string or number")
+            raise WorkflowContractError('core.workflow.ceiling_value', index=index)
         _string(ceiling["unit"], f"$.ceilings[{index}].unit")
     status = _enum(doc["status"], "$.status", {"draft", "approved", "applied", "verified", "rolled-back"})
     if doc["approval"] is not None:
@@ -534,7 +536,7 @@ def _validate_mutation(payload: Mapping[str, Any]) -> None:
         _sha256(approval["approved_plan_sha256"], "$.approval.approved_plan_sha256")
         _datetime(approval["approved_at"], "$.approval.approved_at")
     if status != "draft" and doc["approval"] is None:
-        raise WorkflowContractError("$.approval is required after draft status")
+        raise WorkflowContractError('core.workflow.approval')
     _relative_path(doc["audit_destination"], "$.audit_destination")
     _strings(doc["verification_steps"], "$.verification_steps", minimum=1)
     rollback = _exact(doc["rollback"], "$.rollback", ("operation", "expected_state", "verification"))
@@ -554,7 +556,7 @@ def _validate_orchestration_run(payload: Mapping[str, Any]) -> None:
     _strings(doc["phases"], "$.phases", minimum=1)
     _enum(doc["privacy_class"], "$.privacy_class", PRIVACY_CLASSES)
     if doc["privacy_class"] != lifecycle["classification"]:
-        raise WorkflowContractError("$.privacy_class must match $.data_lifecycle.classification")
+        raise WorkflowContractError('core.contract.privacy_match')
     _enum(doc["mutation_authority"], "$.mutation_authority", {"none", "repository-only", "draft-external", "approved-external"})
     _enum(doc["status"], "$.status", {"open"})
 
@@ -579,12 +581,12 @@ def _validate_orchestration_task(payload: Mapping[str, Any]) -> None:
     _enum(output["contract"], "$.output_contract.contract", set(WORKFLOW_CONTRACT_NAMES))
     _relative_path(output["destination"], "$.output_contract.destination")
     if not _bool(output["single_writer"], "$.output_contract.single_writer"):
-        raise WorkflowContractError("$.output_contract.single_writer must be true")
+        raise WorkflowContractError('core.workflow.single_writer')
     _strings(doc["verification"], "$.verification", minimum=1)
     _strings(doc["recovery"], "$.recovery", minimum=1)
     dependencies = _strings(doc["depends_on"], "$.depends_on")
     if doc["task_id"] in dependencies:
-        raise WorkflowContractError("$.depends_on cannot include the task itself")
+        raise WorkflowContractError('core.workflow.self_dependency')
     _enum(doc["status"], "$.status", {"queued"})
 
 
@@ -606,20 +608,20 @@ def _validate_orchestration_result(payload: Mapping[str, Any]) -> None:
     blockers = _strings(doc["blockers"], "$.blockers")
     recovery = _strings(doc["recovery_hints"], "$.recovery_hints")
     if status == "ok" and blockers:
-        raise WorkflowContractError("$.blockers must be empty for an ok result")
+        raise WorkflowContractError('core.workflow.ok_blockers')
     if status != "ok" and (not blockers or not recovery):
-        raise WorkflowContractError("non-ok results require blockers and recovery_hints")
+        raise WorkflowContractError('core.workflow.failure_recovery')
     if doc["supersedes"] is not None:
         _id(doc["supersedes"], "$.supersedes")
         if doc["supersedes"] == doc["result_id"]:
-            raise WorkflowContractError("$.supersedes cannot reference the result itself")
+            raise WorkflowContractError('core.workflow.self_supersedes')
 
 
 def _validate_orchestration_gate(payload: Mapping[str, Any]) -> None:
     required = ("schema_version", "artifact_type", "gate_id", "run_id", "stage", "evaluated_at", "evaluator", "required_task_ids", "evaluated_result_ids", "checks", "decision", "blockers")
     doc = _exact(payload, "$", required)
     if doc["schema_version"] != SCHEMA_VERSION or doc["artifact_type"] != "orchestration-gate":
-        raise WorkflowContractError("gate version or artifact_type is invalid")
+        raise WorkflowContractError('core.workflow.gate_version')
     _id(doc["run_id"], "$.run_id")
     _id(doc["gate_id"], "$.gate_id")
     _string(doc["stage"], "$.stage")
@@ -638,11 +640,11 @@ def _validate_orchestration_gate(payload: Mapping[str, Any]) -> None:
     blockers = _strings(doc["blockers"], "$.blockers")
     all_passed = all(check["passed"] for check in checks)
     if (decision == "pass") != all_passed:
-        raise WorkflowContractError("$.decision must equal the aggregate check verdict")
+        raise WorkflowContractError('core.workflow.gate_decision')
     if decision == "pass" and blockers:
-        raise WorkflowContractError("$.blockers must be empty for a passing gate")
+        raise WorkflowContractError('core.workflow.passing_gate')
     if decision == "fail" and not blockers:
-        raise WorkflowContractError("a failing gate requires blockers")
+        raise WorkflowContractError('core.workflow.failing_gate')
 
 
 WORKFLOW_VALIDATORS: dict[str, Callable[[Mapping[str, Any]], None]] = {
@@ -666,5 +668,5 @@ def validate_workflow_contract(name: str, payload: Any) -> None:
     """Validate one workflow artifact without external dependencies."""
     validator = WORKFLOW_VALIDATORS.get(name)
     if validator is None:
-        raise WorkflowContractError(f"unknown workflow contract {name!r}")
+        raise WorkflowContractError('core.workflow.unknown', name=name)
     validator(_object(payload, "$"))

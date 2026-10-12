@@ -1,39 +1,39 @@
-# Financial-services paid-media planning questions
+# 金融服务付费媒体规划问题
 
-> Status: qualitative, unscored planning aid; not legal, investment, credit, or compliance advice.
+> 状态：定性、不计分的规划辅助资料；不构成法律、投资、信贷或合规建议。
 
-## Required gates
+## 必需门禁
 
-- Context gate: identify the exact product, provider role, audience, jurisdiction, license
-  status, objective, conversion definition, and accountable compliance owner.
-- Evidence gate: register and verify current official source IDs from platforms and regulators for
-  the product and region before stating eligibility, targeting, disclosure, or claim rules.
-- Regulatory gate: block the affected plan section when current legal or platform evidence,
-  required certification, disclosure text, or specialist approval is missing.
-- Fairness gate: review targeting, exclusions, optimization inputs, and creative for protected
-  traits, proxies, vulnerability, deception, unfairness, and accessibility concerns.
-- Data gate: minimize financial and identity data; document consent, purpose, access,
-  matching, retention, suppression, and incident handling.
-- Approval gate: retain the compliance decision, approved copy, source IDs, owner, scope,
-  expiry, and re-review trigger.
+- 背景门禁：明确具体产品、提供方角色、受众、司法辖区、许可
+  状态、目标、转化定义和承担责任的合规负责人。
+- 证据门禁：在说明资格、定向、披露或声明规则之前，
+  登记并验证来自平台和监管机构、针对该产品与区域的当前官方来源 ID。
+- 监管门禁：当前法律或平台证据、
+  必需认证、披露文本或专家批准缺失时，阻止计划中受影响的部分。
+- 公平性门禁：审查定向、排除项、优化输入和创意是否涉及受保护
+  特征、代理变量、脆弱性、欺骗、不公平和无障碍问题。
+- 数据门禁：最小化财务和身份数据；记录同意、目的、访问、
+  匹配、保留、抑制和事件处理。
+- 批准门禁：保留合规决策、已批准文案、来源 ID、负责人、范围、
+  到期时间和重新审查触发条件。
 
-## Planning questions
+## 规划问题
 
-- What regulated product and provider relationship is actually being advertised?
-- Which claims, rates, fees, risks, comparisons, and examples are approved and current?
-- Which audiences, regions, placements, and optimization signals are eligible now?
-- How will required disclosures remain clear in every requested field and format?
-- Which conversion events avoid sensitive inference and reflect a legitimate business outcome?
-- How will complaints, adverse outcomes, policy changes, and source expiry stop the plan?
+- 实际宣传的是什么受监管产品及提供方关系？
+- 哪些声明、费率、费用、风险、比较和示例已经批准且当前有效？
+- 哪些受众、区域、版位和优化信号目前符合资格？
+- 如何确保所需披露在每个请求的字段和格式中都保持清晰？
+- 哪些转化事件既避免敏感推断，又反映合法的业务成果？
+- 投诉、不利结果、政策变化和来源到期将如何使计划停止？
 
-## Candidate considerations
+## 候选考量
 
-- Consider education, product explanation, trust, and qualified-intent hypotheses only after
-  the evidence and review gates pass.
-- Keep platform eligibility separate from legal permissibility and commercial suitability.
+- 仅在证据和审查门禁通过后，才考虑教育、产品解释、信任和合格意图
+  假设。
+- 将平台资格、法律许可性和商业适宜性分开。
 
-## Output guardrails
+## 输出防护规则
 
-- Return questions, approvals, source IDs, unresolved risks, owners, and stop conditions.
-- Do not prescribe product eligibility, disclosures, targeting, bids, allocations, returns,
-  or financial outcomes from this template.
+- 返回问题、批准、来源 ID、未解决风险、负责人和停止条件。
+- 不得依据此模板规定产品资格、披露、定向、出价、分配比例、回报
+  或财务结果。

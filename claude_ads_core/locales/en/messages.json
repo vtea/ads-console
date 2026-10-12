@@ -1,0 +1,7 @@
+{
+  "metadata.plugin_description": "Claude-first, portable paid-media operations for Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, Apple, Amazon, Reddit, Pinterest, Snapchat, and X. Source-grounded audits, plans, creative workflows, monitoring, experiments, versioned JSON reports, deterministic scoring, and capability-gated account changes.",
+  "metadata.marketplace_description": "Claude-first, portable paid-media operations across 12 advertising platforms.",
+  "metadata.marketplace_plugin_description": "Claude-first, portable paid-media operations across 12 advertising platforms with source-grounded audits, deterministic scoring, lifecycle workflows, versioned JSON reports, and capability-gated account changes.",
+  "metadata.short_description": "Source-grounded paid media operations",
+  "metadata.default_prompt": "Use $ads to audit my paid-media accounts and produce a source-grounded action plan."
+}

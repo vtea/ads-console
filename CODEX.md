@@ -1,10 +1,7 @@
-# Claude Ads Codex Instructions
+# Claude Ads Codex 说明
 
-Read and follow `AGENTS.md`; it is the canonical portable repository contract.
-Use `ads/SKILL.md` as the product entrypoint, load detailed skills and references
-only after routing, and use `ads/agents/openai.yaml` for the Codex-facing skill
-interface metadata.
+阅读并遵循 `AGENTS.md`；它是规范的可移植仓库契约。
+使用 `ads/SKILL.md` 作为产品入口，仅在路由完成后加载详细技能和参考资料，并使用 `ads/agents/openai.yaml` 作为面向 Codex 的技能接口元数据。
 
-Keep repository work read-only unless the user explicitly requests implementation.
-Live advertising-account writes remain separately capability-gated and require the
-full mutation contract even when repository mutation is authorized.
+除非用户明确要求实施，否则仓库工作保持只读。
+即使已获准修改仓库，线上广告账户写入仍受独立的能力门禁约束，并且必须满足完整的变更契约。

@@ -1,26 +1,24 @@
-# Budget Allocation and Scaling
+# 预算分配与扩量
 
-**Verified:** 2026-07-11
-**Refresh:** foundational review by 2027-01-07; platform eligibility at run time
-**Evidence status:** deterministic finance math; allocation heuristics are contextual
+**已核验：** 2026-07-11
+**刷新：** 基础审查须于 2027-01-07 前完成；平台资格在运行时核实
+**证据状态：** 确定性财务计算；分配启发式须结合具体情境
 
-Allocate budget from business constraints and marginal evidence. Do not begin
-with a fixed platform mix, a minimum monthly spend, or a universal scaling step.
+根据业务约束和边际证据分配预算。不要从固定平台组合、最低月度支出或通用扩量步幅出发。
 
-## Required inputs
+## 必需输入
 
-- Objective and accepted business outcome.
-- Gross margin or contribution margin and variable fulfilment costs.
-- Cash, credit, monthly, daily, platform, and campaign ceilings.
-- Target CPA, contribution per conversion, or target profit; state who approved it.
-- Conversion lag, sales-cycle lag, return/cancellation window, and data maturity.
-- Current spend, accepted conversions, value, and confidence by platform.
-- Contractual, geographic, policy, inventory, and creative-capacity constraints.
+- 目标和被接受的业务成果。
+- 毛利率或贡献利润率，以及可变履约成本。
+- 现金、信用、月度、每日、平台和广告系列上限。
+- 目标 CPA、每次转化的贡献或目标利润；说明由谁批准。
+- 转化延迟、销售周期延迟、退货/取消窗口和数据成熟度。
+- 各平台当前支出、被接受的转化、价值和置信度。
+- 合同、地理区域、政策、库存和创意产能约束。
 
-Missing owner-approved ceilings blocks an account write. Missing economics makes
-the plan provisional.
+缺少负责人批准的上限会阻止账户写入。缺少经济数据会使计划处于暂定状态。
 
-## Core math
+## 核心计算
 
 ```text
 CPA = spend / accepted conversions
@@ -32,67 +30,49 @@ marginal_CPA = incremental spend / incremental accepted conversions
 marginal_ROAS = incremental accepted value / incremental spend
 ```
 
-Use net accepted value where returns, fraud, cancellations, duplicate leads, or
-sales rejection materially affect the result. Do not infer profit from platform
-ROAS alone.
+当退货、欺诈、取消、重复线索或销售拒绝会实质影响结果时，使用被接受的净价值。不得仅凭平台 ROAS 推断利润。
 
-## Allocation sequence
+## 分配顺序
 
-1. Reserve non-negotiable commitments and measurement costs.
-2. Protect campaigns with causal or strong same-account evidence of positive
-   marginal contribution, subject to saturation and cash constraints.
-3. Fund bounded experiments with a declared hypothesis, minimum detectable
-   effect, decision date, and stop conditions.
-4. Hold a contingency only when the business has a defined use for it.
-5. Reallocate from the weakest marginal opportunity, not necessarily the worst
-   average CPA or ROAS.
+1. 预留不可协商的承诺支出和衡量成本。
+2. 在饱和程度和现金约束允许的范围内，保护有因果证据或强同账户证据支持正边际贡献的广告系列。
+3. 为有明确边界的实验提供资金，并声明假设、最小可检测效应、决策日期和停止条件。
+4. 仅当业务对备用金有明确用途时才保留。
+5. 从最弱的边际机会重新分配资金，而不一定从平均 CPA 或 ROAS 最差的项目转出。
 
-Any “proven / growth / experiment” split is an operator policy, not a default.
-Record the chosen split and rationale in the run manifest.
+任何“已验证 / 增长 / 实验”的比例划分都是操作者政策，而非默认值。将所选比例及理由记录在运行清单中。
 
-## Scaling decision
+## 扩量决策
 
-Draft a scale change only when all are true:
+仅在以下条件全部为真时起草扩量变更：
 
-- The conversion and revenue data have matured through the relevant lag.
-- Tracking, consent, policy, inventory, and landing experience are healthy enough
-  to interpret the result.
-- Marginal performance is within the owner-approved economic boundary.
-- The campaign is eligible for the proposed budget and bidding change.
-- The advertiser can absorb learning, delivery, and cash-flow volatility.
-- A before/after measure, verification window, and rollback trigger exist.
+- 转化和收入数据已度过相关延迟并成熟。
+- 跟踪、同意、政策、库存和落地体验足够健康，能够解读结果。
+- 边际表现处于负责人批准的经济边界内。
+- 广告系列符合拟议预算和出价变更的资格。
+- 广告主能够承受学习、投放和现金流波动。
+- 存在变更前后衡量、验证窗口和回滚触发条件。
 
-The size and timing of a change come from platform simulations, account history,
-conversion cycles, and blast-radius limits. No universal percentage is safe.
+变更幅度和时机来自平台模拟、账户历史、转化周期和影响范围限制。没有普遍安全的百分比。
 
-## Pause or reduce decision
+## 暂停或削减决策
 
-Do not pause solely because spend crosses a fixed multiple of target CPA. First
-check conversion lag, tracking outages, low sample size, downstream lead quality,
-seasonality, and whether the object is needed for an active experiment.
+不要仅因支出超过目标 CPA 的固定倍数就暂停。首先检查转化延迟、跟踪中断、样本量不足、下游线索质量、季节性，以及该对象是否为正在进行的实验所必需。
 
-Immediate containment is appropriate for an owner-defined runaway-spend ceiling,
-policy or legal exposure, broken destination, confirmed tracking corruption, or
-unauthorized delivery. Prefer the smallest reversible action and preserve evidence.
+对于负责人定义的失控支出上限、政策或法律风险、失效目标页面、已确认的跟踪数据损坏，或未经授权的投放，适合立即遏制。优先采用最小的可逆操作，并保留证据。
 
-## Portfolio view
+## 组合视角
 
-Compare platforms on accepted business outcomes over the same mature window.
-Include:
+在相同且成熟的窗口内，依据被接受的业务成果比较平台。包括：
 
-- Spend share, accepted value share, and contribution after advertising.
-- Marginal rather than only average efficiency.
-- Confidence and evidence coverage.
-- Incrementality or holdout evidence where available.
-- Constraints that prevent movement, such as inventory, audience, policy, or
-  creative throughput.
+- 支出占比、被接受的价值占比和广告后的贡献。
+- 边际效率，而不只是平均效率。
+- 置信度和证据覆盖率。
+- 可用时的增量效果或留出组证据。
+- 阻碍资金转移的约束，例如库存、受众、政策或创意吞吐能力。
 
-When spend or accepted value is unavailable, do not fabricate proportional
-weights. Present scenarios and identify the missing decision input.
+当支出或被接受的价值不可用时，不得编造比例权重。呈现场景并指出缺失的决策输入。
 
-## Change packet
+## 变更包
 
-Every proposed reallocation states current and proposed amounts, affected object
-IDs, economic rationale, expected effect, uncertainty, learning impact, owner,
-approval, verification date, rollback threshold, and idempotency key. The
-recommendation remains a draft until the mutation gate passes.
+每项拟议重新分配均说明当前与拟议金额、受影响对象 ID、经济理由、预期效果、不确定性、学习影响、负责人、批准、验证日期、回滚阈值和幂等键。建议在变更关卡通过之前始终保持草稿状态。

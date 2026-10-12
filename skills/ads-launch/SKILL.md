@@ -1,25 +1,27 @@
 ---
 name: ads-launch
-description: "Draft or explicitly apply a paid-ad campaign launch through Claude Ads capability-gated adapters. Use for campaign creation, launch plans, publishing ads, activating campaigns, uploading creative, or requests to push a campaign live."
+description: "通过 Claude Ads 受能力门禁控制的适配器起草或明确执行付费广告系列上线。适用于创建广告系列、上线计划、发布广告、启用广告系列、上传创意，或将广告系列正式上线的请求。"
 ---
 
-# Campaign Launch
+# 广告系列上线
 
-Default to `--draft`.
+操作语言默认使用简体中文：首次回复、工具前说明、过程进度、AskUserQuestion 的问题、选项和说明，以及最终报告均使用中文；用户明确指定其他操作语言时遵从。广告投放语言独立于操作语言。JSON keys/enums 和原始证据不翻译。委派任务时必须传递操作语言要求。
 
-1. Load the validated setup profile, account snapshot, campaign plan, creative
-   manifest, platform capability manifest, policy findings, and tracking checks.
-2. Refuse a draft that lacks account/object scope, objective, conversion, budget,
-   dates, targeting, assets, destinations, measurement, or policy eligibility.
-3. Produce a deterministic mutation plan with exact proposed objects, before/after
-   state, blast radius, learning impact, owner, success measure, verification
-   window, idempotency key, audit destination, and rollback.
-4. For `--apply`, require the exact operation to be enabled and independently
-   tested, then obtain explicit approval for that exact plan.
-5. Apply the smallest reversible change, verify remote state, and preserve the
-   immutable audit and rollback record.
+默认使用 `--draft`。
 
-Missing ceilings, stale account state, changed remote state, incomplete tracking,
-failed policy review, or an unavailable adapter blocks apply. Permanent deletion is
-not supported.
+1. 加载已验证的设置档案、账户快照、广告系列计划、创意
+   清单、平台能力清单、政策发现和跟踪检查。
+2. 对缺少账户/对象范围、目标、转化、预算、
+   日期、定向、素材、目标页、衡量或政策资格的草案予以拒绝。
+3. 生成确定性的变更计划，包含精确的拟议对象、变更前后
+   状态、影响范围、学习影响、负责人、成功衡量标准、验证
+   窗口、幂等键、审计记录目标位置和回滚方案。
+4. 对于 `--apply`，要求该精确操作已启用并通过独立
+   测试，然后获取针对该确切计划的明确批准。
+5. 执行最小的可逆变更，验证远程状态，并保留
+   不可变的审计和回滚记录。
+
+缺少上限、账户状态过期、远程状态发生变化、跟踪不完整、
+政策审查失败或适配器不可用，都会阻止执行。不支持永久
+删除。
 

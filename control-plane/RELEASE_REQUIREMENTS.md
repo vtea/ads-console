@@ -1,156 +1,71 @@
-# Release Requirements
+# 发布要求
 
-These gates are cumulative. A release candidate is demoted when a load-bearing
-source expires, a critical security or privacy finding opens, a declared
-capability loses its test evidence, or required remote CI does not pass.
+这些门禁要求累积适用。承重来源过期、出现严重安全或隐私发现、已声明能力失去测试证据，或必需远程 CI 未通过时，发布候选项会被降级。
 
-## Product and contract gates
+## 产品与契约门禁
 
-- Buyer, promise, commands, outputs, boundaries, privacy defaults, and mutation
-  authority are documented consistently.
-- Public schemas have semantic versions and fixtures. Breaking changes require
-  a major schema version and migration notes.
-- Capability status matches implementation, adapter, fixture, and test evidence.
-- Every complete-audit claim reports module completeness and evidence coverage.
-- Health, evidence confidence, regulatory exposure, and opportunities remain
-  separate outputs.
-- Every catalog ID has one typed registry disposition. Only an enabled versioned
-  profile may supply health controls and category weights; health controls require
-  verified load-bearing claims, non-zero reviewed severity, explicit inputs, and
-  stable status. Disabled profiles must fail closed without a health score.
+- 目标客户、承诺、命令、输出、边界、隐私默认值和变更权限记录一致。
+- 公开 schema 具有语义版本和固定测试数据。破坏性变更需要 schema 主版本升级及迁移说明。
+- 能力状态与实现、适配器、固定测试数据和测试证据一致。
+- 每项完整审计声明均报告模块完整性及证据覆盖率。
+- 健康度、证据置信度、监管风险敞口和机会保持为独立输出。
+- 每个目录 ID 都有一个类型化注册表处置。只有已启用的版本化配置可提供健康度控制项和类别权重；健康度控制项需要经过验证的承重声明、经过审查的非零严重程度、明确输入和稳定状态。禁用的配置必须失败即关闭，不提供健康度分数。
 
-## Evidence gates
+## 证据门禁
 
-- Every load-bearing platform, API, policy, regulation, benchmark, or creative
-  specification claim has a claim ID and at least one dated source ID.
-- Official, regulator, standards-body, or primary sources are preferred.
-- Practitioner evidence is labeled and cannot alone establish mandatory policy
-  or compliance behavior.
-- API, policy, feature, and creative-specification sources refresh within 30
-  days; regulation receives event-driven review plus a 30-day check near an
-  effective date; benchmarks refresh quarterly; foundational methods refresh
-  within 12 months.
-- Overdue load-bearing sources block release until refreshed or the dependent
-  claim and capability are demoted.
+- 每项承重平台、API、政策、法规、基准或创意规格声明都具有声明 ID 和至少一个注明日期的来源 ID。
+- 优先使用官方、监管机构、标准机构或一手来源。
+- 从业者证据必须标注，不能单独确立强制性政策或合规行为。
+- API、政策、功能和创意规格来源须在 30 天内刷新；法规采用事件驱动审查，并在生效日期附近进行 30 天检查；基准按季度刷新；基础方法在 12 个月内刷新。
+- 逾期承重来源会阻止发布，直到来源刷新，或依赖它的声明和能力被降级。
 
-## Safety and privacy gates
+## 安全与隐私门禁
 
-- Writes are disabled by default and capability-gated by platform.
-- Mutation lifecycle tests cover preview, approval, apply, repeated apply,
-  verify, failure, audit, and rollback.
-- URL, redirect, DNS, browser-subresource, output-path, symlink, archive, and
-  parser-differential defenses pass adversarial tests.
-- Untrusted content cannot change instructions or mutation authority.
-- Secrets and personal data are absent from tracked files, fixtures, reports,
-  logs, task packets, archives, and Git history.
-- Data classification, redaction, retention, encryption, and deletion behavior
-  are documented and tested.
-- Dependency advisories are fixed or have expiring, machine-checked
-  `not_affected` evidence bound to the exact package version and unused code
-  path. New advisories, accepted-risk dispositions, import drift, or expired
-  evidence fail closed. Every referenced evidence path must remain in the
-  public release package.
-- Each exception carries at least one machine-checked guard: forbidden import
-  prefixes, or forbidden call keywords when the vulnerable channel is a call
-  argument rather than a module. The guards are syntactic checks over
-  first-party source in the guarded scope. Direct imports and `importlib` or
-  `__import__` calls with literal names fail CI; a guarded keyword passed to
-  any callable fails CI; unresolvable dynamic imports, forwarded keyword
-  mappings to the guarded function, and forwarded mappings to an unresolvable
-  callee fail CI. Transitive imports inside third-party packages,
-  computed values assigned to callable names, interprocedural data flow, and
-  assignments to library option dictionaries are outside the guard and are
-  covered only by the written analysis in the exception record.
+- 写入默认禁用，并按平台受能力门禁约束。
+- 变更生命周期测试涵盖预览、批准、执行、重复执行、验证、失败、审计和回滚。
+- URL、重定向、DNS、浏览器子资源、输出路径、符号链接、归档及解析器差异防御通过对抗测试。
+- 不可信内容不能改变指令或变更权限。
+- 已跟踪文件、固定测试数据、报告、日志、任务包、归档和 Git 历史中不存在秘密及个人数据。
+- 数据分类、脱敏、保留、加密和删除行为均有文档及测试。
+- 依赖安全公告已修复，或具有带到期时间、经机器检查的 `not_affected` 证据，并绑定精确包版本及未使用的代码路径。新公告、接受风险的处置、导入漂移或证据过期均失败即关闭。每个被引用的证据路径必须保留在公开发行包中。
+- 每项例外至少带有一种机器检查防护：禁止导入前缀；或者当漏洞通道是调用参数而非模块时，禁止调用关键词。这些防护是针对受保护范围内第一方源码的语法检查。直接导入以及使用字面量名称的 `importlib` 或 `__import__` 调用会导致 CI 失败；传给任何可调用对象的受保护关键词会导致 CI 失败；无法解析的动态导入、转发给受保护函数的关键词映射，以及转发给无法解析被调用方的映射会导致 CI 失败。第三方包内部的传递导入、赋给可调用名称的计算值、过程间数据流，以及对库选项字典的赋值不在防护范围内，仅由例外记录中的书面分析覆盖。
 
-## Evaluation gates
+## 评估门禁
 
-- Schema, scoring, normalization, missing-data, deduplication, routing, and
-  report-rendering suites pass.
-- Every target platform has sanitized export fixtures and failure cases.
-- Routing and safety regressions pass at 100 percent.
-- Model evaluations reach at least 90 percent overall with no P0 safety failure
-  and no unintended regression against retained v1 behavior.
-- The canonical model gate consumes complete external Claude Code run evidence
-  for both the exact candidate commit and pinned retained-v1 subject. Candidate
-  and baseline use the same CLI and model snapshot, a fresh process per case,
-  no conversation reuse, no mutation authority, and an evaluator independent
-  of the run executor.
-- Local schema, suite, and assessor checks never substitute for either external
-  model run. Missing, stale, non-Claude, self-graded, hash-mismatched, partial,
-  or runtime-incomparable evidence fails closed. Keep raw responses private and
-  retain only the redacted deterministic gate report as ignored, external
-  release evidence. It must not alter the exact Git subject it verifies or enter
-  the product archive.
-- Each model run requires separate runner and evaluator Ed25519 signatures over
-  the exact subject, runtime, case receipts, rubric judgments, and result. Supply
-  external trust and implementation-principal exclusions through
-  `CLAUDE_ADS_MODEL_EVAL_TRUST_BUNDLE_JSON` and
-  `CLAUDE_ADS_MODEL_EVAL_IMPLEMENTATION_PRINCIPALS_JSON`. Repository-local,
-  forged, stale, role-mismatched, self-signed, or self-review evidence fails closed.
-- A fresh-context verifier confirms completion claims from artifacts and test
-  output, not from the implementation conversation.
+- schema、评分、标准化、缺失数据、去重、路由和报告渲染套件通过。
+- 每个目标平台均有脱敏导出固定测试数据和失败案例。
+- 路由及安全回归以 100 percent 通过。
+- 模型评估总体至少达到 90 percent，无 P0 安全失败，且相对保留的 v1 行为没有非预期回归。
+- 规范模型门禁消费针对精确候选提交和固定保留 v1 对象的完整外部 Claude Code 运行证据。候选与基线使用相同 CLI 和模型快照，每个案例使用全新进程，不复用对话，没有变更权限，并由独立于运行执行者的评估者评估。
+- 本地 schema、套件和评估器检查绝不能替代任一外部模型运行。缺失、过期、非 Claude、自行评分、哈希不匹配、不完整或运行时不可比的证据均失败即关闭。原始响应保持私有，仅将脱敏后的确定性门禁报告保留为被忽略的外部发布证据。该证据不得改变其验证的精确 Git 对象，也不得进入产品归档。
+- 每个模型运行要求运行执行者和评估者分别对精确对象、运行时、案例回执、评分标准判断和结果提供 Ed25519 签名。通过 `CLAUDE_ADS_MODEL_EVAL_TRUST_BUNDLE_JSON` 和 `CLAUDE_ADS_MODEL_EVAL_IMPLEMENTATION_PRINCIPALS_JSON` 提供外部信任及实现主体排除项。仓库本地、伪造、过期、角色不匹配、自签名或自我审查证据均失败即关闭。
+- 全新上下文验证者依据产物和测试输出确认完成声明，而不是依据实现过程中的对话。
 
-## Installation and packaging gates
+## 安装与打包门禁
 
-- Python-wheel resolution, install, upgrade, and uninstall are tested on the
-  declared Linux, macOS, and Windows interpreter tuples. This is not a claim of
-  cross-platform Playwright browser or WeasyPrint PDF feature execution.
-- Installation does not silently mutate global Python or execute unverified
-  network content.
-- Uninstall removes only ownership-manifest entries and leaves no unowned files.
-- A clean checkout reproducibly builds the release archive, release manifest,
-  SHA-256 checksums, SBOM, and license notices.
-- Runtime and development locks use exact versions plus the union of publisher
-  wheel hashes for every declared CPython 3.11/3.12 Linux, macOS, and Windows
-  target. Installers use `--require-hashes --only-binary=:all:`, run `pip check`,
-  and fail before mutation when the interpreter target is not in that matrix.
-- The CycloneDX release SBOM contains the application and runtime closure only;
-  the separate development lock/inventory remains audit evidence, not an
-  application dependency.
-- Playwright browser payloads and WeasyPrint native/system libraries are modeled
-  in `control-plane/manifests/external-runtime-dependencies.json`; they remain
-  outside the Python lock/SBOM. Browser execution requires separate host/payload
-  attestation. Real PDF rendering is smoke-tested on the Ubuntu full-test job,
-  not across the full wheel matrix.
-- Archive paths are portable and contain no invalid, absolute, or traversal
-  names.
+- Python wheel 解析、安装、升级和卸载在声明的 Linux、macOS 和 Windows 解释器元组上经过测试。这不代表跨平台执行 Playwright 浏览器或 WeasyPrint PDF 功能的声明。
+- 安装不得静默修改全局 Python，也不得执行未经验证的网络内容。
+- 卸载仅移除所有权清单条目，不移除任何非本项目所有的文件。
+- 干净检出可重复构建发行归档、发行清单、SHA-256 校验和、SBOM 和许可证声明。
+- 运行时及开发锁定使用精确版本，并取所有声明的 CPython 3.11/3.12 Linux、macOS 和 Windows 目标的发布者 wheel 哈希并集。安装程序使用 `--require-hashes --only-binary=:all:`，运行 `pip check`，且当解释器目标不在矩阵内时，在修改之前失败。
+- CycloneDX 发行 SBOM 仅包含应用及运行时闭包；独立的开发锁定/清单仍为审计证据，不是应用依赖。
+- Playwright 浏览器载荷和 WeasyPrint 原生/系统库记录在 `control-plane/manifests/external-runtime-dependencies.json` 中；它们不在 Python 锁定/SBOM 内。浏览器执行需要独立的宿主/载荷证明。真实 PDF 渲染在 Ubuntu 全测试任务中进行冒烟测试，而不是在整个 wheel 矩阵上测试。
+- 归档路径可移植，不包含无效名称、绝对名称或目录穿越名称。
 
-## Merge and release gate
+## 合并与发布门禁
 
-- Required GitHub Actions checks pass on the integration commit. Local success
-  does not substitute for unavailable, skipped, or billing-blocked remote CI.
-- The GitHub Actions run supplied to release verification is a
-  `workflow_dispatch` run of `ci.yml` at the release commit, because only that
-  event runs the live ecosystem reconciliation in strict mode. Green push or
-  pull_request runs report tracker drift as warnings and are not release
-  evidence.
-- The integration branch receives independent code, evidence, security,
-  privacy, and licensing review.
-- Review evidence conforms to the independent-review schema, binds the exact
-  commit and tree, and verifies under externally provisioned Ed25519 public keys.
-  Pending templates and repository-local trust roots cannot satisfy this gate.
-- No critical blocker remains in the ecosystem disposition ledger.
-- Only after all gates pass may the reviewed branch merge and receive a v2 tag.
-- Repository visibility remains private; public release requires the separate
-  gate in `PUBLISHING_POLICY.md`.
+- 必需的 GitHub Actions 检查在集成提交上通过。本地成功不能替代不可用、跳过或因计费受阻的远程 CI。
+- 提供给发布验证的 GitHub Actions 运行，必须是在发布提交上对 `ci.yml` 发起的 `workflow_dispatch` 运行，因为只有该事件会以严格模式执行在线生态对账。绿色的 push 或 pull_request 运行仅将跟踪器漂移报告为警告，不是发布证据。
+- 集成分支接受独立的代码、证据、安全、隐私和许可证审查。
+- 审查证据符合独立审查 schema，绑定精确提交和树，并在外部配置的 Ed25519 公钥下通过验证。待定模板和仓库本地信任根不能满足此门禁。
+- 生态处置台账中没有剩余严重阻碍项。
+- 只有通过全部门禁后，经过审查的分支才可合并并获得 v2 标签。
+- 仓库可见性保持私有；公开发布需通过 `PUBLISHING_POLICY.md` 中的独立门禁。
 
-## Independent-review evidence protocol
+## 独立审查证据协议
 
-The files in `control-plane/manifests/reviews/` are pending, unsigned templates,
-not approvals. Completed review evidence stays outside the checkout and release
-archive because findings and evidence locators may be internal.
+`control-plane/manifests/reviews/` 中的文件是待定且未签名的模板，不是批准。已完成审查证据保存在检出目录和发行归档之外，因为发现及证据定位信息可能属于内部信息。
 
-Independent reviewers bind their documents to the full commit and tree IDs and
-sign canonical UTF-8 JSON with Ed25519 after omitting only
-`authentication.signature_b64url` (sorted keys, no insignificant whitespace, no
-ASCII escaping). Supply public reviewer keys through
-`CLAUDE_ADS_REVIEW_TRUST_KEYS_JSON`, implementation reviewer IDs through
-`CLAUDE_ADS_IMPLEMENTATION_PRINCIPALS_JSON`, and the external evidence directory
-through `CLAUDE_ADS_REVIEW_EVIDENCE_DIR`. Private keys must never enter the
-checkout, verifier, logs, or artifacts.
+独立审查者将其文档绑定完整的提交和树 ID，仅省略 `authentication.signature_b64url` 后，对规范 UTF-8 JSON 进行 Ed25519 签名（键排序、无无意义空白、不使用 ASCII 转义）。通过 `CLAUDE_ADS_REVIEW_TRUST_KEYS_JSON` 提供审查者公钥，通过 `CLAUDE_ADS_IMPLEMENTATION_PRINCIPALS_JSON` 提供实现审查者 ID，通过 `CLAUDE_ADS_REVIEW_EVIDENCE_DIR` 提供外部证据目录。私钥绝不能进入检出目录、验证器、日志或产物。
 
-Run `python scripts/review_evidence.py --root .`. Missing external state,
-subject mismatch, stale or duplicate evidence, pending/rejected decisions,
-invalid or mis-scoped keys, self-review, open critical/high findings, and
-accepted-risk findings without a separate owner gate fail closed. The verifier's
-redacted digest report may feed release metadata; raw review documents may not.
+运行 `python scripts/review_evidence.py --root .`。缺失外部状态、对象不匹配、过期或重复证据、待定/拒绝决定、无效或范围不当的密钥、自我审查、未关闭的 critical/high 发现，以及没有独立所有者门禁的接受风险发现均失败即关闭。验证器的脱敏摘要报告可提供给发行元数据；原始审查文档不可。

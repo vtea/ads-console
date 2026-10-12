@@ -16,9 +16,16 @@ import os
 import re
 import socket
 import stat
+import sys
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+
+# Source checkouts keep core beside scripts; installed layouts keep it inside scripts.
+if not (Path(__file__).resolve().parent / "claude_ads_core").is_dir():
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from claude_ads_core.i18n import t
 
 try:
     from cryptography.exceptions import InvalidSignature
@@ -53,6 +60,8 @@ _TOKEN_PATTERN = re.compile(
     r"\b(?:sk[_-](?:live[_-])?|gh[pousr]_|AIza)[A-Za-z0-9._-]{8,}\b",
     re.IGNORECASE,
 )
+
+_URL_USERINFO_PATTERN = re.compile(r"(\b[a-z][a-z0-9+.-]*://)[^\s/<>]*@", re.IGNORECASE)
 
 _PRIVATE_KEY_PATTERN = re.compile(
     r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----.*?-----END [A-Z0-9 ]*PRIVATE KEY-----",
@@ -103,7 +112,7 @@ def sanitize_error(err: Exception) -> str:
     Returns:
         The exception string with sensitive substrings replaced.
     """
-    return redact_sensitive_text(err)
+    return redact_sensitive_text(_URL_USERINFO_PATTERN.sub(r"\1", str(err)))
 
 
 def sanitize_headers(headers: Any) -> dict[str, str]:
@@ -206,51 +215,51 @@ def _format_utc(value: datetime) -> str:
 
 def _parse_utc(value: Any, field_name: str) -> datetime:
     if not isinstance(value, str):
-        raise ValueError(f"Egress attestation {field_name} must be an RFC 3339 timestamp.")
+        raise ValueError(t("tools.url.timestamp_required", field=field_name))
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as exc:
         raise ValueError(
-            f"Egress attestation {field_name} must be an RFC 3339 timestamp."
+            t("tools.url.timestamp_required", field=field_name)
         ) from exc
     if parsed.tzinfo is None or parsed.utcoffset() is None:
-        raise ValueError(f"Egress attestation {field_name} must include a timezone.")
+        raise ValueError(t("tools.url.timezone_required", field=field_name))
     return parsed.astimezone(timezone.utc)
 
 
 def _decode_b64url(value: str, field_name: str) -> bytes:
     if not isinstance(value, str) or not value:
-        raise ValueError(f"Egress attestation {field_name} must be base64url text.")
+        raise ValueError(t("tools.url.base64_required", field=field_name))
     try:
         padding = "=" * (-len(value) % 4)
         decoded = base64.b64decode(value + padding, altchars=b"-_", validate=True)
     except (ValueError, TypeError) as exc:
-        raise ValueError(f"Egress attestation {field_name} is not valid base64url.") from exc
+        raise ValueError(t("tools.url.base64_invalid", field=field_name)) from exc
     canonical = base64.urlsafe_b64encode(decoded).rstrip(b"=").decode("ascii")
     if canonical != value.rstrip("="):
-        raise ValueError(f"Egress attestation {field_name} is not canonical base64url.")
+        raise ValueError(t("tools.url.base64_noncanonical", field=field_name))
     return decoded
 
 
 def _read_attestation_document(path: str | os.PathLike[str]) -> bytes:
     candidate = Path(path).expanduser()
     if candidate.is_symlink():
-        raise ValueError("Egress attestation document must not be a symlink.")
+        raise ValueError(t("tools.url.attestation_symlink"))
     flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
     try:
         descriptor = os.open(candidate, flags)
     except OSError as exc:
-        raise ValueError(f"Cannot open egress attestation document: {sanitize_error(exc)}") from exc
+        raise ValueError(t("tools.url.attestation_open", error=sanitize_error(exc))) from exc
     try:
         metadata = os.fstat(descriptor)
         if not stat.S_ISREG(metadata.st_mode):
-            raise ValueError("Egress attestation document must be a regular file.")
+            raise ValueError(t("tools.url.attestation_regular"))
         if metadata.st_size > _ATTESTATION_MAX_BYTES:
-            raise ValueError("Egress attestation document is too large.")
+            raise ValueError(t("tools.url.attestation_large"))
         with os.fdopen(descriptor, "rb", closefd=False) as stream:
             data = stream.read(_ATTESTATION_MAX_BYTES + 1)
         if len(data) > _ATTESTATION_MAX_BYTES:
-            raise ValueError("Egress attestation document is too large.")
+            raise ValueError(t("tools.url.attestation_large"))
         return data
     finally:
         os.close(descriptor)
@@ -260,7 +269,7 @@ def _canonical_attestation_payload(document: dict[str, Any]) -> bytes:
     authenticated = json.loads(json.dumps(document))
     authentication = authenticated.get("authentication")
     if not isinstance(authentication, dict):
-        raise ValueError("Egress attestation authentication must be an object.")
+        raise ValueError(t("tools.url.authentication_object"))
     authentication.pop("signature_b64url", None)
     return json.dumps(
         authenticated,
@@ -292,9 +301,9 @@ def load_egress_sandbox_attestation(
     try:
         document = json.loads(raw)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ValueError("Egress attestation document must be valid UTF-8 JSON.") from exc
+        raise ValueError(t("tools.url.attestation_json")) from exc
     if not isinstance(document, dict):
-        raise ValueError("Egress attestation document must be a JSON object.")
+        raise ValueError(t("tools.url.attestation_object"))
 
     required_top_level = {
         "schema_version",
@@ -315,31 +324,31 @@ def load_egress_sandbox_attestation(
         unexpected = sorted(set(document) - required_top_level)
         detail = []
         if missing:
-            detail.append(f"missing {', '.join(missing)}")
+            detail.append(t("tools.url.missing_fields", fields=', '.join(missing)))
         if unexpected:
-            detail.append(f"unexpected {', '.join(unexpected)}")
-        raise ValueError("Invalid egress attestation fields: " + "; ".join(detail))
+            detail.append(t("tools.url.unexpected_fields", fields=', '.join(unexpected)))
+        raise ValueError(t("tools.url.invalid_fields", detail="; ".join(detail)))
     if document["schema_version"] != "1.0.0":
-        raise ValueError("Unsupported egress attestation schema version.")
+        raise ValueError(t("tools.url.schema_version"))
     if document["audience"] != "claude-ads-browser-egress":
-        raise ValueError("Egress attestation has the wrong audience.")
+        raise ValueError(t("tools.url.wrong_audience"))
 
     for field_name in ("attestation_id", "issuer_id", "environment_id"):
         value = document[field_name]
         if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:@/-]{2,127}", value):
-            raise ValueError(f"Egress attestation {field_name} is invalid.")
+            raise ValueError(t("tools.url.invalid_field", field=field_name))
     if document["enforcement_boundary"] not in {
         "container-network-policy",
         "host-firewall",
         "isolated-network-proxy",
     }:
-        raise ValueError("Egress attestation enforcement_boundary is unsupported.")
+        raise ValueError(t("tools.url.boundary_unsupported"))
 
     controls = document["controls"]
     if not isinstance(controls, dict) or set(controls) != _ATTESTATION_CONTROL_KEYS:
-        raise ValueError("Egress attestation must declare the complete browser control set.")
+        raise ValueError(t("tools.url.complete_controls"))
     if any(value is not True for value in controls.values()):
-        raise ValueError("Every egress attestation browser control must be true.")
+        raise ValueError(t("tools.url.controls_true"))
     evidence_refs = document["evidence_refs"]
     if (
         not isinstance(evidence_refs, list)
@@ -347,20 +356,20 @@ def load_egress_sandbox_attestation(
         or len(evidence_refs) > 20
         or any(not isinstance(item, str) or not item.strip() or len(item) > 512 for item in evidence_refs)
     ):
-        raise ValueError("Egress attestation evidence_refs must contain 1-20 references.")
+        raise ValueError(t("tools.url.evidence_refs"))
 
     issued_at = _parse_utc(document["issued_at"], "issued_at")
     not_before = _parse_utc(document["not_before"], "not_before")
     expires_at = _parse_utc(document["expires_at"], "expires_at")
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     if not issued_at <= not_before < expires_at:
-        raise ValueError("Egress attestation validity timestamps are inconsistent.")
+        raise ValueError(t("tools.url.validity_inconsistent"))
     if (expires_at - issued_at).total_seconds() > _ATTESTATION_MAX_LIFETIME_SECONDS:
-        raise ValueError("Egress attestation validity exceeds 24 hours.")
+        raise ValueError(t("tools.url.validity_long"))
     if current < not_before:
-        raise ValueError("Egress attestation is not yet valid.")
+        raise ValueError(t("tools.url.not_yet_valid"))
     if current >= expires_at:
-        raise ValueError("Egress attestation has expired.")
+        raise ValueError(t("tools.url.expired"))
 
     authentication = document["authentication"]
     if not isinstance(authentication, dict) or set(authentication) != {
@@ -368,9 +377,9 @@ def load_egress_sandbox_attestation(
         "key_id",
         "signature_b64url",
     }:
-        raise ValueError("Egress attestation authentication fields are invalid.")
+        raise ValueError(t("tools.url.authentication_fields"))
     if authentication["algorithm"] != "ed25519":
-        raise ValueError("Unsupported egress attestation authentication algorithm.")
+        raise ValueError(t("tools.url.authentication_algorithm"))
 
     trusted_key_id = expected_key_id or os.environ.get("CLAUDE_ADS_EGRESS_ATTESTATION_KEY_ID")
     trusted_environment = expected_environment_id or os.environ.get(
@@ -380,32 +389,27 @@ def load_egress_sandbox_attestation(
         "CLAUDE_ADS_EGRESS_ATTESTATION_PUBLIC_KEY_B64URL"
     )
     if not trusted_key_id or not trusted_environment or not encoded_key:
-        raise ValueError(
-            "External egress attestation trust material is incomplete; public key, key ID, "
-            "and environment ID are required."
-        )
+        raise ValueError(t("tools.url.trust_incomplete"))
     if authentication["key_id"] != trusted_key_id:
-        raise ValueError("Egress attestation key ID is not trusted.")
+        raise ValueError(t("tools.url.key_untrusted"))
     if document["environment_id"] != trusted_environment:
-        raise ValueError("Egress attestation is bound to another environment.")
+        raise ValueError(t("tools.url.environment_mismatch"))
 
     if Ed25519PublicKey is None:
-        raise ValueError(
-            "The cryptography package is required to verify egress attestations."
-        )
-    public_key_bytes = _decode_b64url(encoded_key, "trust public key")
+        raise ValueError(t("tools.url.cryptography_required"))
+    public_key_bytes = _decode_b64url(encoded_key, t("tools.url.trust_public_key"))
     if len(public_key_bytes) != 32:
-        raise ValueError("Egress attestation Ed25519 public key must be 32 bytes.")
+        raise ValueError(t("tools.url.public_key_size"))
     signature = _decode_b64url(authentication["signature_b64url"], "signature_b64url")
     if len(signature) != 64:
-        raise ValueError("Egress attestation Ed25519 signature must be 64 bytes.")
+        raise ValueError(t("tools.url.signature_size"))
     try:
         Ed25519PublicKey.from_public_bytes(public_key_bytes).verify(
             signature,
             _canonical_attestation_payload(document),
         )
     except (InvalidSignature, ValueError) as exc:
-        raise ValueError("Egress attestation authentication failed.") from exc
+        raise ValueError(t("tools.url.authentication_failed")) from exc
 
     return EgressSandboxAttestation(
         attestation_id=document["attestation_id"],
@@ -429,11 +433,11 @@ def _require_verified_egress_attestation(
         or attestation._verification_marker is not _ATTESTATION_VERIFIED
     ):
         raise ValueError(
-            "Browser request blocked: a verified egress-sandbox attestation document is required."
+            t("tools.url.browser_attestation_required")
         )
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     if current >= attestation.expires_at:
-        raise ValueError("Browser request blocked: the egress-sandbox attestation has expired.")
+        raise ValueError(t("tools.url.browser_attestation_expired"))
     return attestation
 
 
@@ -446,32 +450,32 @@ def _validate_and_resolve_url(url: str) -> tuple[str, Any, tuple[str, ...]]:
     to close.
     """
     if not isinstance(url, str):
-        raise ValueError("URL must be a string.")
+        raise ValueError(t("tools.url.string_required"))
     url = url.strip()
     if not url or len(url) > _MAX_URL_LENGTH:
-        raise ValueError("URL is empty or too long.")
+        raise ValueError(t("tools.url.empty_or_long"))
     if any(ord(char) < 32 for char in url) or "\\" in url:
-        raise ValueError("URL contains forbidden control characters or backslashes.")
+        raise ValueError(t("tools.url.forbidden_characters"))
 
     parsed = urlparse(url)
     if not parsed.scheme:
         url = f"https://{url}"
         parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
-        raise ValueError(f"Invalid URL scheme: {parsed.scheme}. Only http/https allowed.")
+        raise ValueError(t("tools.url.invalid_scheme", scheme=sanitize_error(parsed.scheme)))
     hostname = parsed.hostname
     if not hostname:
-        raise ValueError("URL has no hostname.")
+        raise ValueError(t("tools.url.no_hostname"))
     if parsed.username is not None or parsed.password is not None:
-        raise ValueError("Credentials in URLs are not allowed.")
+        raise ValueError(t("tools.url.credentials_forbidden"))
     try:
         parsed.port
     except ValueError as exc:
-        raise ValueError("URL has an invalid port.") from exc
+        raise ValueError(t("tools.url.invalid_port")) from exc
 
     normalized_hostname = hostname.rstrip(".").lower()
     if normalized_hostname in _LOCAL_HOSTNAMES or normalized_hostname.endswith(".localhost"):
-        raise ValueError("URL targets a local/internal hostname.")
+        raise ValueError(t("tools.url.local_hostname"))
     try:
         resolved = socket.getaddrinfo(
             normalized_hostname,
@@ -480,9 +484,9 @@ def _validate_and_resolve_url(url: str) -> tuple[str, Any, tuple[str, ...]]:
             socket.SOCK_STREAM,
         )
     except socket.gaierror as exc:
-        raise ValueError(f"DNS resolution failed for {normalized_hostname}: {exc}") from exc
+        raise ValueError(t("tools.url.dns_failed", hostname=sanitize_error(normalized_hostname), error=sanitize_error(exc))) from exc
     if not resolved:
-        raise ValueError(f"DNS resolution returned no addresses for {normalized_hostname}")
+        raise ValueError(t("tools.url.dns_empty", hostname=sanitize_error(normalized_hostname)))
 
     addresses: list[str] = []
     for _, _, _, _, addr in resolved:
@@ -490,7 +494,7 @@ def _validate_and_resolve_url(url: str) -> tuple[str, Any, tuple[str, ...]]:
         # is_global rejects loopback, private, link-local, multicast,
         # documentation, benchmark, CGNAT, unspecified, and reserved space.
         if not ip.is_global or ip.is_multicast or ip.is_reserved:
-            raise ValueError(f"URL resolves to blocked non-public IP: {ip}")
+            raise ValueError(t("tools.url.nonpublic_ip", ip=ip))
         canonical = str(ip)
         if canonical not in addresses:
             addresses.append(canonical)
@@ -556,7 +560,7 @@ class _PinnedHTTPAdapter(HTTPAdapter):
 
     def __init__(self, parsed: Any, addresses: tuple[str, ...]) -> None:
         if HTTPAdapter is object:  # pragma: no cover - dependency guard
-            raise RuntimeError("requests is required for guarded HTTP requests")
+            raise RuntimeError(t("tools.url.requests_required"))
         super().__init__()
         self._scheme = parsed.scheme
         self._hostname = parsed.hostname.rstrip(".").lower()
@@ -571,7 +575,7 @@ class _PinnedHTTPAdapter(HTTPAdapter):
             or hostname != self._hostname
             or parsed.port != self._port
         ):
-            raise InvalidURL("Pinned adapter cannot be reused for another origin.")
+            raise InvalidURL(t("tools.url.adapter_origin"))
         return parsed
 
     def get_connection_with_tls_context(
@@ -583,9 +587,9 @@ class _PinnedHTTPAdapter(HTTPAdapter):
     ) -> Any:
         parsed = self._check_request_origin(request)
         if proxies:
-            raise InvalidURL("Proxies are forbidden for guarded requests.")
+            raise InvalidURL(t("tools.url.proxies_forbidden"))
         if parsed.scheme == "https" and verify is False:
-            raise InvalidURL("TLS certificate verification cannot be disabled.")
+            raise InvalidURL(t("tools.url.tls_required"))
 
         host_params, pool_kwargs = self.build_connection_pool_key_attributes(
             request,
@@ -621,12 +625,12 @@ def guarded_request(session: Any, method: str, url: str, **kwargs: Any) -> Any:
     TOCTOU window without changing Host, SNI, or TLS hostname verification.
     """
     if requests is None:  # pragma: no cover - dependency guard
-        raise ValueError("requests is required for guarded HTTP requests.")
+        raise ValueError(t("tools.url.requests_required_period"))
     if not isinstance(url, str):
-        raise ValueError("URL must be a string.")
+        raise ValueError(t("tools.url.string_required"))
     raw_url = url.strip()
     if any(ord(char) < 32 for char in raw_url) or "\\" in raw_url:
-        raise ValueError("URL contains forbidden control characters or backslashes.")
+        raise ValueError(t("tools.url.forbidden_characters"))
     if not urlparse(raw_url).scheme:
         raw_url = f"https://{raw_url}"
     try:
@@ -636,15 +640,15 @@ def guarded_request(session: Any, method: str, url: str, **kwargs: Any) -> Any:
         # unpinned adapter.
         canonical_url = requests.Request(method.upper(), raw_url).prepare().url
     except (requests.exceptions.RequestException, ValueError) as exc:
-        raise ValueError(f"Invalid URL: {sanitize_error(exc)}") from exc
+        raise ValueError(t("tools.url.invalid_url", error=sanitize_error(exc))) from exc
 
     validated, parsed, addresses = _validate_and_resolve_url(canonical_url)
     if kwargs.get("allow_redirects") is True:
-        raise ValueError("Automatic redirects are forbidden for guarded requests.")
+        raise ValueError(t("tools.url.redirects_forbidden"))
     if parsed.scheme == "https" and kwargs.get("verify") is False:
-        raise ValueError("TLS certificate verification cannot be disabled.")
+        raise ValueError(t("tools.url.tls_required"))
     if kwargs.get("proxies"):
-        raise ValueError("Proxies are forbidden for guarded requests.")
+        raise ValueError(t("tools.url.proxies_forbidden"))
     kwargs["allow_redirects"] = False
 
     if not hasattr(session, "mount"):
@@ -652,7 +656,7 @@ def guarded_request(session: Any, method: str, url: str, **kwargs: Any) -> Any:
         # with an isolated Session rather than using the module-level pool,
         # which cannot be safely pinned.
         if requests is None or session is not requests:
-            raise ValueError("guarded_request requires requests.Session.")
+            raise ValueError(t("tools.url.session_required"))
         session = requests.Session()
         session.trust_env = False
 
@@ -660,10 +664,10 @@ def guarded_request(session: Any, method: str, url: str, **kwargs: Any) -> Any:
     session.mount(_origin_prefix(parsed), adapter)
     get_adapter = getattr(session, "get_adapter", None)
     if get_adapter is not None and get_adapter(validated) is not adapter:
-        raise ValueError("Pinned adapter selection failed; request denied.")
+        raise ValueError(t("tools.url.adapter_failed"))
     dispatcher = getattr(session, method.lower(), None)
     if dispatcher is None:
-        raise ValueError(f"Unsupported HTTP method: {method}")
+        raise ValueError(t("tools.url.unsupported_method", method=sanitize_error(method)))
     return dispatcher(validated, **kwargs)
 
 
@@ -742,7 +746,7 @@ def resolve_output_path(
     try:
         candidate.relative_to(base)
     except ValueError as exc:
-        raise ValueError(f"Output path escapes configured root: {candidate}") from exc
+        raise ValueError(t("tools.url.output_escape", path=sanitize_error(candidate))) from exc
     if create_parent:
         candidate.parent.mkdir(parents=True, exist_ok=True)
     return candidate

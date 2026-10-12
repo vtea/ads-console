@@ -1,90 +1,83 @@
-# Brand Voice to Visual Style Mapping
+# 品牌语气到视觉风格的映射
 
-> Updated: 2026-04-01
-> Source: Used by creative-strategist and visual-designer agents
+> 更新日期：2026-04-01
+> 来源：供 creative-strategist 和 visual-designer 代理使用
 
-## Purpose
+## 目的
 
-Brand voice scores from `brand-profile.json` can suggest visual hypotheses; they do
-not translate deterministically into a visual identity. Brand examples, approved
-assets, accessibility, culture, audience, placement, and the creative brief take
-precedence. Use mappings below to propose testable directions and require human
-review before generation or publication.
+`brand-profile.json` 中的品牌语气分数可以提示视觉假设；不能确定性地转化为视觉识别。品牌示例、已批准素材、可访问性、文化、受众、版位和创意简报具有优先权。使用以下映射提出可测试方向，并在生成或发布前要求人工审查。
 
-## Axis Mappings
+## 维度映射
 
 ### 1. formal_casual
 
-| Range     | Score | Visual Descriptors                                      |
+| 范围     | 分数 | 视觉描述                                      |
 |-----------|-------|---------------------------------------------------------|
-| Low       | 1-3   | Clean lines, symmetrical, muted palette, serif type     |
-| Mid       | 4-6   | Balanced layout, neutral tones, modern sans-serif       |
-| High      | 7-10  | Organic shapes, warm palette, hand-drawn elements       |
+| 低       | 1-3   | 简洁线条、对称、柔和配色、衬线字体     |
+| 中       | 4-6   | 平衡布局、中性色调、现代无衬线字体       |
+| 高       | 7-10  | 有机形状、暖色配色、手绘元素       |
 
 ### 2. rational_emotional
 
-| Range     | Score | Visual Descriptors                                      |
+| 范围     | 分数 | 视觉描述                                      |
 |-----------|-------|---------------------------------------------------------|
-| Low       | 1-3   | Data overlays, charts, structured grids, cool tones     |
-| Mid       | 4-6   | Infographic style, balanced data and imagery            |
-| High      | 7-10  | Expressive color, human faces, dynamic motion blur      |
+| 低       | 1-3   | 数据叠加层、图表、结构化网格、冷色调     |
+| 中       | 4-6   | 信息图风格、数据与图像平衡            |
+| 高       | 7-10  | 富于表现力的色彩、人物面孔、动态运动模糊      |
 
 ### 3. bold_subtle
 
-| Range     | Score | Visual Descriptors                                      |
+| 范围     | 分数 | 视觉描述                                      |
 |-----------|-------|---------------------------------------------------------|
-| Low       | 1-3   | Soft focus, pastel tones, whitespace, thin strokes      |
-| Mid       | 4-6   | Medium contrast, standard weight type, clear hierarchy  |
-| High      | 7-10  | High contrast, saturated color, heavy type, full bleed  |
+| 低       | 1-3   | 柔焦、粉彩色调、留白、细笔画      |
+| 中       | 4-6   | 中等对比度、标准字重、清晰层级  |
+| 高       | 7-10  | 高对比度、饱和色彩、粗重字体、满版出血  |
 
 ### 4. traditional_innovative
 
-| Range     | Score | Visual Descriptors                                      |
+| 范围     | 分数 | 视觉描述                                      |
 |-----------|-------|---------------------------------------------------------|
-| Low       | 1-3   | Classic compositions, heritage textures, earth tones    |
-| Mid       | 4-6   | Contemporary layouts, balanced modern and classic cues  |
-| High      | 7-10  | Futuristic gradients, 3D renders, neon accents, glass   |
+| 低       | 1-3   | 经典构图、传统质感、大地色调    |
+| 中       | 4-6   | 当代布局、平衡现代与经典线索  |
+| 高       | 7-10  | 未来感渐变、3D 渲染、霓虹点缀、玻璃质感   |
 
 ### 5. expert_accessible
 
-| Range     | Score | Visual Descriptors                                      |
+| 范围     | 分数 | 视觉描述                                      |
 |-----------|-------|---------------------------------------------------------|
-| Low       | 1-3   | Technical diagrams, denser information, specialist cues |
-| Mid       | 4-6   | Balanced explanation, clear hierarchy, mixed detail     |
-| High      | 7-10  | Plain-language labels, generous hierarchy, familiar cues |
+| 低       | 1-3   | 技术图解、更密集信息、专业线索 |
+| 中       | 4-6   | 平衡解释、清晰层级、混合细节     |
+| 高       | 7-10  | 通俗标签、宽松层级、熟悉线索 |
 
 ### 6. playful_serious
 
-| Range     | Score | Visual Descriptors                                      |
+| 范围     | 分数 | 视觉描述                                      |
 |-----------|-------|---------------------------------------------------------|
-| Low       | 1-3   | Whimsical patterns, cartoon elements, candy colors      |
-| Mid       | 4-6   | Lifestyle photography, natural color grading            |
-| High      | 7-10  | Cinematic lighting, desaturated palette, minimal decor  |
+| 低       | 1-3   | 奇趣图案、卡通元素、糖果色      |
+| 中       | 4-6   | 生活方式摄影、自然调色            |
+| 高       | 7-10  | 电影感照明、低饱和配色、极简装饰  |
 
-## How to Apply
+## 应用方法
 
-1. Read `brand-profile.json` and extract the six voice axis scores.
-2. For each axis, treat the matching range as candidate descriptors only.
-3. Compare candidates with supplied brand assets and remove contradictions,
-   stereotypes, inaccessible choices, and culturally unsafe assumptions.
-4. Draft at least two materially different style directions when evidence is weak.
-5. Record the selected direction and owner approval in the creative manifest, then
-   pass normalized descriptors to the installed image capability.
+1. 阅读 `brand-profile.json` 并提取六个语气维度分数。
+2. 对每个维度，仅将匹配范围视为候选描述。
+3. 将候选项与提供的品牌素材比较，移除矛盾、刻板印象、不可访问选择和文化上不安全的假设。
+4. 证据薄弱时，至少起草两个实质不同的风格方向。
+5. 在创意清单中记录所选方向和负责人批准，然后将标准化描述传递给已安装图像能力。
 
-## Example
+## 示例
 
-Given a brand with these scores:
+给定具有以下分数的品牌：
 
-- formal_casual: 7 (High; organic shapes, warm palette)
-- bold_subtle: 8 (High; high contrast, saturated color)
-- playful_serious: 3 (Low; whimsical patterns, candy colors)
+- formal_casual: 7（高；有机形状、暖色配色）
+- bold_subtle: 8（高；高对比度、饱和色彩）
+- playful_serious: 3（低；奇趣图案、糖果色）
 
-The resulting [STYLE] component:
+得到的 [STYLE] 组成部分：
 
 ```
 [STYLE]: organic shapes, warm palette, high contrast, saturated color,
 whimsical patterns, candy colors
 ```
 
-This is one hypothesis for review. It is not evidence that the brand has this
-identity or that the direction will improve performance.
+这是一项供审查的假设。它不能证明品牌具有这种识别，也不能证明该方向会改善表现。

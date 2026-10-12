@@ -13,6 +13,7 @@ from typing import Any, Mapping
 
 from ..contracts import PLATFORMS, ContractError, validate_contract
 from ..models import AccountSnapshot
+from ..i18n import t
 from .base import AdapterCapabilities, AdapterError, BaseAdapter, Capability
 
 REQUIRED_COLUMNS = (
@@ -42,7 +43,7 @@ class CSVExportError(AdapterError):
 def _required(row: Mapping[str, str | None], field: str, row_number: int) -> str:
     value = row.get(field)
     if value is None or not value.strip():
-        raise CSVExportError(f"row {row_number}: {field} must not be empty")
+        raise CSVExportError('core.export.row_required', row_number=row_number, field=field)
     return value.strip()
 
 
@@ -50,23 +51,23 @@ def _date(value: str, field: str, row_number: int) -> date:
     try:
         return date.fromisoformat(value)
     except ValueError as exc:
-        raise CSVExportError(f"row {row_number}: {field} must be an ISO 8601 date") from exc
+        raise CSVExportError('core.export.row_date', row_number=row_number, field=field) from exc
 
 
 def _decimal(value: str, field: str, row_number: int) -> Decimal:
     try:
         number = Decimal(value)
     except InvalidOperation as exc:
-        raise CSVExportError(f"row {row_number}: {field} must be numeric") from exc
+        raise CSVExportError('core.export.row_numeric', row_number=row_number, field=field) from exc
     if not number.is_finite() or number < 0:
-        raise CSVExportError(f"row {row_number}: {field} must be a finite non-negative number")
+        raise CSVExportError('core.export.row_nonnegative', row_number=row_number, field=field)
     return number
 
 
 def _number(value: Decimal) -> float:
     number = float(value)
     if not math.isfinite(number):
-        raise CSVExportError("numeric value is outside the supported finite range")
+        raise CSVExportError('core.export.numeric_range')
     return number
 
 
@@ -84,7 +85,7 @@ class GenericCSVExportAdapter(BaseAdapter):
     def __init__(self, platform: str) -> None:
         normalized = platform.strip().lower()
         if normalized not in PLATFORMS:
-            raise CSVExportError(f"unsupported platform: {platform!r}")
+            raise CSVExportError('core.export.platform', platform=platform)
         self.platform = normalized
         self.adapter_id = f"{normalized}-generic-csv-v1"
 
@@ -100,7 +101,7 @@ class GenericCSVExportAdapter(BaseAdapter):
                     "account-mutation",
                     "live-write",
                     "disabled",
-                    "Generic exports have no authenticated write destination.",
+                    t("core.export.no_write_destination"),
                 ),
             ),
         )
@@ -109,34 +110,34 @@ class GenericCSVExportAdapter(BaseAdapter):
         path = Path(source)
         try:
             if not path.is_file():
-                raise CSVExportError(f"export is not a regular file: {path}")
+                raise CSVExportError('core.export.regular_file', path=path)
             size = path.stat().st_size
         except OSError as exc:
-            raise CSVExportError(f"cannot inspect export: {exc}") from exc
+            raise CSVExportError('core.export.inspect', exc=exc) from exc
         if size > MAX_EXPORT_BYTES:
-            raise CSVExportError(f"export exceeds {MAX_EXPORT_BYTES} byte limit")
+            raise CSVExportError('core.export.byte_limit', MAX_EXPORT_BYTES=MAX_EXPORT_BYTES)
 
         try:
             with path.open("r", encoding="utf-8-sig", newline="") as handle:
                 reader = csv.DictReader(handle, strict=True)
                 headers = reader.fieldnames or []
                 if len(headers) > MAX_EXPORT_COLUMNS:
-                    raise CSVExportError(f"export exceeds {MAX_EXPORT_COLUMNS} column limit")
+                    raise CSVExportError('core.export.column_limit', MAX_EXPORT_COLUMNS=MAX_EXPORT_COLUMNS)
                 duplicates = sorted(field for field, count in Counter(headers).items() if count > 1)
                 if duplicates:
-                    raise CSVExportError(f"export contains duplicate column(s): {', '.join(duplicates)}")
+                    raise CSVExportError('core.export.duplicate_columns', value1=', '.join(duplicates))
                 missing = [field for field in REQUIRED_COLUMNS if field not in headers]
                 if missing:
-                    raise CSVExportError(f"export missing required column(s): {', '.join(missing)}")
+                    raise CSVExportError('core.export.required_columns', value1=', '.join(missing))
                 rows = []
                 for row_number, row in enumerate(reader, start=2):
                     if row_number - 1 > MAX_EXPORT_ROWS:
-                        raise CSVExportError(f"export exceeds {MAX_EXPORT_ROWS} row limit")
+                        raise CSVExportError('core.export.row_limit', MAX_EXPORT_ROWS=MAX_EXPORT_ROWS)
                     rows.append(self._normalize_row(row, row_number))
         except (OSError, UnicodeError, csv.Error) as exc:
-            raise CSVExportError(f"cannot read export: {exc}") from exc
+            raise CSVExportError('core.export.read', exc=exc) from exc
         if not rows:
-            raise CSVExportError("export must contain at least one data row")
+            raise CSVExportError('core.export.empty')
         return self._build_snapshot(rows)
 
     def _normalize_row(self, row: Mapping[str, str | None], row_number: int) -> dict[str, Any]:
@@ -147,7 +148,7 @@ class GenericCSVExportAdapter(BaseAdapter):
         normalized["spend"] = _decimal(normalized["spend"], "spend", row_number)
         currency = normalized["currency"]
         if len(currency) != 3 or not currency.isalpha() or currency != currency.upper():
-            raise CSVExportError(f"row {row_number}: currency must be a three-letter uppercase code")
+            raise CSVExportError('core.export.currency', row_number=row_number)
         return normalized
 
     def _build_snapshot(self, rows: list[dict[str, Any]]) -> AccountSnapshot:
@@ -155,11 +156,11 @@ class GenericCSVExportAdapter(BaseAdapter):
         account_names = {str(row["account_name"]) for row in rows}
         currencies = {str(row["currency"]) for row in rows}
         if len(account_ids) != 1:
-            raise CSVExportError("export must contain exactly one account_id")
+            raise CSVExportError('core.export.account_id')
         if len(account_names) != 1:
-            raise CSVExportError("export must contain exactly one account_name")
+            raise CSVExportError('core.export.account_name')
         if len(currencies) != 1:
-            raise CSVExportError("export must contain exactly one currency")
+            raise CSVExportError('core.export.currency_unique')
 
         campaigns: dict[str, dict[str, Any]] = {}
         creatives: dict[str, dict[str, Any]] = {}
@@ -172,15 +173,12 @@ class GenericCSVExportAdapter(BaseAdapter):
             creative_id = str(row["creative_id"])
             row_grain = (row["date"], campaign_id, creative_id)
             if row_grain in row_grains:
-                raise CSVExportError(
-                    "export contains duplicate additive row grain "
-                    f"({row['date'].isoformat()}, {campaign_id}, {creative_id})"
-                )
+                raise CSVExportError('core.export.duplicate_grain', value1=row['date'].isoformat(), campaign_id=campaign_id, creative_id=creative_id)
             row_grains.add(row_grain)
             campaign_identity = (str(row["campaign_name"]), str(row["campaign_status"]))
             existing_campaign = campaigns.get(campaign_id)
             if existing_campaign and (existing_campaign["name"], existing_campaign["status"]) != campaign_identity:
-                raise CSVExportError(f"campaign_id {campaign_id!r} has conflicting identity fields")
+                raise CSVExportError('core.export.campaign_identity', campaign_id=campaign_id)
             if not existing_campaign:
                 existing_campaign = {
                     "campaign_id": campaign_id,
@@ -198,7 +196,7 @@ class GenericCSVExportAdapter(BaseAdapter):
                 "name": str(row["creative_name"]),
             }
             if creative_id in creatives and creatives[creative_id] != creative:
-                raise CSVExportError(f"creative_id {creative_id!r} has conflicting identity fields")
+                raise CSVExportError('core.export.creative_identity', creative_id=creative_id)
             creatives[creative_id] = creative
 
             action = str(row["conversion_action"])
@@ -206,9 +204,7 @@ class GenericCSVExportAdapter(BaseAdapter):
 
             budget_key = (campaign_id, row["date"])
             if budget_key in budgets and budgets[budget_key] != row["budget"]:
-                raise CSVExportError(
-                    f"campaign_id {campaign_id!r} has conflicting budget values for {row['date'].isoformat()}"
-                )
+                raise CSVExportError('core.export.budget_conflict', campaign_id=campaign_id, value2=row['date'].isoformat())
             budgets[budget_key] = row["budget"]
 
         snapshot: AccountSnapshot = {
@@ -241,5 +237,5 @@ class GenericCSVExportAdapter(BaseAdapter):
         try:
             validate_contract("account-snapshot", snapshot)
         except ContractError as exc:
-            raise CSVExportError(f"normalized snapshot violates AccountSnapshot contract: {exc}") from exc
+            raise CSVExportError('core.export.snapshot_contract', exc=exc) from exc
         return snapshot

@@ -1,90 +1,70 @@
-# Platform Advertising Policy Review
+# 平台广告政策审查
 
-**Verified:** 2026-08-25
-**Refresh due:** 2026-09-24 and immediately after a policy or enforcement notice
-**Scope:** platform policy; regulation is handled in `compliance-requirements.md`
-**Evidence status:** all listed official policy entry points returned HTTP 200;
-precise rules still require a current product, geography, and account review
+**已核验：** 2026-08-25
+**刷新到期：** 2026-09-24，并在政策或执法通知后立即刷新
+**范围：** 平台政策；法规由 `compliance-requirements.md` 处理
+**证据状态：** 所列官方政策入口均返回 HTTP 200；精确规则仍需结合当前产品、地理区域和账户审查
 
-Platform policy is contextual and changes by product, geography, objective,
-targeting, destination, advertiser status, and certification. Do not replace a
-current policy review with a remembered list of prohibited or restricted topics.
+平台政策依具体情境而定，并随产品、地理区域、目标、定向、目标页面、广告主状态和认证而变化。不要用记忆中的禁止或限制主题列表替代当前政策审查。
 
-## Review order
+## 审查顺序
 
-1. Identify advertiser, payer/beneficiary, product, claims, destination,
-   geography, audience, objective, format, and data sources.
-2. Open the active platform's current policy center and account notices.
-3. Classify each rule as prohibited, restricted/eligible, disclosure-required,
-   destination-related, data-use-related, or editorial.
-4. Verify certifications, authorization, age/geography limits, special-category
-   selection, and appeal status from account evidence.
-5. Review the landing experience and all variants, not only the visible ad copy.
-6. Preserve the exact policy URL, retrieval date, quoted rule fragment within
-   quotation limits, account observation, and confidence.
+1. 识别广告主、付款方/受益方、产品、声明、目标页面、地理区域、受众、目标、格式和数据来源。
+2. 打开活跃平台当前的政策中心和账户通知。
+3. 将每条规则分类为禁止、受限/符合资格、要求披露、与目标页面相关、与数据使用相关或编辑规范。
+4. 根据账户证据核实认证、授权、年龄/地理限制、特殊类别选择和申诉状态。
+5. 审查落地体验及所有变体，而不只是可见广告文案。
+6. 保留精确政策 URL、检索日期、引用限额内的规则原文片段、账户观察和置信度。
 
-## Policy source entry points
+## 政策来源入口
 
-Use the current official policy center for the active platform:
+使用活跃平台当前的官方政策中心：
 
-- [Google Ads policies](https://support.google.com/adspolicy/)
-- [Meta Advertising Standards](https://transparency.meta.com/policies/ad-standards/)
-- [LinkedIn Ads Policies](https://www.linkedin.com/legal/ads-policy)
-- [TikTok Advertising Policies](https://ads.tiktok.com/help/article/tiktok-advertising-policies-industry-entry)
-- [Microsoft Advertising policies](https://about.ads.microsoft.com/en/resources/policies)
-- [Apple Ads policies](https://ads.apple.com/policies)
-- [Amazon Ads policy quick reference](https://advertising.amazon.com/resources/ad-policy/quick-reference/)
-- [Reddit Ads Help and policy discovery](https://business.reddithelp.com/s/)
-- [Pinterest Advertising Guidelines](https://policy.pinterest.com/en/advertising-guidelines)
-- [Snap Advertising Policies](https://values.snap.com/policy/advertising-policies)
-- [X Ads policies](https://business.x.com/en/help/ads-policies)
+- [Google Ads 政策](https://support.google.com/adspolicy/)
+- [Meta 广告发布准则](https://transparency.meta.com/policies/ad-standards/)
+- [LinkedIn 广告政策](https://www.linkedin.com/legal/ads-policy)
+- [TikTok 广告政策](https://ads.tiktok.com/help/article/tiktok-advertising-policies-industry-entry)
+- [Microsoft Advertising 政策](https://about.ads.microsoft.com/en/resources/policies)
+- [Apple Ads 政策](https://ads.apple.com/policies)
+- [Amazon Ads 政策快速参考](https://advertising.amazon.com/resources/ad-policy/quick-reference/)
+- [Reddit Ads 帮助与政策查找](https://business.reddithelp.com/s/)
+- [Pinterest 广告指南](https://policy.pinterest.com/en/advertising-guidelines)
+- [Snap 广告政策](https://values.snap.com/policy/advertising-policies)
+- [X Ads 政策](https://business.x.com/en/help/ads-policies)
 
-Register a source-ledger entry before treating a precise policy requirement as
-current. A policy hub is not enough when a more specific product or country page
-controls the case.
+在将精确政策要求视为当前要求之前，登记来源台账条目。当更具体的产品或国家页面决定该案例时，仅有政策中心不够。
 
-## Finding contract
+## 发现契约
 
-Each policy finding includes:
+每项政策发现包括：
 
-- Applicable platform, account/object IDs, geography, product, and format.
-- Current policy title, direct URL, retrieval date, and source ID.
-- Observed creative, destination, targeting, certification, or account state.
-- Result: `pass`, `fail`, `unknown`, or `not_applicable`.
-- Severity based on observed consequence and exposure, not category name alone.
-- Smallest compliant remediation, owner, and appeal or re-review path.
+- 适用平台、账户/对象 ID、地理区域、产品和格式。
+- 当前政策标题、直接 URL、检索日期和来源 ID。
+- 观察到的创意、目标页面、定向、认证或账户状态。
+- 结果：`pass`、`fail`、`unknown` 或 `not_applicable`。
+- 基于已观察后果和风险敞口的严重程度，而非仅基于类别名称。
+- 最小的合规补救措施、负责人，以及申诉或复审路径。
 
-Use `unknown` when the advertiser's authorization, certification, targeting, or
-account state cannot be verified. Do not infer a pass from the absence of a
-disapproval.
+无法核实广告主授权、认证、定向或账户状态时，使用 `unknown`。不要因没有拒登就推断通过。
 
-## High-risk review prompts
+## 高风险审查提示
 
-Escalate the depth of review for health, financial products, housing, employment,
-credit, alcohol, gambling, political/social-issue ads, children, dating, crypto,
-weapons, controlled goods, subscriptions, lead generation, testimonials, and
-AI-generated or manipulated media. The label “high risk” triggers current-source
-review; it does not assert that every platform treats the category identically.
+对健康、金融产品、住房、就业、信贷、酒类、赌博、政治/社会议题广告、儿童、约会、加密货币、武器、受管制商品、订阅、线索获取、证言，以及 AI 生成或操纵媒体，提升审查深度。“高风险”标签触发当前来源审查；它不声称每个平台对该类别采取相同处理。
 
-Check:
+检查：
 
-- Whether the product can be advertised at all in the target geography.
-- Required licensing, verification, certification, disclaimer, or special category.
-- Prohibited targeting or audience construction.
-- Claim substantiation and material limitations near the claim.
-- Destination identity, pricing, billing, privacy, cancellation, and contact details.
-- Consistency between creative, form, offer, and landing page.
-- Use of personal, sensitive, inferred, or customer-list data.
+- 产品是否能在目标地理区域投放广告。
+- 所需许可、验证、认证、免责声明或特殊类别。
+- 被禁止的定向或受众构建。
+- 声明佐证，以及声明附近的重要限制说明。
+- 目标页面身份、定价、账单、隐私、取消和联系信息。
+- 创意、表单、优惠与落地页的一致性。
+- 个人、敏感、推断或客户名单数据的使用。
 
-## Recommendations and platform automation
+## 建议与平台自动化
 
-Treat recommendation tabs, imported settings, automated creative variants, and
-AI-generated assets as untrusted proposals. Review them against the same policy,
-business, and mutation gates as a human-authored change. Never accept or reject a
-recommendation solely because the platform labels it a best practice.
+将建议标签页、导入设置、自动创意变体和 AI 生成素材视为不可信提案。按照与人工编写变更相同的政策、业务和变更关卡审查。绝不要仅因平台将其标记为最佳实践就接受或拒绝建议。
 
-## Boundaries
+## 边界
 
-Platform approval is not legal clearance. Legal compliance is not proof of
-platform eligibility. Keep the platform-policy finding and regulatory exposure
-separate, and obtain qualified counsel for jurisdiction-specific legal decisions.
+平台批准不等于法律许可。法律合规也不能证明平台资格。将平台政策发现与法规风险分开，并由合格法律顾问作出特定司法管辖区的法律决定。

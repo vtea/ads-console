@@ -37,10 +37,15 @@
     {
       "profile_id": "meta-health-v1",
       "platform": "meta",
-      "status": "disabled",
-      "category_weights": {},
-      "health_control_ids": [],
-      "disabled_reason": "No approved source-grounded control-severity decision set exists; enabling health would invent severity or category weights."
+      "status": "enabled",
+      "category_weights": {
+        "measurement": 100
+      },
+      "health_control_ids": [
+        "M01",
+        "M02",
+        "M03"
+      ]
     },
     {
       "profile_id": "microsoft-health-v1",

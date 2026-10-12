@@ -7,6 +7,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from typing import Any, Mapping, Sequence
 
 from .contracts import ContractError, validate_contract
+from .errors import LocalizedError
 
 SEVERITY_WEIGHTS: Mapping[str, Decimal] = {
     "critical": Decimal("5"),
@@ -19,19 +20,19 @@ NORMAL_COVERAGE = Decimal("80")
 PROVISIONAL_COVERAGE = Decimal("60")
 
 
-class ScoringError(ValueError):
+class ScoringError(LocalizedError, ValueError):
     """Raised for invalid or internally inconsistent scoring inputs."""
 
 
 def _decimal(value: Any, field: str) -> Decimal:
     if isinstance(value, bool):
-        raise ScoringError(f"{field} must be numeric")
+        raise ScoringError('core.scoring.numeric', field=field)
     try:
         result = Decimal(str(value))
     except Exception as exc:
-        raise ScoringError(f"{field} must be numeric") from exc
+        raise ScoringError('core.scoring.numeric', field=field) from exc
     if not result.is_finite():
-        raise ScoringError(f"{field} must be finite")
+        raise ScoringError('core.scoring.finite', field=field)
     return result
 
 
@@ -108,17 +109,17 @@ def _coverage_status(coverage: Decimal) -> str:
 
 def _validated_weights(category_weights: Mapping[str, Any]) -> dict[str, Decimal]:
     if not category_weights:
-        raise ScoringError("category_weights must not be empty")
+        raise ScoringError('core.scoring.weights_empty')
     weights: dict[str, Decimal] = {}
     for category, raw_weight in sorted(category_weights.items()):
         if not isinstance(category, str) or not category:
-            raise ScoringError("category weight keys must be non-empty strings")
+            raise ScoringError('core.scoring.weight_keys')
         weight = _decimal(raw_weight, f"category_weights.{category}")
         if weight < 0:
-            raise ScoringError(f"category_weights.{category} must be >= 0")
+            raise ScoringError('core.scoring.weight_minimum', category=category)
         weights[category] = weight
     if sum(weights.values(), Decimal("0")) != CATEGORY_WEIGHT_TOTAL:
-        raise ScoringError("category weights must sum to exactly 100")
+        raise ScoringError('core.scoring.weights_total')
     return weights
 
 
@@ -142,25 +143,25 @@ def score_account(
         try:
             validate_contract("control-definition", control)
         except ContractError as exc:
-            raise ScoringError(str(exc)) from exc
+            raise ScoringError(exc) from exc
         control_id = str(control["control_id"])
         if control_id in controls_by_id:
-            raise ScoringError(f"duplicate control_id: {control_id}")
+            raise ScoringError('core.scoring.duplicate_control', control_id=control_id)
         controls_by_id[control_id] = control
         if control["category"] not in weights:
-            raise ScoringError(f"control {control_id} uses unweighted category {control['category']!r}")
+            raise ScoringError('core.scoring.unweighted_category', control_id=control_id, value2=control['category'])
 
     findings_by_id: dict[str, Mapping[str, Any]] = {}
     for finding in findings:
         try:
             validate_contract("finding", finding)
         except ContractError as exc:
-            raise ScoringError(str(exc)) from exc
+            raise ScoringError(exc) from exc
         control_id = str(finding["control_id"])
         if control_id not in controls_by_id:
-            raise ScoringError(f"finding references unknown control_id: {control_id}")
+            raise ScoringError('core.scoring.unknown_control', control_id=control_id)
         if control_id in findings_by_id:
-            raise ScoringError(f"duplicate finding for control_id: {control_id}")
+            raise ScoringError('core.scoring.duplicate_finding', control_id=control_id)
         findings_by_id[control_id] = finding
 
     eligible = [
@@ -257,30 +258,30 @@ def score_portfolio(accounts: Sequence[Mapping[str, Any]]) -> PortfolioResult:
     included: list[tuple[str, Decimal, Decimal | None, str, tuple[str, str] | None]] = []
     for index, account in enumerate(accounts):
         if not isinstance(account, Mapping):
-            raise ScoringError(f"accounts[{index}] must be an object")
+            raise ScoringError('core.scoring.account_object', index=index)
         account_id = account.get("account_id")
         if not isinstance(account_id, str) or not account_id:
-            raise ScoringError(f"accounts[{index}].account_id must be a non-empty string")
+            raise ScoringError('core.scoring.account_id', index=index)
         if account.get("health_score") is None:
             continue
         health = _decimal(account["health_score"], f"accounts[{index}].health_score")
         if not Decimal("0") <= health <= Decimal("100"):
-            raise ScoringError(f"accounts[{index}].health_score must be between 0 and 100")
+            raise ScoringError('core.scoring.health_range', index=index)
         raw_spend = account.get("spend")
         spend = None if raw_spend is None else _decimal(raw_spend, f"accounts[{index}].spend")
         if spend is not None and spend < 0:
-            raise ScoringError(f"accounts[{index}].spend must be >= 0")
+            raise ScoringError('core.scoring.spend_minimum', index=index)
         status = str(account.get("status", "normal"))
         if status not in {"normal", "provisional", "insufficient_evidence"}:
-            raise ScoringError(f"accounts[{index}].status is invalid")
+            raise ScoringError('core.scoring.account_status', index=index)
         raw_window = account.get("window")
         window: tuple[str, str] | None = None
         if raw_window is not None:
             if not isinstance(raw_window, Mapping):
-                raise ScoringError(f"accounts[{index}].window must be an object")
+                raise ScoringError('core.scoring.window_object', index=index)
             start, end = raw_window.get("start"), raw_window.get("end")
             if not isinstance(start, str) or not start or not isinstance(end, str) or not end:
-                raise ScoringError(f"accounts[{index}].window requires non-empty start and end strings")
+                raise ScoringError('core.scoring.window_fields', index=index)
             window = (start, end)
         included.append((account_id, health, spend, status, window))
 

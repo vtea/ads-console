@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from claude_ads_core.cli import main
 from tests.core.test_contracts import account_snapshot, report_bundle
 
@@ -20,12 +22,19 @@ def test_validate_command_emits_machine_readable_success(tmp_path, capsys):
     assert output == {"contract": "account-snapshot", "path": path, "status": "valid"}
 
 
-def test_validate_command_returns_two_and_json_error(tmp_path, capsys):
+@pytest.mark.parametrize(("locale_args", "expected"), [([], "缺少必需字段"), (["--locale", "en"], "missing required")])
+def test_validate_command_returns_two_and_json_error(tmp_path, capsys, monkeypatch, locale_args, expected):
+    monkeypatch.delenv("CLAUDE_ADS_LOCALE", raising=False)
     path = write_json(tmp_path, "snapshot.json", {"schema_version": "1.0.0"})
-    assert main(["validate", "account-snapshot", path]) == 2
-    error = json.loads(capsys.readouterr().err)
+    assert main([*locale_args, "validate", "account-snapshot", path]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err.startswith("{")
+    error = json.loads(captured.err)
+    assert set(error) == {"status", "error"}
     assert error["status"] == "invalid"
-    assert "missing required" in error["error"]
+    assert expected in error["error"]
+    assert "\\u" not in captured.err
 
 
 def test_status_command_reports_bundle_status(tmp_path, capsys):

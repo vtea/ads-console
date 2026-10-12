@@ -13,6 +13,7 @@ from typing import Any, Mapping
 
 from ..contracts import ContractError, validate_contract
 from ..models import AccountSnapshot
+from ..i18n import t
 from .base import AdapterCapabilities, AdapterError, BaseAdapter, Capability
 from .csv_export import MAX_EXPORT_BYTES, MAX_EXPORT_COLUMNS, MAX_EXPORT_ROWS
 from .mappings_v1 import NativeFieldMapping, get_native_profile
@@ -24,8 +25,9 @@ class NativeExportError(AdapterError):
 
 def _nonempty(value: str | None, label: str, row_number: int | None = None) -> str:
     if value is None or not value.strip():
-        prefix = f"row {row_number}: " if row_number is not None else ""
-        raise NativeExportError(f"{prefix}{label} must not be empty")
+        if row_number is not None:
+            raise NativeExportError("core.export.row_required", row_number=row_number, field=label)
+        raise NativeExportError("core.native.required", label=label)
     return value.strip()
 
 
@@ -33,16 +35,16 @@ def _decimal(value: str, label: str, row_number: int) -> Decimal:
     try:
         number = Decimal(value)
     except InvalidOperation as exc:
-        raise NativeExportError(f"row {row_number}: {label} must be numeric") from exc
+        raise NativeExportError('core.native.row_numeric', row_number=row_number, label=label) from exc
     if not number.is_finite() or number < 0:
-        raise NativeExportError(f"row {row_number}: {label} must be a finite non-negative number")
+        raise NativeExportError('core.native.row_nonnegative', row_number=row_number, label=label)
     return number
 
 
 def _float(value: Decimal) -> float:
     number = float(value)
     if not math.isfinite(number):
-        raise NativeExportError("numeric value is outside the supported finite range")
+        raise NativeExportError('core.export.numeric_range')
     return number
 
 
@@ -55,32 +57,26 @@ def _transform(mapping: NativeFieldMapping, value: str, row_number: int) -> str 
         prefix = "urn:li:sponsoredCampaign:"
         suffix = value.removeprefix(prefix)
         if not value.startswith(prefix) or not suffix.isdigit():
-            raise NativeExportError(
-                f"row {row_number}: {mapping.source} must be a sponsoredCampaign URN from a CAMPAIGN pivot"
-            )
+            raise NativeExportError('core.native.campaign_urn', row_number=row_number, value2=mapping.source)
         return value
     if mapping.transform == "iso_date":
         try:
             return date.fromisoformat(value)
         except ValueError as exc:
-            raise NativeExportError(f"row {row_number}: {mapping.source} must be an ISO 8601 date") from exc
+            raise NativeExportError('core.native.date', row_number=row_number, value2=mapping.source) from exc
     if mapping.transform == "iso_datetime_date":
         try:
             parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
         except ValueError as exc:
-            raise NativeExportError(
-                f"row {row_number}: {mapping.source} must be an ISO 8601 timestamp with offset"
-            ) from exc
+            raise NativeExportError('core.native.timestamp', row_number=row_number, value2=mapping.source) from exc
         if parsed.tzinfo is None:
-            raise NativeExportError(
-                f"row {row_number}: {mapping.source} must include a timezone offset"
-            )
+            raise NativeExportError('core.native.timezone', row_number=row_number, value2=mapping.source)
         return parsed.date()
     if mapping.transform == "decimal":
         return _decimal(value, mapping.source, row_number)
     if mapping.transform == "micros":
         return _decimal(value, mapping.source, row_number) / Decimal("1000000")
-    raise NativeExportError(f"unsupported transform in profile: {mapping.transform}")
+    raise NativeExportError('core.native.transform', value1=mapping.transform)
 
 
 class NativeCSVExportAdapter(BaseAdapter):
@@ -97,15 +93,13 @@ class NativeCSVExportAdapter(BaseAdapter):
         try:
             self.profile = get_native_profile(platform)
         except ValueError as exc:
-            raise NativeExportError(str(exc)) from exc
+            raise NativeExportError(exc) from exc
         self.platform = self.profile.platform
         self.adapter_id = self.profile.profile_id
         supplied = dict(context or {})
         unknown_context = sorted(set(supplied) - set(self.profile.required_context))
         if unknown_context:
-            raise NativeExportError(
-                f"{self.profile.profile_id} does not accept context field(s): {', '.join(unknown_context)}"
-            )
+            raise NativeExportError('core.native.context_fields', value1=self.profile.profile_id, value2=', '.join(unknown_context))
         self.context = {
             field: _nonempty(supplied.get(field), f"context.{field}")
             for field in self.profile.required_context
@@ -122,31 +116,29 @@ class NativeCSVExportAdapter(BaseAdapter):
                     "native-export-normalization",
                     "export-read",
                     self.profile.status,
-                    self.profile.disabled_reason,
+                    self.profile.localized_disabled_reason,
                 ),
                 Capability(
                     "account-mutation",
                     "live-write",
                     "disabled",
-                    "Native report adapters have no authenticated write destination.",
+                    t("core.native.no_write_destination"),
                 ),
             ),
         )
 
     def read_snapshot(self, source: str | PathLike[str]) -> AccountSnapshot:
         if self.profile.status == "disabled":
-            raise NativeExportError(
-                f"{self.profile.profile_id} is disabled: {self.profile.disabled_reason}"
-            )
+            raise NativeExportError('core.native.disabled', value1=self.profile.profile_id, value2=self.profile.localized_disabled_reason)
         path = Path(source)
         try:
             if not path.is_file():
-                raise NativeExportError(f"export is not a regular file: {path}")
+                raise NativeExportError('core.export.regular_file', path=path)
             size = path.stat().st_size
         except OSError as exc:
-            raise NativeExportError(f"cannot inspect export: {exc}") from exc
+            raise NativeExportError('core.export.inspect', exc=exc) from exc
         if size > MAX_EXPORT_BYTES:
-            raise NativeExportError(f"export exceeds {MAX_EXPORT_BYTES} byte limit")
+            raise NativeExportError('core.export.byte_limit', MAX_EXPORT_BYTES=MAX_EXPORT_BYTES)
 
         rows: list[dict[str, Any]] = []
         try:
@@ -156,31 +148,28 @@ class NativeCSVExportAdapter(BaseAdapter):
                 self._validate_headers(headers)
                 for row_number, row in enumerate(reader, start=2):
                     if row_number - 1 > MAX_EXPORT_ROWS:
-                        raise NativeExportError(f"export exceeds {MAX_EXPORT_ROWS} row limit")
+                        raise NativeExportError('core.export.row_limit', MAX_EXPORT_ROWS=MAX_EXPORT_ROWS)
                     rows.append(self._normalize_row(row, row_number))
         except (OSError, UnicodeError, csv.Error) as exc:
-            raise NativeExportError(f"cannot read export: {exc}") from exc
+            raise NativeExportError('core.export.read', exc=exc) from exc
         if not rows:
-            raise NativeExportError("export must contain at least one data row")
+            raise NativeExportError('core.export.empty')
         return self._build_snapshot(rows)
 
     def _validate_headers(self, headers: list[str]) -> None:
         if len(headers) > MAX_EXPORT_COLUMNS:
-            raise NativeExportError(f"export exceeds {MAX_EXPORT_COLUMNS} column limit")
+            raise NativeExportError('core.export.column_limit', MAX_EXPORT_COLUMNS=MAX_EXPORT_COLUMNS)
         duplicates = sorted(field for field, count in Counter(headers).items() if count > 1)
         if duplicates:
-            raise NativeExportError(f"export contains duplicate column(s): {', '.join(duplicates)}")
+            raise NativeExportError('core.export.duplicate_columns', value1=', '.join(duplicates))
         expected = set(self.profile.expected_headers)
         actual = set(headers)
         missing = sorted(expected - actual)
         extra = sorted(actual - expected)
         if missing:
-            raise NativeExportError(f"export missing profile column(s): {', '.join(missing)}")
+            raise NativeExportError('core.native.missing_columns', value1=', '.join(missing))
         if extra:
-            raise NativeExportError(
-                "export contains unmapped column(s); select the exact versioned report projection: "
-                + ", ".join(extra)
-            )
+            raise NativeExportError('core.native.unmapped_columns', value1=', '.join(extra))
 
     def _normalize_row(self, row: Mapping[str, str | None], row_number: int) -> dict[str, Any]:
         normalized: dict[str, Any] = dict(self.context)
@@ -190,14 +179,9 @@ class NativeCSVExportAdapter(BaseAdapter):
         for guard in self.profile.guards:
             value = _nonempty(row.get(guard.source), guard.source, row_number)
             if guard.allowed_values and value not in guard.allowed_values:
-                raise NativeExportError(
-                    f"row {row_number}: {guard.source}={value!r} is outside profile values "
-                    f"{', '.join(guard.allowed_values)}"
-                )
+                raise NativeExportError('core.native.allowed_values', row_number=row_number, value2=guard.source, value=value, value4=', '.join(guard.allowed_values))
             if guard.forbidden_values and value in guard.forbidden_values:
-                raise NativeExportError(
-                    f"row {row_number}: {guard.source}={value!r} routes to a different platform profile"
-                )
+                raise NativeExportError('core.native.platform_route', row_number=row_number, value2=guard.source, value=value)
         for check in self.profile.date_checks:
             left = normalized[check.left_target]
             right = normalized[check.right_target]
@@ -207,18 +191,14 @@ class NativeCSVExportAdapter(BaseAdapter):
                 else right == left + timedelta(days=1)
             )
             if not valid:
-                raise NativeExportError(
-                    f"row {row_number}: native report date relationship {check.relation} failed"
-                )
+                raise NativeExportError('core.native.date_relation', row_number=row_number, value2=check.relation)
         required = ("date", "account_id", "currency", "campaign_id", "spend")
         missing = [field for field in required if field not in normalized]
         if missing:
-            raise NativeExportError(
-                f"{self.profile.profile_id} cannot produce required normalized field(s): {', '.join(missing)}"
-            )
+            raise NativeExportError('core.native.required_fields', value1=self.profile.profile_id, value2=', '.join(missing))
         currency = str(normalized["currency"])
         if len(currency) != 3 or not currency.isalpha() or currency != currency.upper():
-            raise NativeExportError(f"row {row_number}: currency must be a three-letter uppercase code")
+            raise NativeExportError('core.export.currency', row_number=row_number)
         return normalized
 
     def _build_snapshot(self, rows: list[dict[str, Any]]) -> AccountSnapshot:
@@ -226,11 +206,11 @@ class NativeCSVExportAdapter(BaseAdapter):
         currencies = {str(row["currency"]) for row in rows}
         account_names = {str(row["account_name"]) for row in rows if "account_name" in row}
         if len(account_ids) != 1:
-            raise NativeExportError("export must contain exactly one normalized account_id")
+            raise NativeExportError('core.native.account_id')
         if len(currencies) != 1:
-            raise NativeExportError("export must contain exactly one normalized currency")
+            raise NativeExportError('core.native.currency')
         if len(account_names) > 1:
-            raise NativeExportError("export contains conflicting normalized account_name values")
+            raise NativeExportError('core.native.account_name')
 
         campaigns: dict[str, dict[str, Any]] = {}
         creatives: dict[str, dict[str, Any]] = {}
@@ -241,7 +221,7 @@ class NativeCSVExportAdapter(BaseAdapter):
         for row in rows:
             grain = tuple(row[field] for field in self.profile.report_grain)
             if grain in grains:
-                raise NativeExportError(f"export contains duplicate native report grain: {grain!r}")
+                raise NativeExportError('core.native.duplicate_grain', grain=grain)
             grains.add(grain)
             campaign_id = str(row["campaign_id"])
             campaign = {"campaign_id": campaign_id}
@@ -252,7 +232,7 @@ class NativeCSVExportAdapter(BaseAdapter):
             existing = campaigns.get(campaign_id)
             identity = {key: value for key, value in campaign.items() if key != "spend"}
             if existing and {key: value for key, value in existing.items() if key != "spend"} != identity:
-                raise NativeExportError(f"campaign_id {campaign_id!r} has conflicting identity fields")
+                raise NativeExportError('core.export.campaign_identity', campaign_id=campaign_id)
             if not existing:
                 existing = {**identity, "spend": Decimal("0")}
                 campaigns[campaign_id] = existing
@@ -265,7 +245,7 @@ class NativeCSVExportAdapter(BaseAdapter):
                 if "creative_name" in row:
                     creative["name"] = str(row["creative_name"])
                 if creative_id in creatives and creatives[creative_id] != creative:
-                    raise NativeExportError(f"creative_id {creative_id!r} has conflicting identity fields")
+                    raise NativeExportError('core.export.creative_identity', creative_id=creative_id)
                 creatives[creative_id] = creative
 
             if "conversions" in row:
@@ -273,9 +253,7 @@ class NativeCSVExportAdapter(BaseAdapter):
             if "budget" in row:
                 key = (campaign_id, row["date"])
                 if key in budgets and budgets[key] != row["budget"]:
-                    raise NativeExportError(
-                        f"campaign_id {campaign_id!r} has conflicting budget values for {row['date']}"
-                    )
+                    raise NativeExportError('core.export.budget_conflict', campaign_id=campaign_id, value2=row['date'])
                 budgets[key] = row["budget"]
 
         account: dict[str, Any] = {
@@ -311,5 +289,5 @@ class NativeCSVExportAdapter(BaseAdapter):
         try:
             validate_contract("account-snapshot", snapshot)
         except ContractError as exc:
-            raise NativeExportError(f"normalized snapshot violates AccountSnapshot contract: {exc}") from exc
+            raise NativeExportError('core.export.snapshot_contract', exc=exc) from exc
         return snapshot

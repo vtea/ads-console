@@ -1,91 +1,68 @@
-# Bidding Strategy Decisions
+# 出价策略决策
 
-**Verified:** 2026-08-25
-**Refresh due:** 2026-09-24
-**Primary source:** `google-smart-bidding-official` — [Google Ads Help: About Smart Bidding](https://support.google.com/google-ads/answer/7065882)
-**Supporting source:** `google-target-roas-official` — [Google Ads Help: About Target ROAS](https://support.google.com/google-ads/answer/6268637)
+**已核验：** 2026-08-25
+**刷新到期：** 2026-09-24
+**主要来源：** `google-smart-bidding-official` — [Google Ads 帮助：关于智能出价](https://support.google.com/google-ads/answer/7065882)
+**支持来源：** `google-target-roas-official` — [Google Ads 帮助：关于目标广告支出回报率](https://support.google.com/google-ads/answer/6268637)
 
-Bidding is a control system, not a ladder unlocked by a universal conversion
-count. Select an eligible strategy from the campaign objective, value signal,
-delivery constraint, and measurement quality shown in the current account UI.
+出价是一个控制系统，而不是由通用转化数量解锁的阶梯。根据当前账户 UI 中显示的广告系列目标、价值信号、投放约束和衡量质量，选择符合资格的策略。
 
-Google describes Target CPA, Target ROAS, Maximize conversions, and Maximize
-conversion value as Smart Bidding strategies that optimize at auction time.
-Google also documents a June 2026 label transition that does not change the
-underlying bidding behavior. Availability and labels can change by campaign
-type, so verify them at run time.
+Google 将 Target CPA、Target ROAS、Maximize conversions 和 Maximize conversion value 描述为在竞价时优化的智能出价策略。Google 还记录了 2026 年 6 月的一次标签变更，该变更不改变底层出价行为。可用性和标签可能随广告系列类型而变化，因此须在运行时核实。
 
-## Decision inputs
+## 决策输入
 
-- Primary business objective: visibility, traffic, accepted conversions, value,
-  profit proxy, or another explicit outcome.
-- Conversion action, counting method, value source, attribution, and lag.
-- Historical volume and variance over complete conversion cycles.
-- Budget limitation, inventory limitation, seasonality, and auction coverage.
-- Owner-approved CPA, ROAS, contribution, cash, and policy boundaries.
-- Campaign-type eligibility and any beta, regional, or account restrictions.
+- 主要业务目标：可见度、流量、被接受的转化、价值、利润代理指标或其他明确成果。
+- 转化操作、计数方法、价值来源、归因和延迟。
+- 完整转化周期内的历史数量和方差。
+- 预算限制、广告资源限制、季节性和竞价覆盖。
+- 负责人批准的 CPA、ROAS、贡献、现金和政策边界。
+- 广告系列类型资格，以及任何测试版、区域或账户限制。
 
-If optimization data are incomplete or corrupted, repair measurement before
-changing the bidder unless containment is required.
+如果优化数据不完整或已损坏，除非需要遏制损害，否则应先修复衡量，再更改出价系统。
 
-## Strategy logic
+## 策略逻辑
 
-| Goal | Candidate strategy | Evidence to verify |
+| 目标 | 候选策略 | 待核验证据 |
 | --- | --- | --- |
-| Maximize accepted conversion volume within budget | Conversion-maximizing strategy | Primary conversion is valid; budget and lag are understood |
-| Hold an average acquisition-cost goal | Target-cost strategy | Target reflects mature account economics and is eligible |
-| Maximize accepted value within budget | Value-maximizing strategy | Values are complete, comparable, and timely |
-| Hold an average return goal | Target-return strategy | Value tracking and target economics are sound |
-| Visibility or reach | Impression/reach strategy | Outcome is truly visibility; placement and frequency constraints are explicit |
-| Exploration or measurement repair | Manual/traffic strategy where available | Time-boxed purpose, stop condition, and downstream risk are documented |
+| 在预算内尽可能增加被接受的转化量 | 转化最大化策略 | 主要转化有效；预算和延迟已明确 |
+| 维持平均获客成本目标 | 目标成本策略 | 目标反映成熟的账户经济数据，且符合资格 |
+| 在预算内尽可能增加被接受的价值 | 价值最大化策略 | 价值完整、可比且及时 |
+| 维持平均回报目标 | 目标回报策略 | 价值跟踪和目标经济依据可靠 |
+| 可见度或覆盖 | 展示/覆盖策略 | 成果确实是可见度；版位和频次约束明确 |
+| 探索或衡量修复 | 可用时采用手动/流量策略 | 已记录有时限的目的、停止条件和下游风险 |
 
-The exact platform label is an observed capability, not a cross-platform
-translation. Do not assume that similarly named strategies have identical
-auction behavior.
+精确的平台标签是一项观察到的能力，而非跨平台翻译。不得假定名称相近的策略具有完全相同的竞价行为。
 
-## Setting a target
+## 设定目标
 
-Derive targets from accepted economics and mature account history. For Google
-Target ROAS, official guidance recommends using business goals and historical
-ROAS and evaluating over conversion cycles; the same page warns that an overly
-high target can restrict traffic. The page also carries an August 2026 bidding
-system update, so the active campaign state remains controlling evidence. This
-is platform guidance, not a guaranteed outcome.
+根据被接受的经济数据和成熟的账户历史推导目标。对于 Google Target ROAS，官方指导建议使用业务目标和历史 ROAS，并按转化周期评估；同一页面警告，过高的目标可能限制流量。该页面还包含 2026 年 8 月的出价系统更新，因此当前广告系列状态仍是决定性证据。这是平台指导，而非结果保证。
 
-Do not apply fixed target multipliers, fixed minimum conversion counts, or a
-fixed adjustment cadence across accounts. Record the source window, lag maturity,
-confidence interval or variance, and expected volume trade-off.
+不得跨账户套用固定目标倍数、固定最低转化数量或固定调整频率。记录来源窗口、延迟成熟度、置信区间或方差，以及预期的数量权衡。
 
-## Change discipline
+## 变更纪律
 
-Before a bid change:
+出价变更前：
 
-1. Confirm no concurrent budget, conversion, targeting, creative, or policy
-   change would confound interpretation.
-2. Use the platform's current simulator or experiment feature when suitable.
-3. Define the evaluation window in conversion cycles, not arbitrary calendar days.
-4. Draft a reversible change with owner-approved boundaries.
-5. Verify delivery, spend, accepted outcomes, and remote state after application.
+1. 确认没有同时发生的预算、转化、定向、创意或政策变更会干扰解读。
+2. 适合时使用平台当前的模拟器或实验功能。
+3. 以转化周期定义评估窗口，而不是任意日历天数。
+4. 起草带有负责人批准边界的可逆变更。
+5. 应用后验证投放、支出、被接受的成果和远端状态。
 
-For Google target adjustments, the official guidance says the bidder reacts to
-target changes but may need one to two conversion cycles to reach the target.
-Treat that duration as Google-specific guidance and verify it against the active
-campaign, not as a universal freeze period.
+对于 Google 目标调整，官方指导指出出价系统会对目标变化作出响应，但可能需要一到两个转化周期才能达到目标。将该时长视为 Google 专属指导，并针对活跃广告系列核实，而不是将其视为通用冻结期。
 
-## Diagnostic questions
+## 诊断问题
 
-- Is under-delivery caused by target strictness, budget, eligibility, inventory,
-  creative, audience, policy, or tracking?
-- Is apparent efficiency an attribution or mix shift rather than incremental value?
-- Are values net of cancellations, low-quality leads, and repeat-customer rules?
-- Is a portfolio strategy grouping campaigns with genuinely compatible goals?
-- Would a bid change violate a learning, experiment, or contractual constraint?
+- 投放不足是由目标严格程度、预算、资格、广告资源、创意、受众、政策还是跟踪引起？
+- 表面效率是否只是归因或组合变化，而非增量价值？
+- 价值是否已扣除取消、低质量线索，并考虑回头客规则？
+- 组合策略是否将目标真正兼容的广告系列分为一组？
+- 出价变更是否会违反学习、实验或合同约束？
 
-## Unsafe recommendations
+## 不安全的建议
 
-- “Use manual bidding below N conversions” without platform/account evidence.
-- “Change the target by N% every N days” as a universal rule.
-- Broad match, negative keywords, placement expansion, or automation adoption
-  prescribed solely from the bid strategy name.
-- Vendor-reported lift used as a forecast.
-- A bid mutation without exact account/object IDs, approval, verification, and rollback.
+- 没有平台/账户证据就说“低于 N 次转化时使用手动出价”。
+- 将“每 N 天将目标调整 N%”当作通用规则。
+- 仅根据出价策略名称就要求采用广泛匹配、否定关键词、版位扩展或自动化。
+- 将供应商报告的提升用作预测。
+- 没有精确账户/对象 ID、批准、验证和回滚的出价变更。

@@ -1,100 +1,73 @@
-# Conversion Tracking and Measurement
+# 转化跟踪与衡量
 
-**Verified:** 2026-08-26
-**Refresh due:** 2026-09-25 for platform documentation
-**Evidence status:** architecture and audit questions; implementation is account-specific
+**已核验：** 2026-08-26
+**刷新到期：** 平台文档为 2026-09-25
+**证据状态：** 架构与审计问题；实施依账户而定
 
-Tracking is acceptable only when the business event, consent state, browser and
-server paths, platform configuration, and downstream business record reconcile.
-The presence of a tag or API connection is not proof of accurate measurement.
+只有业务事件、同意状态、浏览器与服务器路径、平台配置和下游业务记录相互核对一致时，跟踪才可接受。标签或 API 连接的存在不能证明衡量准确。
 
-## Canonical event contract
+## 规范事件契约
 
-For every optimization and reporting event, record:
+对每个优化和报告事件，记录：
 
-- Stable event name and business definition.
-- Event time, timezone, source, and unique event ID.
-- Order, lead, or opportunity ID where lawful and appropriate.
-- Currency and value definition, including refunds and cancellations.
-- Browser/server/offline origin and deduplication key.
-- Consent state and allowed processing purpose.
-- Platform conversion action, primary/secondary role, counting behavior,
-  attribution window, and inclusion in bidding.
-- CRM acceptance state and reconciliation result.
+- 稳定事件名称和业务定义。
+- 事件时间、时区、来源和唯一事件 ID。
+- 在合法且适当时记录订单、线索或商机 ID。
+- 货币和价值定义，包括退款与取消。
+- 浏览器/服务器/线下来源和去重键。
+- 同意状态和允许的处理目的。
+- 平台转化操作、主要/次要角色、计数行为、归因窗口以及是否纳入出价。
+- CRM 接受状态和核对结果。
 
-Do not send unnecessary personal or sensitive data. Hashing is not consent and
-does not make otherwise prohibited collection lawful.
+不要发送不必要的个人或敏感数据。哈希处理不是同意，也不会使原本被禁止的收集行为合法化。
 
-## Platform evidence
+## 平台证据
 
-| Platform | Current first-party source | What it supports |
+| 平台 | 当前第一方来源 | 所支持的内容 |
 | --- | --- | --- |
-| Google Ads | `google-consent-modeling-official`: [Consent mode modeling](https://support.google.com/google-ads/answer/10548233) and `google-consent-modeling-improvement-official`: [impact results](https://support.google.com/google-ads/answer/11954524) | Modeling and impact reporting use eligibility thresholds; inspect the active setup and diagnostics instead of inventing an unpublished number |
-| TikTok Ads | `tiktok-events-api-official` — [About Events API](https://ads.tiktok.com/help/article/events-api) | TikTok recommends Pixel plus Events API with event deduplication for web conversion clients |
-| LinkedIn Ads | `linkedin-conversions-api-official` — [Conversions API Playbook](https://business.linkedin.com/content/dam/me/business/en-us/marketing-solutions/resources/pdfs/Conversions-API-Playbook.pdf) | Browser and server conversion sources require deliberate reporting setup |
-| Microsoft Advertising | `microsoft-uet-official` — [UET setup](https://help.ads.microsoft.com/apex/index/3/en/56913) | UET setup, page coverage, verification, and troubleshooting |
+| Google Ads | `google-consent-modeling-official`：[同意模式建模](https://support.google.com/google-ads/answer/10548233) 和 `google-consent-modeling-improvement-official`：[影响结果](https://support.google.com/google-ads/answer/11954524) | 建模和影响报告采用资格阈值；检查当前设置与诊断，而不是编造未公布的数字 |
+| TikTok Ads | `tiktok-events-api-official` — [关于 Events API](https://ads.tiktok.com/help/article/events-api) | TikTok 建议网页转化客户结合使用 Pixel 与 Events API，并进行事件去重 |
+| LinkedIn Ads | `linkedin-conversions-api-official` — [Conversions API 操作手册](https://business.linkedin.com/content/dam/me/business/en-us/marketing-solutions/resources/pdfs/Conversions-API-Playbook.pdf) | 浏览器与服务器转化来源需要有意配置报告设置 |
+| Microsoft Advertising | `microsoft-uet-official` — [UET 设置](https://help.ads.microsoft.com/apex/index/3/en/56913) | UET 设置、页面覆盖、验证和故障排除 |
 
-For Meta, Apple, Amazon, Reddit, Pinterest, Snapchat, X, and any platform detail
-not represented by a current source-ledger entry, inspect the current official
-account documentation and capability manifest during the run. Do not reuse a
-different platform's event names or requirements by analogy.
+对于 Meta、Apple、Amazon、Reddit、Pinterest、Snapchat、X，以及当前来源台账条目未覆盖的任何平台细节，在运行期间检查当前官方账户文档和能力清单。不得类比复用另一平台的事件名称或要求。
 
-Google's current consent-mode modeling page lists correct consent mode or IAB
-TCF implementation and a daily threshold of 700 ad clicks over seven days per
-country/domain grouping among its quality checks. The separate current
-impact-results page says additional volume and modeling thresholds apply, but it
-does not publish another numeric click threshold. Do not infer one. These are
-eligibility facts, not a universal minimum account budget or a guarantee of
-modeled conversions. Use the active configuration and current diagnostics.
+Google 当前的同意模式建模页面在其质量检查中列出正确实施同意模式或 IAB TCF，以及按国家/域名分组、连续七天每日 700 次广告点击的阈值。另一个当前影响结果页面说明还适用额外的数量和建模阈值，但未公布另一个数值点击阈值。不得推断。这些是资格事实，而非通用最低账户预算，也不是建模转化保证。使用当前配置和当前诊断。
 
-## Audit sequence
+## 审计顺序
 
-1. Trace one real test event from user action to browser request, server request,
-   platform receipt, deduplication, report, and CRM record.
-2. Compare totals by event date and processing date over a lag-mature window.
-3. Inspect duplicates, missing IDs, invalid values/currencies, clock skew, and
-   events arriving before valid consent.
-4. Confirm only intended business outcomes influence bidding.
-5. Test refunds, cancellations, offline status changes, cross-domain flows, and
-   payment-provider redirects where applicable.
-6. Record platform diagnostics as vendor observations, then verify with raw
-   payload logs and business records where access permits.
+1. 跟踪一个真实测试事件，从用户操作到浏览器请求、服务器请求、平台接收、去重、报告和 CRM 记录。
+2. 在延迟已成熟的窗口内，按事件日期和处理日期比较总量。
+3. 检查重复、缺失 ID、无效价值/货币、时钟偏差，以及在有效同意之前到达的事件。
+4. 确认只有预期业务成果影响出价。
+5. 适用时测试退款、取消、线下状态变化、跨域流程和支付服务商重定向。
+6. 将平台诊断记录为供应商观察，然后在权限允许时用原始载荷日志和业务记录验证。
 
-## Deduplication
+## 去重
 
-Browser and server copies of the same business action must share the platform's
-documented deduplication fields. Do not invent a universal field mapping. Check:
+同一业务操作的浏览器和服务器副本必须共享平台文档规定的去重字段。不要编造通用字段映射。检查：
 
-- Same action produces one accepted platform conversion.
-- Distinct actions do not collide on an ID.
-- Retries are idempotent.
-- Late offline updates do not create a second sale or lead.
-- Deduplication survives cross-domain and payment flows.
+- 同一操作只产生一次被平台接受的转化。
+- 不同操作的 ID 不发生冲突。
+- 重试具有幂等性。
+- 延迟的线下更新不会产生第二笔销售或第二条线索。
+- 去重在跨域和支付流程中仍然有效。
 
-## Attribution and reconciliation
+## 归因与核对
 
-Keep these views separate:
+将以下视图分开：
 
-- Platform-attributed conversions for delivery diagnostics.
-- Analytics attribution for journey analysis.
-- CRM/accounting outcomes for accepted business value.
-- Experiment or model estimates for incrementality.
+- 用于投放诊断的平台归因转化。
+- 用于旅程分析的分析工具归因。
+- 用于被接受业务价值的 CRM/会计成果。
+- 用于增量效果的实验或模型估计。
 
-Never sum platform-attributed conversions across platforms as though they were
-unique people or incremental outcomes. Disclose attribution windows, view-through
-treatment, identity resolution, consent exclusions, and conversion lag.
+绝不要将跨平台的平台归因转化相加，仿佛它们代表独立人数或增量成果。披露归因窗口、浏览归因处理、身份解析、同意排除和转化延迟。
 
-## Severity guidance
+## 严重程度指导
 
-Critical findings require observed impact, such as no primary event, confirmed
-double counting, unauthorized sensitive-data transmission, materially wrong
-value/currency, or bidding against a non-business event. A missing server-side
-integration alone is an opportunity or coverage gap unless a current platform
-requirement or observed measurement loss makes it more severe.
+关键发现需要观察到实际影响，例如没有主要事件、已确认重复计数、未经授权传输敏感数据、价值/货币出现重大错误，或针对非业务事件出价。单纯缺少服务器端集成属于机会或覆盖缺口，除非当前平台要求或观察到的衡量损失使其更严重。
 
-## Completion evidence
+## 完成证据
 
-A tracking review is complete only when it identifies tested events, environments,
-time window, consent states, payload evidence, platform diagnostics, CRM
-reconciliation, gaps, confidence, and an owner for remediation. Never infer
-health from configuration screenshots alone.
+只有跟踪审查明确列出已测试事件、环境、时间窗口、同意状态、载荷证据、平台诊断、CRM 核对、缺口、置信度和补救负责人，才算完成。绝不要仅凭配置截图推断健康状况。

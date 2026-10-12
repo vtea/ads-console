@@ -1,54 +1,43 @@
-# X Ads control reference
+# X Ads 控制项参考
 
-Retrieved: 2026-07-11. Refresh official platform and policy sources before using
-this reference after its control-plane refresh date.
+检索日期：2026-07-11。在本参考文档的控制平面刷新日期之后使用前，请刷新官方平台和政策来源。
 
-## Category model
+## 类别模型
 
-This reference does not define an executable scoring profile. Bind a versioned
-profile whose categories cover the applicable controls and whose weights total 100;
-otherwise produce findings without a health score.
+本参考文档不定义可执行的评分配置。绑定一个带版本的配置，其类别须涵盖适用控制项，且权重总计为 100；否则，只生成发现，不提供健康分数。
 
-## Runtime evaluation contract
+## 运行时评估契约
 
-- Treat each row as an applicability-first evidence question. Missing evidence is
-  `unknown`; unavailable or ineligible surfaces are `not_applicable`.
-- Verify objective, placement, geography, measurement path, report definitions,
-  policy, brand-safety controls, and account eligibility before evaluation.
-- The registered source below grounds website conversion tracking only. Current
-  CAPI, app/offline measurement, targeting, format, policy, API, and availability
-  claims require additional dated official source IDs or account evidence.
-- This reference is advisory and export-read only. It does not provide a live X API
-  reader or mutation adapter.
+- 将每一行视为优先检查适用性的证据问题。缺失证据为 `unknown`；不可用或不符合资格的广告载体为 `not_applicable`。
+- 评估前核实目标、版位、地理区域、衡量路径、报告定义、政策、品牌安全控制和账户资格。
+- 下列已登记来源仅为网站转化跟踪提供依据。当前 CAPI、应用/线下衡量、定向、格式、政策、API 和可用性声明，需要额外的注明日期的官方来源 ID 或账户证据。
+- 本参考文档仅用于咨询和读取导出数据。它不提供实时 X API 读取器或变更适配器。
 
-## Controls
+## 控制项
 
-| ID | Category | Evidence question |
+| ID | 类别 | 证据问题 |
 | --- | --- | --- |
-| XA-M01 | Measurement | X Pixel, Conversions API, MMP, or offline source is declared and verified. |
-| XA-M02 | Measurement | Conversion events avoid sensitive categories and comply with X data-use policy. |
-| XA-M03 | Measurement | Identifiers, event values, and browser/server deduplication are documented. |
-| XA-M04 | Measurement | App campaigns use a supported mobile measurement path. |
-| XA-S01 | Structure | Campaign objective and optimization event match the business outcome. |
-| XA-S02 | Structure | Campaign, line-item/ad-group, creative, and account eligibility are valid. |
-| XA-A01 | Audience | Keyword, conversation, interest, follower-lookalike, geography, and first-party choices are evidence-based. |
-| XA-A02 | Audience | Prospecting, retargeting, exclusions, and expansion avoid unintended overlap. |
-| XA-C01 | Creative | Copy and media fit the selected format, placement, and landing-page promise. |
-| XA-C02 | Creative | Creative diversity covers materially distinct hooks, concepts, and formats. |
-| XA-C03 | Creative | Replies and conversation context are considered where the placement exposes them. |
-| XA-B01 | Budget | Budget, bid, pacing, and optimization state are viable for available evidence. |
-| XA-R01 | Reporting | Date window, attribution, currency, and metric definitions are consistent. |
-| XA-R02 | Reporting | Organic signals remain separate from paid attribution and optimization claims. |
-| XA-P01 | Policy | Brand-safety, adjacency, regulated-category, privacy, and account-status risks are reviewed. |
-| XA-E01 | Experiment | Tests isolate one decision with a declared window and success measure. |
+| XA-M01 | 衡量 | 已声明并验证 X Pixel、Conversions API、MMP 或线下来源。 |
+| XA-M02 | 衡量 | 转化事件避免敏感类别，并遵守 X 数据使用政策。 |
+| XA-M03 | 衡量 | 标识符、事件价值和浏览器/服务器去重已记录。 |
+| XA-M04 | 衡量 | 应用广告系列使用受支持的移动衡量路径。 |
+| XA-S01 | 结构 | 广告系列目标和优化事件匹配业务成果。 |
+| XA-S02 | 结构 | 广告系列、line-item/广告组、创意和账户资格有效。 |
+| XA-A01 | 受众 | 关键词、对话、兴趣、关注者相似受众、地理区域和第一方选择基于证据。 |
+| XA-A02 | 受众 | 新客开发、再定向、排除和扩展避免非预期重叠。 |
+| XA-C01 | 创意 | 文案和媒体适合所选格式、版位和落地页承诺。 |
+| XA-C02 | 创意 | 创意多样性覆盖实质不同的吸引点、概念和格式。 |
+| XA-C03 | 创意 | 版位展示回复和对话背景时，已将其纳入考虑。 |
+| XA-B01 | 预算 | 预算、出价、投放节奏和优化状态对于可用证据而言可行。 |
+| XA-R01 | 报告 | 日期窗口、归因、货币和指标定义一致。 |
+| XA-R02 | 报告 | 自然信号与付费归因及优化声明保持分离。 |
+| XA-P01 | 政策 | 已审查品牌安全、相邻内容、受监管类别、隐私和账户状态风险。 |
+| XA-E01 | 实验 | 测试隔离一项决策，并声明窗口和成功指标。 |
 
-Results use `pass`, `fail`, `unknown`, or `not_applicable`. Unknown controls
-reduce evidence coverage; unavailable, beta, premium, or ineligible features are
-unscored opportunities.
+结果使用 `pass`、`fail`、`unknown` 或 `not_applicable`。未知控制项降低证据覆盖率；不可用、测试版、高级或不符合资格的功能作为不评分的机会。
 
-## Registered official evidence
+## 已登记官方证据
 
-- `x-conversion-tracking`: [X website conversion tracking](https://business.x.com/en/help/campaign-measurement-and-analytics/conversion-tracking-for-websites/about-conversion-tracking)
+- `x-conversion-tracking`：[X 网站转化跟踪](https://business.x.com/en/help/campaign-measurement-and-analytics/conversion-tracking-for-websites/about-conversion-tracking)
 
-Official sources override this summary when they change. Unsupported controls stay
-`unknown`; practitioner material may supplement but not replace official evidence.
+官方来源发生变化时，以官方来源为准，而非本概述。缺乏支持的控制项保持为 `unknown`；从业者材料可以补充，但不能替代官方证据。

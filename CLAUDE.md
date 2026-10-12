@@ -1,34 +1,31 @@
-# Claude Ads Repository Instructions
+# Claude Ads 仓库说明
 
 @AGENTS.md
 
-`AGENTS.md` is the canonical portable repository contract. `ads/SKILL.md` is
-the product entrypoint. Load focused skills and references only when the task
-routes to them.
+## 操作语言
 
-## Architecture
+仓库任务默认使用简体中文（`zh-CN`）：首次回复、工具调用前说明、过程提示、提问与选项、最终报告均使用中文。用户明确要求其他操作语言时遵从该要求。广告创意的投放语言独立于操作语言；机器字段、schema keys/enums/IDs、命令、路径以及原始证据保持原样。
 
-- `ads/`: primary `/ads` orchestration skill and shared references.
-- `skills/`: focused platform and workflow skills.
-- `agents/`: bounded workers that return results to the conductor.
-- `claude_ads_core/`: deterministic schemas, normalization, scoring, reporting,
-  and adapter contracts.
-- `control-plane/`: product boundaries, evidence and capability manifests,
-  safety policy, maturity, ecosystem decisions, and release gates.
-- `tests/` and `evals/`: deterministic and model-facing verification.
+`AGENTS.md` 是规范的可移植仓库契约。`ads/SKILL.md` 是产品入口。仅在任务路由到相应内容时加载专项技能和参考资料。
 
-## Development
+## 架构
 
-- Keep skill entrypoints concise and use progressive disclosure.
-- Keep platform facts and volatile guidance in dated references, not permanent
-  root instructions.
-- Python tools expose a CLI, structured output, and tests proportional to risk.
-- Agents return schema-valid results; the conductor owns final artifacts.
-- Use manifest-derived counts and capability status instead of hand-maintained
-  claims.
+- `ads/`：主要的 `/ads` 编排技能及共享参考资料。
+- `skills/`：专项平台和工作流技能。
+- `agents/`：向主协调器返回结果的有界工作代理。
+- `claude_ads_core/`：确定性 schema、标准化、评分、报告及适配器契约。
+- `control-plane/`：产品边界、证据和能力清单、安全策略、成熟度、生态决策及发布门禁。
+- `tests/` 和 `evals/`：确定性验证与面向模型的验证。
 
-## Verification
+## 开发
 
-Run the focused tests for the changed surface, then the complete local suite.
-Release claims additionally require every gate in
-`control-plane/RELEASE_REQUIREMENTS.md` and required remote CI.
+- 保持技能入口简洁，采用渐进式披露。
+- 将平台事实和易变指引放入注明日期的参考资料，而不是永久性根级说明。
+- Python 工具应提供 CLI、结构化输出，以及与风险相称的测试。
+- 代理返回符合 schema 的结果；主协调器拥有最终产物。
+- 使用从清单推导的数量和能力状态，而不是手工维护的声明。
+
+## 验证
+
+先运行变更范围的专项测试，再运行完整本地套件。
+发布声明还要求通过 `control-plane/RELEASE_REQUIREMENTS.md` 中的全部门禁及必需的远程 CI。

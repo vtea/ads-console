@@ -8,7 +8,6 @@ Usage:
     python capture_screenshot.py https://example.com/landing --all --egress-attestation attestation.json
 """
 
-import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -19,7 +18,13 @@ import tempfile
 from typing import Mapping, Any
 from urllib.parse import urlparse
 
+# Source checkouts keep core beside scripts; installed layouts keep it inside scripts.
+if not (Path(__file__).resolve().parent / "claude_ads_core").is_dir():
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from claude_ads_core.contracts import ContractError, load_contract, validate_contract
+from claude_ads_core.cli_support import LocaleArgumentParser, cli_locale
+from claude_ads_core.i18n import locale_scope, t
 from url_utils import (
     EgressSandboxAttestation,
     artifact_locator,
@@ -33,8 +38,8 @@ from url_utils import (
 try:
     from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 except ImportError:
-    print("Error: playwright required. Install with: pip install -r requirements.txt && playwright install chromium")
-    sys.exit(1)
+    sync_playwright = None
+    PlaywrightTimeout = TimeoutError
 
 
 VIEWPORTS = {
@@ -63,10 +68,10 @@ def _write_capture_receipt(
     """Atomically bind a screenshot digest to its verified egress authority."""
     validate_contract("data-lifecycle", data_lifecycle)
     if data_lifecycle["classification"] != "confidential":
-        raise ValueError("Screenshot capture requires a confidential data lifecycle.")
+        raise ValueError(t("tools.capture.confidential_required"))
     screenshot_data = screenshot_data if screenshot_data is not None else screenshot_path.read_bytes()
     if not screenshot_data:
-        raise ValueError("Screenshot artifact is empty; receipt was not written.")
+        raise ValueError(t("tools.capture.empty_artifact"))
     receipt = {
         "schema_version": "1.0.0",
         "operation": "browser-screenshot-capture",
@@ -90,7 +95,7 @@ def _write_capture_receipt(
     )
     _atomic_write_private(
         receipt_path,
-        (json.dumps(receipt, indent=2, sort_keys=True) + "\n").encode("utf-8"),
+        (json.dumps(receipt, indent=2, sort_keys=True, ensure_ascii=False) + "\n").encode("utf-8"),
     )
     return receipt_path
 
@@ -131,6 +136,10 @@ def capture_screenshot(
     Returns:
         Dictionary with hashed target identity, relative artifact locators, and status.
     """
+    if sync_playwright is None:
+        print(t("tools.common.playwright_required"), file=sys.stderr)
+        sys.exit(1)
+
     result = {
         "target_url_sha256": hashlib.sha256(url.encode("utf-8")).hexdigest(),
         "target_origin": None,
@@ -144,24 +153,24 @@ def capture_screenshot(
     }
 
     if viewport not in VIEWPORTS:
-        result["error"] = f"Invalid viewport: {viewport}. Choose from: {list(VIEWPORTS.keys())}"
+        result["error"] = t("tools.capture.invalid_viewport", viewport=sanitize_error(viewport), choices=list(VIEWPORTS.keys()))
         return result
 
     vp = VIEWPORTS[viewport]
 
     try:
         if data_lifecycle is None:
-            raise ValueError("A validated data lifecycle is required for screenshot capture.")
+            raise ValueError(t("tools.capture.lifecycle_required"))
         validate_contract("data-lifecycle", data_lifecycle)
         if data_lifecycle["classification"] != "confidential":
-            raise ValueError("Screenshot capture requires a confidential data lifecycle.")
+            raise ValueError(t("tools.capture.confidential_required"))
         url = validate_browser_url(url, egress_attestation=egress_attestation)
         output_path = resolve_output_path(output_path, create_parent=True)
         result["target_origin"] = _target_origin(url)
         result["output_locator"] = artifact_locator(output_path)
     except ValueError as e:
-        print(f"Capture preflight failed: {sanitize_error(e)}", file=sys.stderr)
-        result["error"] = "capture preflight failed; inspect private ephemeral runtime logs"
+        print(t("tools.capture.preflight_detail", error=sanitize_error(e)), file=sys.stderr)
+        result["error"] = t("tools.capture.preflight_failed")
         return result
 
     try:
@@ -181,10 +190,10 @@ def capture_screenshot(
             page.wait_for_timeout(1000)
             if blocked_requests:
                 blocked = blocked_requests[0]
-                raise ValueError(f"Blocked browser request to {blocked['url']}: {blocked['error']}")
+                raise ValueError(t("tools.common.blocked_browser_request", url=blocked['url'], error=blocked['error']))
             screenshot_data = page.screenshot(full_page=full_page)
             if not isinstance(screenshot_data, bytes) or not screenshot_data:
-                raise ValueError("Browser returned an empty screenshot artifact.")
+                raise ValueError(t("tools.capture.empty_browser_artifact"))
             _atomic_write_private(output_path, screenshot_data)
             try:
                 receipt_path = _write_capture_receipt(
@@ -204,57 +213,66 @@ def capture_screenshot(
             browser.close()
 
     except PlaywrightTimeout:
-        result["error"] = f"Page load timed out after {timeout}ms"
+        result["error"] = t("tools.common.page_timeout", timeout=timeout)
     except Exception as e:
-        print(f"Capture failed: {sanitize_error(e)}", file=sys.stderr)
-        result["error"] = "capture failed; inspect private ephemeral runtime logs"
+        print(t("tools.capture.failure_detail", error=sanitize_error(e)), file=sys.stderr)
+        result["error"] = t("tools.capture.failed")
 
     return result
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Capture ad landing page screenshots")
-    parser.add_argument("url", help="URL to capture")
-    parser.add_argument("--output", "-o", default="screenshots", help="Output directory")
-    parser.add_argument("--viewport", "-v", default="desktop", choices=VIEWPORTS.keys())
-    parser.add_argument("--all", "-a", action="store_true", help="Capture all viewports")
-    parser.add_argument("--full", "-f", action="store_true", help="Capture full page")
-    parser.add_argument("--timeout", "-t", type=int, default=30000, help="Timeout in ms")
+def main(argv: list[str] | None = None):
+    with locale_scope(cli_locale(argv)):
+        try:
+            return _main(argv)
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(t("tools.common.error", error=sanitize_error(exc)), file=sys.stderr)
+            sys.exit(1)
+
+
+def _main(argv: list[str] | None):
+    parser = LocaleArgumentParser(description=t("tools.capture.description"))
+    parser.add_argument("url", help=t("tools.capture.url_help"))
+    parser.add_argument("--output", "-o", default="screenshots", help=t("tools.capture.output_help"))
+    parser.add_argument("--viewport", "-v", default="desktop", choices=VIEWPORTS.keys(), help=t("tools.capture.viewport_help"))
+    parser.add_argument("--all", "-a", action="store_true", help=t("tools.capture.all_help"))
+    parser.add_argument("--full", "-f", action="store_true", help=t("tools.capture.full_help"))
+    parser.add_argument("--timeout", "-t", type=int, default=30000, help=t("tools.common.timeout_ms_help"))
     parser.add_argument(
         "--egress-attestation",
         required=True,
-        help=(
-            "Path to a signed, short-lived egress-sandbox attestation. Trust key, "
-            "key ID, and environment ID must be provisioned through environment variables."
-        ),
+        help=t("tools.common.egress_help"),
     )
     parser.add_argument(
         "--data-lifecycle",
         required=True,
-        help="Path to a valid confidential data-lifecycle JSON contract.",
+        help=t("tools.capture.lifecycle_help"),
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    if sync_playwright is None:
+        print(t("tools.common.playwright_required"), file=sys.stderr)
+        sys.exit(1)
 
     try:
         egress_attestation = load_egress_sandbox_attestation(args.egress_attestation)
     except ValueError as exc:
-        print(f"Error: {sanitize_error(exc)}", file=sys.stderr)
+        print(t("tools.common.error", error=sanitize_error(exc)), file=sys.stderr)
         sys.exit(1)
 
     try:
         data_lifecycle = load_contract("data-lifecycle", args.data_lifecycle)
         if data_lifecycle["classification"] != "confidential":
-            raise ContractError("Screenshot capture requires classification=confidential")
+            raise ContractError(t("tools.capture.classification_required"))
     except ContractError as exc:
-        print(f"Error: {sanitize_error(exc)}", file=sys.stderr)
+        print(t("tools.common.error", error=sanitize_error(exc)), file=sys.stderr)
         sys.exit(1)
 
     try:
         output_dir = resolve_output_path(args.output)
         output_dir.mkdir(parents=True, exist_ok=True)
     except ValueError as exc:
-        print(f"Error: {sanitize_error(exc)}", file=sys.stderr)
+        print(t("tools.common.error", error=sanitize_error(exc)), file=sys.stderr)
         sys.exit(1)
 
     parsed = urlparse(args.url)
@@ -266,7 +284,7 @@ def main():
         filename = f"{base_name}_{viewport}.png"
         output_path = output_dir / filename
 
-        print(f"Capturing {viewport} screenshot...")
+        print(t("tools.capture.capturing", viewport=viewport))
         result = capture_screenshot(
             args.url,
             output_path,
@@ -278,10 +296,10 @@ def main():
         )
 
         if result["success"]:
-            print(f"  Saved artifact: {result['output_locator']}")
-            print(f"  Receipt: {result['receipt_locator']}")
+            print(t("tools.capture.saved", locator=sanitize_error(result['output_locator'])))
+            print(t("tools.capture.receipt", locator=sanitize_error(result['receipt_locator'])))
         else:
-            print(f"  Failed: {result['error']}")
+            print(t("tools.capture.failure", error=sanitize_error(result['error'])))
 
 
 if __name__ == "__main__":

@@ -10,9 +10,16 @@ Usage:
     python analyze_landing.py https://example.com/landing --json --egress-attestation attestation.json
 """
 
-import argparse
 import json
 import sys
+from pathlib import Path
+
+# Source checkouts keep core beside scripts; installed layouts keep it inside scripts.
+if not (Path(__file__).resolve().parent / "claude_ads_core").is_dir():
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from claude_ads_core.cli_support import LocaleArgumentParser, cli_locale
+from claude_ads_core.i18n import locale_scope, t
 
 from url_utils import (
     EgressSandboxAttestation,
@@ -26,8 +33,8 @@ from url_utils import (
 try:
     from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 except ImportError:
-    print("Error: playwright required. Install with: pip install -r requirements.txt && playwright install chromium")
-    sys.exit(1)
+    sync_playwright = None
+    PlaywrightTimeout = TimeoutError
 
 
 def analyze_landing(
@@ -48,6 +55,10 @@ def analyze_landing(
         - Form presence and field count
         - Trust signals (testimonials, badges, reviews)
     """
+    if sync_playwright is None:
+        print(t("tools.common.playwright_required"), file=sys.stderr)
+        sys.exit(1)
+
     result = {
         "url": sanitize_url(url),
         "performance": {
@@ -123,7 +134,7 @@ def analyze_landing(
             )
             if desktop_blocks:
                 blocked = desktop_blocks[0]
-                raise ValueError(f"Blocked browser request to {blocked['url']}: {blocked['error']}")
+                raise ValueError(t("tools.common.blocked_browser_request", url=blocked['url'], error=blocked['error']))
 
             # Performance metrics
             perf = page.evaluate("""
@@ -257,7 +268,7 @@ def analyze_landing(
             )
             if mobile_blocks:
                 blocked = mobile_blocks[0]
-                raise ValueError(f"Blocked browser request to {blocked['url']}: {blocked['error']}")
+                raise ValueError(t("tools.common.blocked_browser_request", url=blocked['url'], error=blocked['error']))
 
             # LCP on mobile viewport (G59 = mobile speed)
             lcp = page.evaluate("""
@@ -287,9 +298,9 @@ def analyze_landing(
             browser.close()
 
     except PlaywrightTimeout:
-        result["error"] = f"Page load timed out after {timeout}ms"
+        result["error"] = t("tools.common.page_timeout", timeout=timeout)
     except Exception as e:
-        result["error"] = sanitize_error(e)
+        result["error"] = t("tools.common.external_error", error=sanitize_error(e))
 
     return result
 
@@ -297,7 +308,7 @@ def analyze_landing(
 def grade_landing(result: dict) -> dict:
     """Grade landing page quality based on ad audit criteria."""
     if result.get("error"):
-        raise ValueError("cannot grade a failed landing-page analysis")
+        raise ValueError(t("tools.landing.cannot_grade"))
 
     grades = {}
 
@@ -343,17 +354,28 @@ def grade_landing(result: dict) -> dict:
     return grades
 
 
+def _display_value(value):
+    """Localize missing human-readable values, never page text or JSON data."""
+    return t("tools.landing.null_value") if value is None else value
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Analyze landing page quality for ad campaigns")
-    parser.add_argument("url", help="URL to analyze")
-    parser.add_argument("--timeout", "-t", type=int, default=30000, help="Timeout in ms")
-    parser.add_argument("--json", "-j", action="store_true", help="Output as JSON")
+    with locale_scope(cli_locale(argv)):
+        try:
+            return _main(argv)
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(t("tools.common.error", error=sanitize_error(exc)), file=sys.stderr)
+            return 1
+
+
+def _main(argv: list[str] | None) -> int:
+    parser = LocaleArgumentParser(description=t("tools.landing.description"))
+    parser.add_argument("url", help=t("tools.landing.url_help"))
+    parser.add_argument("--timeout", "-t", type=int, default=30000, help=t("tools.common.timeout_ms_help"))
+    parser.add_argument("--json", "-j", action="store_true", help=t("tools.landing.json_help"))
     parser.add_argument(
         "--egress-attestation",
-        help=(
-            "Path to a signed, short-lived egress-sandbox attestation. Trust key, "
-            "key ID, and environment ID must be provisioned through environment variables."
-        ),
+        help=t("tools.common.egress_help"),
     )
 
     args = parser.parse_args(argv)
@@ -364,7 +386,7 @@ def main(argv: list[str] | None = None) -> int:
             else None
         )
     except ValueError as exc:
-        print(f"Error: {sanitize_error(exc)}", file=sys.stderr)
+        print(t("tools.common.error", error=sanitize_error(exc)), file=sys.stderr)
         return 1
     result = analyze_landing(
         args.url,
@@ -374,45 +396,45 @@ def main(argv: list[str] | None = None) -> int:
     if result.get("error"):
         error = sanitize_error(result["error"])
         if args.json:
-            print(json.dumps({**result, "error": error}, indent=2))
-        print(f"Error: {error}", file=sys.stderr)
+            print(json.dumps({**result, "error": error}, indent=2, ensure_ascii=False))
+        print(t("tools.common.error", error=error), file=sys.stderr)
         return 1
 
     grades = grade_landing(result)
 
     if args.json:
         output = {**result, "grades": grades}
-        print(json.dumps(output, indent=2))
+        print(json.dumps(output, indent=2, ensure_ascii=False))
     else:
-        print("Landing Page Quality Analysis")
+        print(t("tools.landing.title"))
         print("=" * 50)
-        print(f"\nURL: {result['url']}")
+        print(t("tools.landing.url", url=result['url']))
 
-        print("\nPerformance:")
+        print(t("tools.landing.performance"))
         lcp = result["performance"]["lcp_ms"]
-        lcp_status = "GOOD" if lcp and lcp < 2500 else "SLOW" if lcp else "N/A"
-        print(f"  LCP: {lcp}ms ({lcp_status})")
+        lcp_status = t("tools.landing.good") if lcp and lcp < 2500 else t("tools.landing.slow") if lcp else t("tools.landing.not_available")
+        print(t("tools.landing.lcp", value=_display_value(lcp), status=lcp_status))
         cls = result["performance"]["cls"]
-        cls_status = "GOOD" if cls is not None and cls < 0.1 else "POOR" if cls else "N/A"
-        print(f"  CLS: {cls} ({cls_status})")
-        print(f"  TTFB: {result['performance']['ttfb_ms']}ms")
+        cls_status = t("tools.landing.good") if cls is not None and cls < 0.1 else t("tools.landing.poor") if cls else t("tools.landing.not_available")
+        print(t("tools.landing.cls", value=_display_value(cls), status=cls_status))
+        print(t("tools.landing.ttfb", value=_display_value(result['performance']['ttfb_ms'])))
 
-        print("\nContent:")
-        print(f"  Title: {result['content']['title']}")
-        print(f"  H1: {result['content']['h1'] or 'MISSING'}")
-        print(f"  Words: {result['content']['word_count']}")
+        print(t("tools.landing.content"))
+        print(t("tools.landing.page_title", title=_display_value(result['content']['title'])))
+        print(t("tools.landing.h1", heading=result['content']['h1'] or t("tools.landing.missing")))
+        print(t("tools.landing.words", count=result['content']['word_count']))
 
-        print("\nConversion Elements:")
-        print(f"  CTA Above Fold: {'Y' if result['conversion']['cta_above_fold'] else 'N'}")
-        print(f"  Form: {'Y (' + str(result['conversion']['form_fields']) + ' fields)' if result['conversion']['form_present'] else 'N'}")
-        print(f"  Phone: {'Y' if result['conversion']['phone_number'] else 'N'}")
-        print(f"  Chat: {'Y' if result['conversion']['chat_widget'] else 'N'}")
+        print(t("tools.landing.conversion"))
+        print(t("tools.landing.cta", present=t("tools.landing.yes") if result['conversion']['cta_above_fold'] else t("tools.landing.no")))
+        print(t("tools.landing.form", present=t("tools.landing.form_fields", count=result['conversion']['form_fields']) if result['conversion']['form_present'] else t("tools.landing.no")))
+        print(t("tools.landing.phone", present=t("tools.landing.yes") if result['conversion']['phone_number'] else t("tools.landing.no")))
+        print(t("tools.landing.chat", present=t("tools.landing.yes") if result['conversion']['chat_widget'] else t("tools.landing.no")))
 
-        print(f"\nSchema: {', '.join(result['schema']['types_found']) or 'None'}")
+        print(t("tools.landing.schema", types=', '.join(result['schema']['types_found']) or t("tools.landing.none")))
 
-        print("\nAudit Grades:")
+        print(t("tools.landing.grades"))
         for check, grade in grades.items():
-            print(f"  [{grade}] {check}")
+            print(f"  [{t('tools.landing.grade.' + grade)}] {check}")
 
     return 0
 

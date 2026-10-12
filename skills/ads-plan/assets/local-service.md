@@ -1,38 +1,38 @@
-# Local-service paid-media planning questions
+# 本地服务付费媒体规划问题
 
-> Status: qualitative, unscored planning aid.
+> 状态：定性、不计分的规划辅助资料。
 
-## Required gates
+## 必需门禁
 
-- Context gate: document the service, service area, hours, capacity, seasonality,
-  licensing, objective, qualified outcome, budget authority, and escalation owner.
-- Evidence gate: verify current service, location, availability, price, offer, review,
-  license, and platform facts through approved inputs and current official source IDs.
-- Regulatory gate: identify local licensing, call recording, consent, accessibility,
-  emergency, home-service, and category requirements and route uncertainty to review.
-- Measurement gate: define qualified calls, forms, bookings, completed work, cancellations,
-  duplicates, spam, and offline reconciliation without a universal call-quality rule.
-- Capability gate: verify current location, call, lead, schedule, and audience features for
-  the account and region before including them in a plan.
+- 背景门禁：记录服务、服务区域、营业时间、承接能力、季节性、
+  许可、目标、合格成果、预算权限和升级处理负责人。
+- 证据门禁：通过已批准的输入和当前官方来源 ID，验证当前服务、位置、可用性、价格、优惠、评价、
+  许可和平台事实。
+- 监管门禁：识别当地许可、通话录音、同意、无障碍、
+  紧急情况、家居服务和类别要求，并将不确定性转交审查。
+- 衡量门禁：定义合格来电、表单、预订、已完成工作、取消、
+  重复、垃圾信息和离线对账，不得使用普遍适用的通话质量规则。
+- 能力门禁：在将位置、来电、潜在客户、排期和受众功能纳入计划之前，
+  验证其对该账户和区域的当前可用性。
 
-## Planning questions
+## 规划问题
 
-- Which services and places can the business actually fulfill now?
-- What distinguishes an inquiry, qualified opportunity, booking, and completed service?
-- Which claims, offers, reviews, credentials, and availability statements are approved?
-- How do business hours, dispatch capacity, response time, and seasonality affect demand?
-- Which search, local, social, or remarketing roles are eligible and measurable?
-- Which exclusions are supported by query or lead evidence without overblocking demand?
-- How will consent, call handling, routing, follow-up, and customer data be governed?
+- 企业现在实际能够履行哪些服务、覆盖哪些地点？
+- 如何区分咨询、合格机会、预订和已完成服务？
+- 哪些声明、优惠、评价、资质和可用性陈述已经批准？
+- 营业时间、调度能力、响应时间和季节性如何影响需求？
+- 哪些搜索、本地、社交或再营销角色符合资格且可衡量？
+- 哪些排除项有查询或潜在客户证据支持，又不会过度屏蔽需求？
+- 如何治理同意、来电处理、分流、跟进和客户数据？
 
-## Candidate considerations
+## 候选考量
 
-- Consider intent capture, local awareness, service education, and seasonal hypotheses
-  according to current evidence and operational capacity.
-- Connect media recommendations to lead quality and fulfilled work, not clicks alone.
+- 根据当前证据和运营能力，考虑意图捕获、本地认知、服务教育和季节性
+  假设。
+- 将媒体建议与潜在客户质量及已履行工作相连接，而不只是点击。
 
-## Output guardrails
+## 输出防护规则
 
-- Return qualitative options, source IDs, operational dependencies, owners, and checks.
-- Do not prescribe radii, schedules, qualification durations, channel shares, bids,
-  automatic account-action rules, or lead-cost targets.
+- 返回定性选项、来源 ID、运营依赖项、负责人和检查项。
+- 不得规定半径、排期、资格判定时长、渠道份额、出价、
+  自动账户操作规则或潜在客户成本目标。

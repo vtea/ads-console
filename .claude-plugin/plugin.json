@@ -1,7 +1,7 @@
 {
   "name": "claude-ads",
   "version": "2.0.2",
-  "description": "Claude-first, portable paid-media operations for Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, Apple, Amazon, Reddit, Pinterest, Snapchat, and X. Source-grounded audits, plans, creative workflows, monitoring, experiments, versioned JSON reports, deterministic scoring, and capability-gated account changes.",
+  "description": "以 Claude 为核心、默认中文的跨平台付费广告运营工具。支持 Google、Meta、YouTube、LinkedIn、TikTok、Microsoft、Apple、Amazon、Reddit、Pinterest、Snapchat 和 X 的循证审计、规划、创意、监控、实验、版本化 JSON 报告及确定性评分；账户变更须通过能力与授权检查。",
   "author": {
     "name": "AgriciDaniel",
     "url": "https://github.com/AgriciDaniel"
@@ -36,5 +36,8 @@
     "cursor",
     "multi-host"
   ],
-  "skills": ["./ads/", "./skills/"]
+  "skills": [
+    "./ads/",
+    "./skills/"
+  ]
 }

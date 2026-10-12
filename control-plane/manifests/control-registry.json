@@ -2449,15 +2449,15 @@
       "platform": "meta",
       "control_id": "M01",
       "intent": "Meta Pixel installed",
-      "disposition": "conditional_watchlist",
+      "disposition": "health",
       "source_claim_ids": [
         "CLM-0008"
       ],
       "control_definition": {
         "schema_version": "1.0.0",
         "control_id": "M01",
-        "category": "unclassified",
-        "severity": "informational",
+        "category": "measurement",
+        "severity": "high",
         "required_inputs": [
           "applicability_context",
           "current_account_evidence",
@@ -2470,23 +2470,23 @@
         "geographies": [
           "account-configured"
         ],
-        "scoring_behavior": "watchlist",
-        "stability": "experimental"
+        "scoring_behavior": "health",
+        "stability": "stable"
       }
     },
     {
       "platform": "meta",
       "control_id": "M02",
       "intent": "Conversions API applicability and status",
-      "disposition": "conditional_watchlist",
+      "disposition": "health",
       "source_claim_ids": [
         "CLM-0008"
       ],
       "control_definition": {
         "schema_version": "1.0.0",
         "control_id": "M02",
-        "category": "unclassified",
-        "severity": "informational",
+        "category": "measurement",
+        "severity": "high",
         "required_inputs": [
           "applicability_context",
           "current_account_evidence",
@@ -2499,23 +2499,23 @@
         "geographies": [
           "account-configured"
         ],
-        "scoring_behavior": "watchlist",
-        "stability": "experimental"
+        "scoring_behavior": "health",
+        "stability": "stable"
       }
     },
     {
       "platform": "meta",
       "control_id": "M03",
       "intent": "Event deduplication",
-      "disposition": "conditional_watchlist",
+      "disposition": "health",
       "source_claim_ids": [
         "CLM-0008"
       ],
       "control_definition": {
         "schema_version": "1.0.0",
         "control_id": "M03",
-        "category": "unclassified",
-        "severity": "informational",
+        "category": "measurement",
+        "severity": "high",
         "required_inputs": [
           "applicability_context",
           "current_account_evidence",
@@ -2528,8 +2528,8 @@
         "geographies": [
           "account-configured"
         ],
-        "scoring_behavior": "watchlist",
-        "stability": "experimental"
+        "scoring_behavior": "health",
+        "stability": "stable"
       }
     },
     {

@@ -40,6 +40,15 @@ from url_utils import (  # noqa: E402
     validate_browser_url,
     validate_url,
 )
+from claude_ads_core.i18n import locale_scope  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def english_output(monkeypatch):
+    monkeypatch.setenv("CLAUDE_ADS_LOCALE", "en")
+    with locale_scope("en"):
+        yield
+
 
 
 def _b64url(value: bytes) -> str:

@@ -1,41 +1,41 @@
-# Agency paid-media planning questions
+# 代理机构付费媒体规划问题
 
-> Status: qualitative, unscored planning aid.
+> 状态：定性、不计分的规划辅助资料。
 
-## Required gates
+## 必需门禁
 
-- Context gate: identify the client, business model, objective, conversion definition,
-  geography, currency, data window, budget authority, and active platforms separately.
-- Evidence gate: use only client-approved inputs and current official source IDs; keep
-  assumptions, stale evidence, and cross-client comparisons explicit.
-- Privacy gate: isolate every client's credentials, exports, audiences, creatives,
-  reports, run directory, and retention policy.
-- Regulatory gate: identify the client's category and jurisdictions, then obtain the
-  required platform, privacy, and specialist review before proposing regulated activity.
-- Capability gate: distinguish export analysis, authorized reads, drafts, and disabled
-  writes for each client and platform.
-- Approval gate: record the client owner, agency owner, creative approval, budget ceiling,
-  mutation authority, verification plan, and rollback path.
+- 背景门禁：分别明确客户、业务模式、目标、转化定义、
+  地理区域、币种、数据窗口、预算权限和活跃平台。
+- 证据门禁：仅使用客户批准的输入和当前官方来源 ID；明确区分
+  假设、过期证据和跨客户比较。
+- 隐私门禁：隔离每个客户的凭据、导出、受众、创意、
+  报告、运行目录和保留政策。
+- 监管门禁：确定客户的类别和司法辖区，然后在提出受监管活动之前，
+  获取所需的平台、隐私和专家审查。
+- 能力门禁：针对每个客户和平台，区分导出分析、授权读取、草案和已禁用的
+  写入。
+- 批准门禁：记录客户负责人、代理机构负责人、创意批准、预算上限、
+  变更权限、验证计划和回滚路径。
 
-## Planning questions
+## 规划问题
 
-- Which business outcome does the client own, and how is it reconciled downstream?
-- Which client facts, claims, audiences, assets, and account permissions are approved?
-- Where do tracking, CRM, consent, feed, and offline outcome definitions disagree?
-- Which platforms are eligible and measurable for this client's objective and geography?
-- Which responsibilities belong to the client, agency, platform, or another vendor?
-- How will findings, approvals, incidents, and changes remain client-specific and auditable?
-- What would cause the plan to stop for missing evidence, privacy, policy, or authority?
+- 客户负责哪项业务成果？如何在下游进行对账？
+- 哪些客户事实、声明、受众、素材和账户权限已获批准？
+- 跟踪、CRM、同意机制、数据源和离线成果定义存在哪些不一致？
+- 对于该客户的目标和地理区域，哪些平台符合资格且可衡量？
+- 哪些责任属于客户、代理机构、平台或其他供应商？
+- 如何确保发现、批准、事件和变更始终按客户隔离且可审计？
+- 什么情况会因证据、隐私、政策或权限缺失而使计划停止？
 
-## Candidate considerations
+## 候选考量
 
-- Compare platform roles from current client evidence rather than a standard agency mix.
-- Consider a small, reversible learning plan with client-defined guardrails.
-- Separate internal quality review from client-facing reporting and account execution.
-- Preserve unsuccessful hypotheses and contradictory evidence for the next planning cycle.
+- 根据当前客户证据比较平台角色，而不是采用标准代理机构组合。
+- 考虑采用规模小、可逆且具备客户定义防护规则的学习计划。
+- 将内部质量审查与面向客户的报告及账户执行分开。
+- 保留未成功的假设和矛盾证据，供下一轮规划使用。
 
-## Output guardrails
+## 输出防护规则
 
-- Return options, tradeoffs, owners, assumptions, source IDs, and verification steps.
-- Do not provide universal allocations, unsupported targets, automatic account-action
-  rules, or cross-client performance promises.
+- 返回选项、权衡、负责人、假设、来源 ID 和验证步骤。
+- 不得提供普遍适用的分配比例、无依据的目标、自动账户操作
+  规则或跨客户的表现承诺。

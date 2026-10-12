@@ -7,9 +7,16 @@ Usage:
     python fetch_page.py https://example.com/landing --output page.html
 """
 
-import argparse
 import sys
+from pathlib import Path
 from urllib.parse import urljoin
+
+# Source checkouts keep core beside scripts; installed layouts keep it inside scripts.
+if not (Path(__file__).resolve().parent / "claude_ads_core").is_dir():
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from claude_ads_core.cli_support import LocaleArgumentParser, cli_locale
+from claude_ads_core.i18n import locale_scope, t
 
 from url_utils import (
     guarded_request,
@@ -23,8 +30,7 @@ from url_utils import (
 try:
     import requests
 except ImportError:
-    print("Error: requests library required. Install with: pip install -r requirements.txt")
-    sys.exit(1)
+    requests = None
 
 
 DEFAULT_HEADERS = {
@@ -48,6 +54,10 @@ def fetch_page(
     Returns:
         Dictionary with url, status_code, content, headers, redirect_chain, error
     """
+    if requests is None:
+        print(t("tools.common.requests_required"), file=sys.stderr)
+        sys.exit(1)
+
     result = {
         "url": sanitize_url(url),
         "status_code": None,
@@ -99,13 +109,13 @@ def fetch_page(
             try:
                 next_url = validate_url(next_url)
             except ValueError as e:
-                result["error"] = f"Blocked redirect: {sanitize_error(e)}"
+                result["error"] = t("tools.fetch.blocked_redirect", error=sanitize_error(e))
                 return result
 
             redirect_chain.append(current_url)
             current_url = next_url
         else:
-            result["error"] = f"Too many redirects (max {max_redirects})"
+            result["error"] = t("tools.fetch.too_many_redirects", maximum=max_redirects)
             return result
 
         result["url"] = sanitize_url(current_url)
@@ -115,25 +125,34 @@ def fetch_page(
         result["redirect_chain"] = [sanitize_url(item) for item in redirect_chain]
 
     except requests.exceptions.Timeout:
-        result["error"] = f"Request timed out after {timeout} seconds"
+        result["error"] = t("tools.fetch.request_timeout", timeout=timeout)
     except requests.exceptions.SSLError as e:
-        result["error"] = f"SSL error: {sanitize_error(e)}"
+        result["error"] = t("tools.fetch.ssl_error", error=sanitize_error(e))
     except requests.exceptions.ConnectionError as e:
-        result["error"] = f"Connection error: {sanitize_error(e)}"
+        result["error"] = t("tools.fetch.connection_error", error=sanitize_error(e))
     except requests.exceptions.RequestException as e:
-        result["error"] = f"Request failed: {sanitize_error(e)}"
+        result["error"] = t("tools.fetch.request_failed", error=sanitize_error(e))
 
     return result
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Fetch a landing page for ad quality analysis")
-    parser.add_argument("url", help="URL to fetch")
-    parser.add_argument("--output", "-o", help="Output file path")
-    parser.add_argument("--timeout", "-t", type=int, default=30, help="Timeout in seconds")
-    parser.add_argument("--no-redirects", action="store_true", help="Don't follow redirects")
+def main(argv: list[str] | None = None):
+    with locale_scope(cli_locale(argv)):
+        try:
+            return _main(argv)
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(t("tools.common.error", error=sanitize_error(exc)), file=sys.stderr)
+            sys.exit(1)
 
-    args = parser.parse_args()
+
+def _main(argv: list[str] | None):
+    parser = LocaleArgumentParser(description=t("tools.fetch.description"))
+    parser.add_argument("url", help=t("tools.fetch.url_help"))
+    parser.add_argument("--output", "-o", help=t("tools.fetch.output_help"))
+    parser.add_argument("--timeout", "-t", type=int, default=30, help=t("tools.fetch.timeout_help"))
+    parser.add_argument("--no-redirects", action="store_true", help=t("tools.fetch.no_redirects_help"))
+
+    args = parser.parse_args(argv)
 
     result = fetch_page(
         args.url,
@@ -142,26 +161,26 @@ def main():
     )
 
     if result["error"]:
-        print(f"Error: {result['error']}", file=sys.stderr)
+        print(t("tools.common.error", error=sanitize_error(result["error"])), file=sys.stderr)
         sys.exit(1)
 
     if args.output:
         try:
             output_path = resolve_output_path(args.output, create_parent=True)
         except ValueError as exc:
-            print(f"Error: {sanitize_error(exc)}", file=sys.stderr)
+            print(t("tools.common.error", error=sanitize_error(exc)), file=sys.stderr)
             sys.exit(1)
         with output_path.open("w", encoding="utf-8") as f:
             f.write(result["content"])
-        print(f"Saved to {output_path}")
+        print(t("tools.fetch.saved", path=sanitize_error(output_path)))
     else:
         print(result["content"])
 
-    print(f"\nURL: {sanitize_url(result['url'])}", file=sys.stderr)
-    print(f"Status: {result['status_code']}", file=sys.stderr)
+    print(t("tools.fetch.url", url=sanitize_url(result["url"])), file=sys.stderr)
+    print(t("tools.fetch.status", status=result["status_code"]), file=sys.stderr)
     if result["redirect_chain"]:
         sanitized_chain = [sanitize_url(u) for u in result["redirect_chain"]]
-        print(f"Redirects: {' -> '.join(sanitized_chain)}", file=sys.stderr)
+        print(t("tools.fetch.redirects", chain=' -> '.join(sanitized_chain)), file=sys.stderr)
 
 
 if __name__ == "__main__":

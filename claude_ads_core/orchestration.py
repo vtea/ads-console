@@ -10,9 +10,11 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from .workflow_contracts import WorkflowContractError, validate_workflow_contract
+from .errors import LocalizedError
+from .i18n import t
 
 
-class OrchestrationError(ValueError):
+class OrchestrationError(LocalizedError, ValueError):
     """Raised when packet persistence or artifact-only evaluation fails."""
 
 
@@ -46,7 +48,7 @@ class OrchestrationStore:
 
     def _directory(self, kind: str) -> Path:
         if kind not in PACKET_CONTRACTS:
-            raise OrchestrationError(f"unknown packet kind {kind!r}")
+            raise OrchestrationError('core.orchestration.packet_kind', kind=kind)
         return self.root / {"run": "runs", "task": "tasks", "result": "results", "gate": "gates"}[kind]
 
     @staticmethod
@@ -56,29 +58,29 @@ class OrchestrationStore:
         for part in absolute.parts[1:]:
             current /= part
             if current.is_symlink():
-                raise OrchestrationError(f"orchestration path contains a symlink: {current}")
+                raise OrchestrationError('core.orchestration.symlink', current=current)
 
     def path_for(self, kind: str, packet_id: str) -> Path:
         if not packet_id or not all(character.isalnum() or character in "._-" for character in packet_id):
-            raise OrchestrationError("packet ID is not path-safe")
+            raise OrchestrationError('core.orchestration.packet_id')
         return self._directory(kind) / f"{packet_id}.json"
 
     def write(self, kind: str, payload: Mapping[str, Any]) -> Path:
         """Validate and create a packet exactly once with mode 0600."""
         contract = PACKET_CONTRACTS.get(kind)
         if contract is None:
-            raise OrchestrationError(f"unknown packet kind {kind!r}")
+            raise OrchestrationError('core.orchestration.packet_kind', kind=kind)
         try:
             validate_workflow_contract(contract, payload)
         except WorkflowContractError as exc:
-            raise OrchestrationError(str(exc)) from exc
+            raise OrchestrationError(exc) from exc
         directory = self._directory(kind)
         self._reject_symlink_components(self.root)
         directory.mkdir(parents=True, exist_ok=True, mode=0o700)
         self._reject_symlink_components(directory)
         path = self.path_for(kind, _packet_id(kind, payload))
         if path.exists() or path.is_symlink():
-            raise OrchestrationError(f"immutable packet already exists: {path.name}")
+            raise OrchestrationError('core.orchestration.packet_exists', value1=path.name)
         if kind == "result":
             self._verify_supersedes(payload)
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
@@ -87,7 +89,7 @@ class OrchestrationStore:
         try:
             descriptor = os.open(path, flags, 0o600)
         except FileExistsError as exc:
-            raise OrchestrationError(f"immutable packet already exists: {path.name}") from exc
+            raise OrchestrationError('core.orchestration.packet_exists', value1=path.name) from exc
         try:
             data = canonical_json_bytes(payload)
             with os.fdopen(descriptor, "wb", closefd=True) as handle:
@@ -103,12 +105,12 @@ class OrchestrationStore:
         path = self.path_for(kind, packet_id)
         self._reject_symlink_components(path.parent)
         if path.is_symlink() or not path.is_file():
-            raise OrchestrationError(f"packet is missing or unsafe: {path.name}")
+            raise OrchestrationError('core.orchestration.packet_unsafe', value1=path.name)
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
             validate_workflow_contract(PACKET_CONTRACTS[kind], payload)
         except (OSError, json.JSONDecodeError, WorkflowContractError) as exc:
-            raise OrchestrationError(f"invalid packet {path.name}: {exc}") from exc
+            raise OrchestrationError('core.orchestration.invalid_packet', value1=path.name, exc=exc) from exc
         return payload
 
     def list(self, kind: str) -> list[dict[str, Any]]:
@@ -123,20 +125,20 @@ class OrchestrationStore:
         existing = self.list("result")
         if prior_id is None:
             if any(item["task_id"] == payload["task_id"] for item in existing):
-                raise OrchestrationError("a repeated task result must supersede the prior result")
+                raise OrchestrationError('core.orchestration.repeat_result')
             return
         prior = next((item for item in existing if item["result_id"] == prior_id), None)
         if prior is None:
-            raise OrchestrationError("supersedes references a missing result")
+            raise OrchestrationError('core.orchestration.supersedes_missing')
         if prior["run_id"] != payload["run_id"] or prior["task_id"] != payload["task_id"]:
-            raise OrchestrationError("supersedes must remain within the same run and task")
+            raise OrchestrationError('core.orchestration.supersedes_scope')
         if any(item.get("supersedes") == prior_id for item in existing):
-            raise OrchestrationError("a result may be superseded only once")
+            raise OrchestrationError('core.orchestration.supersedes_once')
         def instant(value: str) -> datetime:
             return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
 
         if instant(str(payload["created_at"])) <= instant(str(prior["created_at"])):
-            raise OrchestrationError("a superseding result must have a later created_at")
+            raise OrchestrationError('core.orchestration.supersedes_time')
 
 
 def _latest_results(results: Iterable[Mapping[str, Any]]) -> dict[str, Mapping[str, Any]]:
@@ -149,11 +151,11 @@ def _latest_results(results: Iterable[Mapping[str, Any]]) -> dict[str, Mapping[s
             continue
         task_id = str(item["task_id"])
         if task_id in latest:
-            raise OrchestrationError(f"task {task_id!r} has multiple unsuperseded results")
+            raise OrchestrationError('core.orchestration.multiple_results', task_id=task_id)
         latest[task_id] = item
         prior_id = item.get("supersedes")
         if prior_id is not None and str(prior_id) not in by_id:
-            raise OrchestrationError(f"result {item['result_id']!r} supersedes missing evidence")
+            raise OrchestrationError('core.orchestration.missing_evidence', value1=item['result_id'])
     return latest
 
 
@@ -177,25 +179,25 @@ def evaluate_artifact_gate(
         for result in result_list:
             validate_workflow_contract("orchestration-result", result)
     except WorkflowContractError as exc:
-        raise OrchestrationError(str(exc)) from exc
+        raise OrchestrationError(exc) from exc
     run_id = str(run["run_id"])
     task_by_id: dict[str, Mapping[str, Any]] = {}
     for task in task_list:
         if task["run_id"] != run_id:
-            raise OrchestrationError("task subject does not match the run")
+            raise OrchestrationError('core.orchestration.task_run')
         if task["task_id"] in task_by_id:
-            raise OrchestrationError(f"duplicate task ID {task['task_id']!r}")
+            raise OrchestrationError('core.orchestration.duplicate_task', value1=task['task_id'])
         task_by_id[str(task["task_id"])] = task
     for result in result_list:
         if result["run_id"] != run_id:
-            raise OrchestrationError("result subject does not match the run")
+            raise OrchestrationError('core.orchestration.result_run')
         task = task_by_id.get(str(result["task_id"]))
         if task is None or task["role"] != result["role"]:
-            raise OrchestrationError("result does not match a declared task and role")
+            raise OrchestrationError('core.orchestration.result_role')
     latest = _latest_results(result_list)
     required = list(dict.fromkeys(required_task_ids))
     if not required:
-        raise OrchestrationError("a gate requires at least one task")
+        raise OrchestrationError('core.orchestration.gate_tasks')
     checks: list[dict[str, Any]] = []
     blockers: list[str] = []
     evaluated_result_ids: list[str] = []
@@ -208,13 +210,13 @@ def evaluate_artifact_gate(
             evaluated_result_ids.append(str(result["result_id"]))
             evidence_refs = [f"result:{result['result_id']}", *result["evidence_refs"]]
         if task is None:
-            message = "required task packet is missing"
+            message = t("core.orchestration.task_missing")
         elif result is None:
-            message = "required result packet is missing"
+            message = t("core.orchestration.result_missing")
         elif result["status"] != "ok":
-            message = f"latest result status is {result['status']}"
+            message = t("core.orchestration.result_status", status=result["status"])
         else:
-            message = "latest immutable result is ok"
+            message = t("core.orchestration.result_ok")
         checks.append({"id": f"task-{task_id}", "passed": passed, "evidence_refs": evidence_refs, "message": message})
         if not passed:
             blockers.append(f"{task_id}: {message}")
@@ -235,5 +237,5 @@ def evaluate_artifact_gate(
     try:
         validate_workflow_contract("orchestration-gate", gate)
     except WorkflowContractError as exc:
-        raise OrchestrationError(str(exc)) from exc
+        raise OrchestrationError(exc) from exc
     return gate

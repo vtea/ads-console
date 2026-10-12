@@ -1,55 +1,43 @@
-# Amazon Ads control reference
+# Amazon Ads 控制项参考
 
-Retrieved: 2026-07-11. Refresh official product, API, policy, and availability
-sources before using this reference after its control-plane refresh date.
+检索日期：2026-07-11。在本参考文档的控制平面刷新日期之后使用前，请刷新官方产品、API、政策和可用性来源。
 
-## Category model
+## 类别模型
 
-This reference does not define an executable scoring profile. Bind a versioned
-profile whose categories cover the applicable controls and whose weights total 100;
-otherwise produce findings without a health score. The deterministic engine applies
-weights only after scoring applicable controls within each category.
+本参考文档不定义可执行的评分配置。绑定一个带版本的配置，其类别须涵盖适用控制项，且权重总计为 100；否则，只生成发现，不提供健康分数。确定性引擎仅在对各类别内的适用控制项评分后应用权重。
 
-## Runtime evaluation contract
+## 运行时评估契约
 
-- Treat each row as an applicability-first evidence question. Missing evidence is
-  `unknown`; unavailable or ineligible surfaces are `not_applicable`.
-- Verify marketplace, region, seller/vendor relationship, ad product, API access,
-  attribution, reporting grain, and retail ownership before evaluation.
-- The registered source below grounds API availability only. Current product,
-  policy, metric, attribution, catalog, and format claims require additional dated
-  official source IDs or account evidence.
-- This reference is advisory and export-read only. It does not provide a live
-  Amazon API reader or mutation adapter.
+- 将每一行视为优先检查适用性的证据问题。缺失证据为 `unknown`；不可用或不符合资格的广告载体为 `not_applicable`。
+- 评估前核实市场平台、区域、卖家/供应商关系、广告产品、API 访问权限、归因、报告粒度和零售责任归属。
+- 下列已登记来源仅为 API 可用性提供依据。当前产品、政策、指标、归因、商品目录和格式声明需要额外的注明日期的官方来源 ID 或账户证据。
+- 本参考文档仅用于咨询和读取导出数据。它不提供实时 Amazon API 读取器或变更适配器。
 
-## Controls
+## 控制项
 
-| ID | Category | Evidence question |
+| ID | 类别 | 证据问题 |
 | --- | --- | --- |
-| AMZ-M01 | Measurement | Profile, marketplace, region, currency, timezone, and attribution window are explicit. |
-| AMZ-M02 | Measurement | Orders, sales, ACOS, ROAS, TACOS, new-to-brand, and retail metrics are not conflated. |
-| AMZ-M03 | Measurement | Async report lifecycle, status, download, pagination, and missing rows are validated. |
-| AMZ-M04 | Measurement | Amazon Ads attribution is reconciled with Seller/Vendor and business-level outcomes. |
-| AMZ-S01 | Structure | Portfolios, campaign types, targeting, and naming reflect product and objective ownership. |
-| AMZ-S02 | Structure | Sponsored Products, Brands, Display, DSP, and video roles are separately evaluated. |
-| AMZ-T01 | Targeting | Automatic, keyword, product, audience, and defensive targeting have explicit purposes. |
-| AMZ-T02 | Targeting | Search-term harvesting and negatives are based on sufficient query and conversion evidence. |
-| AMZ-R01 | Retail | Buy Box, inventory, price, reviews, detail-page quality, and suppression risks are checked. |
-| AMZ-R02 | Retail | Catalog and variation relationships support the advertised ASINs and landing experience. |
-| AMZ-C01 | Creative | Sponsored Brands, video, display, and Store assets match format and product promise. |
-| AMZ-C02 | Creative | Materially different value propositions and formats are available for testing. |
-| AMZ-B01 | Budget | Budget, bid, placement adjustments, and pacing reflect margin, stock, objective, and evidence. |
-| AMZ-B02 | Budget | Automation changes respect profile/region scope, learning impact, and account ceilings. |
-| AMZ-P01 | Policy | Product eligibility, claims, creative, audience, and marketplace policy constraints are checked. |
-| AMZ-E01 | Experiment | Tests isolate one lever and account for retail, organic, price, and inventory changes. |
+| AMZ-M01 | 衡量 | 配置档案、市场平台、区域、货币、时区和归因窗口均明确。 |
+| AMZ-M02 | 衡量 | 订单、销售额、ACOS、ROAS、TACOS、品牌新客和零售指标没有混淆。 |
+| AMZ-M03 | 衡量 | 异步报告生命周期、状态、下载、分页和缺失行均已验证。 |
+| AMZ-M04 | 衡量 | Amazon Ads 归因已与 Seller/Vendor 和业务层级成果核对。 |
+| AMZ-S01 | 结构 | 广告组合、广告系列类型、定向和命名反映产品与目标的责任归属。 |
+| AMZ-S02 | 结构 | Sponsored Products、Brands、Display、DSP 和视频的作用分别评估。 |
+| AMZ-T01 | 定向 | 自动、关键词、商品、受众和防御性定向均有明确目的。 |
+| AMZ-T02 | 定向 | 搜索词挖掘和否定关键词基于充分的查询与转化证据。 |
+| AMZ-R01 | 零售 | 已检查 Buy Box、库存、价格、评价、详情页质量和展示抑制风险。 |
+| AMZ-R02 | 零售 | 商品目录和变体关系支持所推广的 ASIN 及落地体验。 |
+| AMZ-C01 | 创意 | Sponsored Brands、视频、展示和 Store 素材与格式及产品承诺相符。 |
+| AMZ-C02 | 创意 | 有实质不同的价值主张和格式可供测试。 |
+| AMZ-B01 | 预算 | 预算、出价、版位调整和投放节奏反映利润率、库存、目标和证据。 |
+| AMZ-B02 | 预算 | 自动化变更遵守配置档案/区域范围、学习影响和账户上限。 |
+| AMZ-P01 | 政策 | 已检查商品资格、声明、创意、受众和市场平台政策约束。 |
+| AMZ-E01 | 实验 | 测试隔离单一变量，并考虑零售、自然流量、价格和库存变化。 |
 
-Use `pass`, `fail`, `unknown`, or `not_applicable`. Unknown controls reduce
-coverage. Optional, beta, premium, unavailable, immutable, or ineligible features
-are unscored opportunities.
+使用 `pass`、`fail`、`unknown` 或 `not_applicable`。未知控制项会降低覆盖率。可选、测试版、高级、不可用、不可变或不符合资格的功能作为不评分的机会。
 
-## Registered official evidence
+## 已登记官方证据
 
-- `amazon-ads-api-official`: [Amazon Ads API overview](https://advertising.amazon.com/about-api/)
+- `amazon-ads-api-official`：[Amazon Ads API 概览](https://advertising.amazon.com/about-api/)
 
-Official sources override this summary when they change. Unsupported controls stay
-`unknown`; vendor case studies remain labeled and contextual.
+官方来源发生变化时，以官方来源为准，而非本概述。缺乏支持的控制项保持为 `unknown`；供应商案例研究仍须标注来源并结合具体背景使用。

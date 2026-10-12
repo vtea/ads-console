@@ -1,84 +1,59 @@
-# Regulatory Compliance Requirements
+# 法规合规要求
 
-**Verified:** 2026-08-25
-**Refresh:** event-driven; re-check within 30 days of an applicable effective date
-**Scope:** issue spotting and evidence collection, not legal advice
+**已核验：** 2026-08-25
+**刷新：** 事件驱动；在适用生效日期前后 30 天内重新检查
+**范围：** 问题识别和证据收集，而非法律意见
 
-Do not apply a global checklist before establishing jurisdiction, role, data
-flow, audience, product, and creative provenance. Laws and regulator guidance
-change; a stale state-count table is not a compliance system.
+在确定司法管辖区、角色、数据流、受众、产品和创意溯源之前，不要套用全局检查清单。法律和监管机构指导会变化；过时的州数量表不是合规系统。
 
-## Intake
+## 信息收集
 
-Capture:
+记录：
 
-- Advertiser, controller/business, processor/service-provider, agency, platform,
-  and AI provider/deployer roles.
-- Audience and operational geographies, including excluded locations.
-- Product category, claims, endorsements, political content, and age exposure.
-- Data collected, inferred, uploaded, disclosed, sold/shared, retained, and deleted.
-- Consent, opt-out, preference-signal, access/deletion, and vendor-contract flows.
-- AI-generated or manipulated text, image, audio, and video provenance.
-- Applicable counsel decisions, regulator correspondence, and platform approvals.
+- 广告主、控制者/企业、处理者/服务提供商、代理机构、平台，以及 AI 提供者/部署者的角色。
+- 受众和运营地理区域，包括排除地点。
+- 产品类别、声明、代言、政治内容和年龄接触风险。
+- 收集、推断、上传、披露、出售/共享、保留和删除的数据。
+- 同意、退出、偏好信号、访问/删除和供应商合同流程。
+- AI 生成或操纵的文本、图像、音频和视频的溯源。
+- 适用的法律顾问决定、监管往来和平台批准。
 
-Missing jurisdiction or data-flow evidence produces `needs_input`, not a pass.
+缺少司法管辖区或数据流证据时，结果为 `needs_input`，而不是通过。
 
-## Current primary sources
+## 当前一手来源
 
-| Area | Source | Retained fact |
+| 领域 | 来源 | 保留事实 |
 | --- | --- | --- |
-| EU AI Act | `eu-ai-act-article-50-official` — [European Commission transparency code](https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content) and [Regulation (EU) 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) | Article 50 transparency obligations apply from 2 August 2026; scope differs for providers and deployers |
-| Digital Services Act | `eu-dsa-official` — [European Commission DSA overview](https://digital-strategy.ec.europa.eu/en/policies/digital-services-act) | Ads must be identifiable and include information about who placed them and why they are shown; platform duties differ by service type |
-| California privacy | `cppa-regulations-official` — [CPPA laws and regulations](https://cppa.ca.gov/regulations/) | Adopted and proposed packages are distinct; consult the effective text rather than commentary |
-| Health information | `hhs-tracking-guidance-official`: [HHS tracking guidance](https://www.hhs.gov/hipaa/for-professionals/privacy/guidance/hipaa-online-tracking/index.html) | HIPAA-regulated entities must assess tracking technologies when collected or disclosed information includes PHI; the page records a court-vacated portion of earlier guidance |
-| US endorsements | `ftc-endorsement-guides-official`: [FTC Endorsement Guides FAQ](https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking) | Material connections and non-typical result claims require context-appropriate, clear disclosure/substantiation analysis |
+| 欧盟 AI 法案 | `eu-ai-act-article-50-official` — [欧盟委员会透明度准则](https://digital-strategy.ec.europa.eu/en/policies/code-practice-ai-generated-content) 和 [Regulation (EU) 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) | Article 50 透明度义务自 2 August 2026 起适用；提供者与部署者的适用范围不同 |
+| 数字服务法 | `eu-dsa-official` — [欧盟委员会 DSA 概览](https://digital-strategy.ec.europa.eu/en/policies/digital-services-act) | 广告必须可识别，并包含谁投放以及为何展示的信息；平台义务因服务类型而异 |
+| 加利福尼亚州隐私 | `cppa-regulations-official` — [CPPA 法律与法规](https://cppa.ca.gov/regulations/) | 已通过和拟议的法规方案不同；查阅生效文本，而非评论 |
+| 健康信息 | `hhs-tracking-guidance-official`：[HHS 跟踪指导](https://www.hhs.gov/hipaa/for-professionals/privacy/guidance/hipaa-online-tracking/index.html) | 当收集或披露的信息包含 PHI 时，受 HIPAA 监管的实体必须评估跟踪技术；该页面记录了早期指导中被法院撤销的一部分 |
+| 美国代言 | `ftc-endorsement-guides-official`：[FTC 代言指南常见问题](https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking) | 重大关系和非典型结果声明需要根据情境进行清晰披露/佐证分析 |
 
-The cited Article 50 transparency date is in effect as of the verification date. Do not convert it
-into a claim that every AI-assisted advertisement requires the same label. Check
-the actor, output type, use, exceptions, final Commission guidance, and platform
-implementation. Proposed transition rules remain proposals until adopted.
+所引 Article 50 透明度日期截至核验日期已生效。不要将其转化为“所有 AI 辅助广告都需要相同标签”的声明。检查行为主体、输出类型、用途、例外、欧盟委员会最终指导和平台实施情况。拟议过渡规则在通过之前仍是提案。
 
-## Data and privacy review
+## 数据与隐私审查
 
-Map each event and audience field from collection to destination. For each step,
-record purpose, legal basis or permission relied upon, consent state, sensitive
-status, recipient, retention, deletion, security, and user-control mechanism.
+将每个事件和受众字段从收集到目标位置进行映射。对每一步记录目的、所依据的法律基础或许可、同意状态、敏感状态、接收方、保留、删除、安全和用户控制机制。
 
-Verify the actual applicable law and effective regulation for each jurisdiction.
-Do not use a remembered count of US state privacy laws or a generic “GDPR/CCPA
-compliant” label as evidence. Test preference signals and opt-outs end to end,
-including downstream suppression and proof visible to the operator.
+核实每个司法管辖区实际适用的法律和生效法规。不得将凭记忆得出的美国州隐私法数量，或笼统的“GDPR/CCPA compliant”标签用作证据。端到端测试偏好信号和退出，包括下游抑制和操作者可见的证明。
 
-## Sensitive and regulated contexts
+## 敏感和受监管情境
 
-Escalate to counsel or the accountable compliance owner when the flow can include
-health, financial, precise location, biometric, neural, child/teen, political,
-employment, housing, credit, immigration, or other legally sensitive data.
+当数据流可能包含健康、财务、精确位置、生物识别、神经、儿童/青少年、政治、就业、住房、信贷、移民或其他法律上敏感的数据时，升级至法律顾问或负有责任的合规负责人。
 
-For HIPAA-regulated entities and business associates, inspect HHS's current
-tracking guidance and the court-order note on that page. Do not claim that every
-visit to a public health-information page is PHI, and do not assume a privacy
-notice alone authorizes disclosure.
+对于受 HIPAA 监管的实体及业务伙伴，检查 HHS 当前的跟踪指导及该页面上的法院命令说明。不要声称每次访问公开健康信息页面都属于 PHI，也不要假定仅有隐私通知就授权披露。
 
-## Claims, endorsements, and AI media
+## 声明、代言和 AI 媒体
 
-- Keep substantiation for express and implied objective claims.
-- Disclose material connections in a way ordinary viewers can notice and understand.
-- Compare testimonial results with generally expected results; a vague disclaimer
-  does not repair an otherwise misleading impression.
-- Preserve AI provenance and platform labels; assess Article 50 and local rules
-  against the exact output and role.
-- Review political and public-interest content under current election, platform,
-  and jurisdiction rules before launch.
+- 保留对明示和暗示的客观声明的佐证。
+- 以普通观看者能注意到并理解的方式披露重大关系。
+- 将证言结果与通常预期结果比较；含糊的免责声明无法修复本已误导的印象。
+- 保留 AI 溯源和平台标签；针对精确的输出与角色评估 Article 50 的要求及当地规则。
+- 上线前根据当前选举、平台和司法管辖区规则审查政治及公共利益内容。
 
-## Finding and escalation contract
+## 发现与升级契约
 
-Each finding states jurisdiction, actor, data/creative flow, current primary
-source, observed evidence, applicability rationale, result, confidence, exposure,
-owner, remediation, and re-check date. Keep legal exposure separate from account
-health scoring.
+每项发现说明司法管辖区、行为主体、数据/创意流、当前一手来源、观察到的证据、适用性理由、结果、置信度、风险敞口、负责人、补救措施和复查日期。将法律风险与账户健康评分分开。
 
-Block a mutation when required consent/authorization, counsel decision,
-certification, disclosure, data minimization, or jurisdiction evidence is absent.
-Use `unknown` for unresolved applicability. Claude Ads may identify and document
-the issue; the accountable owner or qualified counsel makes the legal decision.
+缺少所需同意/授权、法律顾问决定、认证、披露、数据最小化或司法管辖区证据时，阻止变更。对未解决的适用性使用 `unknown`。Claude Ads 可以识别并记录问题；法律决定由负责的所有者或合格法律顾问作出。

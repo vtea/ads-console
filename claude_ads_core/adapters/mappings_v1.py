@@ -11,6 +11,14 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import Any, Literal
 
+from ..errors import LocalizedError
+from ..i18n import t
+
+
+class NativeProfileError(LocalizedError, ValueError):
+    """Raised when an exact native profile is unavailable."""
+
+
 ProfileStatus = Literal["fixture-verified", "disabled"]
 Transform = Literal[
     "text",
@@ -77,6 +85,17 @@ class NativeExportProfile:
     def expected_headers(self) -> tuple[str, ...]:
         return tuple(item.source for item in self.fields) + tuple(item.source for item in self.guards)
 
+    @property
+    def localized_disabled_reason(self) -> str | None:
+        if self.disabled_reason is None:
+            return None
+        # Only the built-in exact profile is translated. Caller-defined reasons
+        # remain opaque data rather than being silently replaced by a stock text.
+        original = PROFILES.get(self.platform)
+        if original is self and self.platform in {"amazon", "x"}:
+            return t(f"core.native.{self.platform}_disabled_reason")
+        return self.disabled_reason
+
     def to_dict(self) -> dict[str, Any]:
         """Return a deterministic public capability description."""
 
@@ -96,7 +115,7 @@ class NativeExportProfile:
             "unsupported_normalized_fields": list(self.unsupported_normalized_fields),
             "source_ids": list(self.source_ids),
             "source_urls": list(self.source_urls),
-            "disabled_reason": self.disabled_reason,
+            "disabled_reason": self.localized_disabled_reason,
         }
 
 
@@ -429,4 +448,4 @@ def get_native_profile(platform: str) -> NativeExportProfile:
     try:
         return PROFILES[platform.strip().lower()]
     except KeyError as exc:
-        raise ValueError(f"unsupported native export platform: {platform!r}") from exc
+        raise NativeProfileError("core.native.unsupported_platform", platform=platform) from exc

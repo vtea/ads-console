@@ -1,37 +1,25 @@
-# LinkedIn Ads creative generation contract
+# LinkedIn Ads 创意生成契约
 
-Use this reference for LinkedIn creative planning. Exact ratios, dimensions, copy
-limits, file sizes, durations, page limits, Audience Network behavior, and form
-fields must be verified from current official sources and the target account.
+使用本参考文档规划 LinkedIn 创意。精确比例、尺寸、文案限制、文件大小、时长、页数限制、Audience Network 行为和表单字段，必须根据当前官方来源及目标账户核实。
 
-## Specification gate
+## 规格关卡
 
-For the selected single-image, video, document, carousel, event, lead-generation,
-message, or partner placement, record:
+对于所选单图、视频、文档、轮播、活动、线索获取、消息或合作伙伴版位，记录：
 
-- objective, placement, geography, account eligibility, and official source ID;
-- accepted asset type, ratio, dimensions, byte/page/duration limits, and copy fields;
-- destination, form, disclosure, crop, thumbnail, and preview behavior;
-- brand rights, testimonial and claim substantiation, privacy, and lead-form terms.
+- 目标、版位、地理区域、账户资格和官方来源 ID；
+- 接受的素材类型、比例、尺寸、字节/页数/时长限制和文案字段；
+- 目标页面、表单、披露、裁切、缩略图和预览行为；
+- 品牌权利、证言与声明佐证、隐私和线索表单条款。
 
-Missing or stale load-bearing evidence is `needs_input`. Do not claim one ratio has
-better engagement or that a fixed copy length is universally visible.
+关键证据缺失或过时即为 `needs_input`。不要声称某种比例有更好的互动，或固定文案长度在所有情况下都可见。
 
-## LinkedIn-specific review
+## LinkedIn 专属审查
 
-- Let the approved brand voice and audience context determine tone. “Professional”
-  does not require generic office imagery, formal clothing, muted colors, or the
-  exclusion of playfulness.
-- For document and lead assets, verify the offer, cover, gating, form fields,
-  destination, consent language, and downstream routing together.
-- When Audience Network or another partner surface is selected, verify its current
-  requirements and preview separately rather than assuming LinkedIn resizes safely.
-- Generate materially different B2B hypotheses based on buyer evidence; demographic
-  stereotypes are not a creative strategy.
+- 让已批准的品牌语气和受众情境决定基调。“专业”不要求通用办公室图像、正式着装、柔和颜色，也不要求排除趣味性。
+- 对于文档和线索素材，一并核实优惠、封面、访问门槛、表单字段、目标页面、同意措辞和下游路由。
+- 选择 Audience Network 或其他合作伙伴广告载体时，单独核实其当前要求和预览，而不是假定 LinkedIn 会安全地调整尺寸。
+- 根据买方证据生成实质不同的 B2B 假设；人口统计刻板印象不是创意策略。
 
-## Output contract
+## 输出契约
 
-Record concept ID, placement, specification source IDs, dimensions, ratio, format,
-copy fields, checksum, provenance, rights, safety review, destination/form mapping,
-and preview results. Assets remain drafts until validated and approved; no live
-LinkedIn write capability is implied.
+记录概念 ID、版位、规格来源 ID、尺寸、比例、格式、文案字段、校验和、溯源、权利、安全审查、目标页面/表单映射和预览结果。素材在验证和批准前始终保持草稿；不意味着具备实时 LinkedIn 写入能力。

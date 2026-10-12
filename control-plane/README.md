@@ -1,75 +1,38 @@
-# Claude Ads Control Plane
+# Claude Ads 控制面
 
-This directory is the public-safe contract layer for Claude Ads v2. It records
-what the product is allowed to claim, what it can actually do, which evidence
-supports it, how work is coordinated, and what must pass before release.
+本目录是 Claude Ads v2 可安全公开的契约层。它记录产品可以作出哪些声明、实际能做什么、由哪些证据支持、如何协调工作，以及发布之前必须通过哪些检查。
 
-The design is a clean-room synthesis of source-first research discipline,
-capability honesty, progressive disclosure, reversible operations, and
-fresh-context verification. It contains no copied private prompts, captured
-system text, account exports, credentials, or raw private corpus.
+该设计以洁净室方式综合了来源优先的研究纪律、能力如实披露、渐进式披露、可逆操作以及全新上下文验证。目录不包含复制的私有提示词、捕获的系统文本、账户导出文件、凭据或原始私有语料。
 
-## Contracts
+## 契约
 
-- `PRODUCT_BOUNDARIES.md`: buyer, promise, supported workflows, and explicit
-  non-promises.
-- `PUBLISHING_POLICY.md`: private/public classification and publication gate.
-- `RELEASE_REQUIREMENTS.md`: maturity, testing, security, packaging, and remote
-  CI requirements.
-- `schemas/`: JSON Schema Draft 2020-12 contracts.
-- `schemas/independent-review-evidence.schema.json` and
-  `schemas/review-trust-bundle.schema.json`: externally signed release-review
-  contracts; repository templates cannot satisfy the gate.
-- `manifests/`: current product, evidence, capability, safety, orchestration,
-  maturity, and ecosystem-review state.
-- `manifests/data-lifecycle-policy.json`: versioned classification, minimum
-  retention, encryption, access, deletion-verification, and incident rules. The
-  matching schema is `schemas/data-lifecycle-policy.schema.json`; per-run values
-  use `claude_ads_core/schemas/v1/data-lifecycle.schema.json`.
-- `manifests/control-registry.json` and `manifests/scoring-profiles.json`: the
-  exhaustive typed audit catalog and fail-closed platform health state. A named
-  check is not scoreable unless its versioned profile is enabled.
+- `PRODUCT_BOUNDARIES.md`：目标客户、承诺、支持的工作流及明确不作出的承诺。
+- `PUBLISHING_POLICY.md`：私有/公开分类及公开发布门禁。
+- `RELEASE_REQUIREMENTS.md`：成熟度、测试、安全、打包和远程 CI 要求。
+- `schemas/`：JSON Schema Draft 2020-12 契约。
+- `schemas/independent-review-evidence.schema.json` 和 `schemas/review-trust-bundle.schema.json`：由外部签名的发布审查契约；仓库模板不能满足此门禁。
+- `manifests/`：当前产品、证据、能力、安全、编排、成熟度及生态审查状态。
+- `manifests/data-lifecycle-policy.json`：版本化的分类、最短保留期、加密、访问、删除验证和事件规则。对应 schema 为 `schemas/data-lifecycle-policy.schema.json`；每次运行的值使用 `claude_ads_core/schemas/v1/data-lifecycle.schema.json`。
+- `manifests/control-registry.json` 和 `manifests/scoring-profiles.json`：完整的类型化审计目录，以及失败即关闭的平台健康度状态。除非对应版本化配置已启用，否则具名检查不可评分。
 
-Schema `$id` values use stable `urn:ai-marketing-hub:claude-ads:schema:*`
-identifiers. They are identifiers, not network locations. The tracked files in
-`claude_ads_core/schemas/v1/`, `control-plane/schemas/`, and `evals/schemas/`
-are the canonical validation resources.
+schema 的 `$id` 值采用稳定的 `urn:ai-marketing-hub:claude-ads:schema:*` 标识符。它们是标识符，不是网络地址。`claude_ads_core/schemas/v1/`、`control-plane/schemas/` 和 `evals/schemas/` 中已跟踪的文件是规范验证资源。
 
-## Doctrine
+## 原则
 
-1. No source, no current claim.
-2. No implementation, fixture, and test, no capability claim.
-3. No approval and rollback, no account mutation.
-4. No independent verification path, no release.
-5. Staleness, security failures, or broken evaluations demote maturity.
+1. 没有来源，就没有当前声明。
+2. 没有实现、固定测试数据和测试，就没有能力声明。
+3. 没有批准和回滚，就没有账户变更。
+4. 没有独立验证路径，就不能发布。
+5. 来源过期、安全失败或评估失效都会降低成熟度。
 
-Manifests are release inputs, not marketing copy. A planned capability must be
-marked `declared` or `disabled`; only verified behavior may be marked
-`fixture-verified` or `live-verified`.
+清单是发布输入，不是营销文案。规划中的能力必须标记为 `declared` 或 `disabled`；只有经过验证的行为才能标记为 `fixture-verified` 或 `live-verified`。
 
-The dependency-free core also validates strict v1 workflow artifacts for setup,
-brand, planning, creative/copy, generation, monitoring, experiments, and mutation
-plans. These contracts establish structure only; they do not prove source truth,
-platform eligibility, provider availability, account authority, or approval.
-File-backed orchestration uses immutable run, task, result, and artifact-only gate
-packets. Reruns require an explicit `supersedes` chain.
+无依赖核心也会验证严格的 v1 工作流产物，包括设置、品牌、规划、创意/文案、生成、监控、实验和变更计划。这些契约仅确立结构；并不证明来源真实性、平台资格、供应商可用性、账户权限或批准。基于文件的编排使用不可变的运行、任务、结果以及仅含产物的门禁包。重新运行需要明确的 `supersedes` 链。
 
-The current catalog is operational for discovery findings, not account-health
-grading. All twelve scoring profiles are disabled until per-control source
-support, severity decisions, typed inputs, weights, and regression evidence are
-approved together.
+当前目录除 Meta 的 M01–M03（测量类，严重度 high，类别权重 measurement=100）外，只能用于发现类结果，不能用于账户健康度评级。其余十一个平台评分配置保持禁用，直到逐项控制的来源支持、严重程度决策、类型化输入、权重和回归证据一并获得批准。
 
-Run `python scripts/release.py gate` with the exact canonical-model report,
-external signed review directory, reviewer public-key trust bundle, implementation
-principal list, and GitHub Actions run ID. The emitted assessment conforms to
-`schemas/release-gate-report.schema.json` and fails closed when any input is
-missing, stale, unsigned, mismatched, incomplete, or unsuccessful.
+运行 `python scripts/release.py gate` 时，应提供精确的规范模型报告、外部签名审查目录、审查者公钥信任包、实现主体列表及 GitHub Actions 运行 ID。生成的评估符合 `schemas/release-gate-report.schema.json`，在任一输入缺失、过期、未签名、不匹配、不完整或未成功时失败即关闭。
 
-Canonical model evidence uses separate externally trusted runner and evaluator
-keys. Supply the model trust bundle and implementation-principal exclusions via
-the `CLAUDE_ADS_MODEL_EVAL_*_JSON` environment variables documented in
-`RELEASE_REQUIREMENTS.md`; no repository file is a trust root.
+规范模型证据使用分别受外部信任的运行执行者和评估者密钥。通过 `RELEASE_REQUIREMENTS.md` 中记录的 `CLAUDE_ADS_MODEL_EVAL_*_JSON` 环境变量提供模型信任包和实现主体排除项；任何仓库文件都不是信任根。
 
-Run `python -m claude_ads_core status --root . --as-of YYYY-MM-DD` for the
-repository-artifact status, or replace `status` with `next` for exactly one
-deterministically selected blocker. Both commands are offline and fail closed.
+运行 `python -m claude_ads_core status --root . --as-of YYYY-MM-DD` 可查看基于仓库产物的状态，或将 `status` 替换为 `next`，获取确定性选择的恰好一个阻碍项。两个命令均离线运行，且失败即关闭。

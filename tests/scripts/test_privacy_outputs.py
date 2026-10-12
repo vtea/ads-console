@@ -18,6 +18,15 @@ SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import generate_image  # noqa: E402
+from claude_ads_core.i18n import locale_scope  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def english_output(monkeypatch):
+    monkeypatch.setenv("CLAUDE_ADS_LOCALE", "en")
+    with locale_scope("en"):
+        yield
+
 
 
 _VALID_PNG = base64.b64decode(
@@ -167,7 +176,7 @@ def test_batch_json_contains_hashes_and_relative_locators_only(tmp_path, monkeyp
     assert raw_prompt not in shipped
     assert str(tmp_path) not in shipped
     assert payload[0]["prompt_sha256"] == hashlib.sha256(raw_prompt.encode()).hexdigest()
-    assert payload[0]["prompt_summary"] == generate_image._PROMPT_SUMMARY
+    assert payload[0]["prompt_summary"] == "[redacted: raw prompt is ephemeral and is not persisted]"
     assert payload[0]["file_locator"] == "artifacts/creative.png"
     assert payload[0]["model"] == "test-model"
     assert "prompt" not in payload[0]

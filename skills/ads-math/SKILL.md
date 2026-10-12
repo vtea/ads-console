@@ -1,21 +1,23 @@
 ---
 name: ads-math
-description: "Calculate and model paid-media CPA, CPL, CPC, CPM, ROAS, MER, break-even targets, contribution margin, LTV:CAC, impression-share opportunity, budgets, forecasts, and experiment economics. Use for PPC math, ad calculator, break-even analysis, ROAS calculator, CPA calculator, budget forecast, LTV CAC, or MER."
+description: "计算和建模付费媒体 CPA、CPL、CPC、CPM、ROAS、MER、盈亏平衡目标、贡献毛利、LTV:CAC、展示份额机会、预算、预测和实验经济效益。适用于 PPC 数学计算、广告计算器、盈亏平衡分析、ROAS 计算器、CPA 计算器、预算预测、LTV CAC 或 MER。"
 ---
 
-# Paid Media Financial Model
+# 付费媒体财务模型
 
-1. Identify the decision and collect units, currency, period, tax/refund treatment,
-   margin, attribution basis, and uncertainty.
-2. Show the formula and map every input to an operator value or cited artifact.
-3. Validate denominators, sign, missing values, incompatible windows, and unit
-   conversions.
-4. Calculate base, downside, and upside cases where uncertainty affects the decision.
-5. Keep platform-attributed revenue, blended business revenue, cash flow, and
-   contribution margin distinct.
-6. Return machine-readable inputs, formulas, outputs, sensitivities, and decision
-   implications.
+操作语言默认使用简体中文：首次回复、工具前说明、过程进度、AskUserQuestion 的问题、选项和说明，以及最终报告均使用中文；用户明确指定其他操作语言时遵从。广告投放语言独立于操作语言。JSON keys/enums 和原始证据不翻译。委派任务时必须传递操作语言要求。
 
-Never fabricate missing financial inputs, hide division-by-zero, or present a point
-forecast without its assumptions.
+1. 确定决策，并收集单位、币种、期间、税费/退款处理方式、
+   利润率、归因依据和不确定性。
+2. 展示公式，并将每项输入映射到操作者提供的数值或引用的工件。
+3. 验证分母、正负号、缺失值、不兼容窗口和单位
+   换算。
+4. 在不确定性影响决策时，计算基准、下行情景和上行情景。
+5. 将平台归因收入、混合业务收入、现金流和
+   贡献毛利区分开来。
+6. 返回机器可读的输入、公式、输出、敏感性和决策
+   含义。
+
+绝不能编造缺失的财务输入、掩盖除以零的问题，或在不说明假设的情况下
+给出点预测。
 

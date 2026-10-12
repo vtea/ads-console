@@ -1,39 +1,39 @@
-# Mobile-app paid-media planning questions
+# 移动应用付费媒体规划问题
 
-> Status: qualitative, unscored planning aid.
+> 状态：定性、不计分的规划辅助资料。
 
-## Required gates
+## 必需门禁
 
-- Context gate: identify the app, stores, operating systems, regions, business model,
-  audience, objective, approved in-app outcomes, release state, and budget authority.
-- Evidence gate: use current store, platform, measurement, privacy, and current official source IDs;
-  treat operating-system and attribution behavior as time-sensitive.
-- Privacy gate: document consent, age handling, device and account identifiers, event
-  minimization, partner access, retention, deletion, and regional restrictions.
-- Measurement gate: distinguish store view, install, registration, activation, purchase,
-  subscription, retention, refund, and reconciled value without treating install as value.
-- Capability gate: verify current deep-link, store-page, attribution, audience, creative,
-  and campaign eligibility for each platform and region.
-- Regulatory gate: identify category, child safety, health, finance, gaming, subscription,
-  disclosure, and store-policy risks and route uncertainty to qualified review.
+- 背景门禁：明确应用、商店、操作系统、区域、业务模式、
+  受众、目标、已批准的应用内成果、发布状态和预算权限。
+- 证据门禁：使用当前商店、平台、衡量、隐私和当前官方来源 ID；
+  将操作系统和归因行为视为具有时效性的信息。
+- 隐私门禁：记录同意、年龄处理、设备和账户标识符、事件
+  最小化、合作方访问、保留、删除和区域限制。
+- 衡量门禁：区分商店浏览、安装、注册、激活、购买、
+  订阅、留存、退款和已对账价值，不得将安装视为价值。
+- 能力门禁：针对每个平台和区域，验证当前深层链接、商店页面、归因、受众、创意
+  和广告系列资格。
+- 监管门禁：识别类别、儿童安全、健康、金融、游戏、订阅、
+  披露和商店政策风险，并将不确定性转交具备资格的审查。
 
-## Planning questions
+## 规划问题
 
-- Which post-install outcome represents real user and business value?
-- Which events are reliable, consented, deduplicated, and comparable across systems?
-- How do onboarding, paywall, product quality, store listing, and deep links affect the plan?
-- Which creative claims match the current app experience and store metadata?
-- Which acquisition and re-engagement audiences are eligible and privacy-safe?
-- How will delayed, aggregated, modeled, or missing attribution be disclosed?
-- What would cause a campaign or measurement proposal to remain provisional?
+- 哪项安装后成果代表真实的用户与业务价值？
+- 哪些事件可靠、已获同意、已去重且可跨系统比较？
+- 新手引导、付费墙、产品质量、商店详情页和深层链接如何影响计划？
+- 哪些创意声明与当前应用体验和商店元数据一致？
+- 哪些获客与再互动受众符合资格且符合隐私安全要求？
+- 如何披露延迟、聚合、建模或缺失的归因？
+- 什么情况会使广告系列或衡量提案保持为暂定状态？
 
-## Candidate considerations
+## 候选考量
 
-- Consider intent, discovery, store, social, and re-engagement roles as hypotheses.
-- Compare cohorts and downstream value only when definitions and windows are compatible.
+- 将意图、发现、商店、社交和再互动的角色作为假设考虑。
+- 仅在定义和窗口兼容时，比较同期群和下游价值。
 
-## Output guardrails
+## 输出防护规则
 
-- Return qualitative choices, data gaps, source IDs, owners, and verification needs.
-- Do not prescribe platform shares, event-volume thresholds, bid strategies, attribution
-  windows, retention targets, or value ratios.
+- 返回定性选择、数据缺口、来源 ID、负责人和验证需求。
+- 不得规定平台份额、事件量阈值、出价策略、归因
+  窗口、留存目标或价值比率。

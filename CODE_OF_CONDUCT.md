@@ -1,76 +1,58 @@
-# Contributor Covenant Code of Conduct
+# Contributor Covenant 行为准则
 
-## Our Pledge
+## 我们的承诺
 
-We as members, contributors, and maintainers pledge to make participation in the
-Claude Ads community a harassment-free experience for everyone, regardless of age,
-body size, visible or invisible disability, ethnicity, sex characteristics, gender
-identity and expression, level of experience, education, socioeconomic status,
-nationality, personal appearance, race, caste, color, religion, or sexual identity
-and orientation.
+作为成员、贡献者和维护者，我们承诺让每个人参与 Claude Ads 社区时都免受骚扰，无论其年龄、体型、可见或不可见的残障、族裔、性征、性别认同和表达、经验水平、教育程度、社会经济地位、国籍、个人外貌、种族、种姓、肤色、宗教、性身份或性取向。
 
-We pledge to act and interact in ways that contribute to an open, welcoming,
-diverse, inclusive, and healthy community.
+我们承诺以有助于建立开放、友好、多元、包容和健康社区的方式行动与互动。
 
-## Our Standards
+## 我们的标准
 
-Examples of behavior that contributes to a positive environment include:
+有助于营造积极环境的行为示例包括：
 
-- Demonstrating empathy and kindness toward other people
-- Being respectful of differing opinions, viewpoints, and experiences
-- Giving and gracefully accepting constructive feedback
-- Accepting responsibility and apologizing for mistakes, learning from them
-- Focusing on what is best not just for us as individuals but for the overall community
+- 对他人表现出同理心和善意。
+- 尊重不同意见、观点和经历。
+- 提供并坦然接受建设性反馈。
+- 为错误承担责任并道歉，从中学习。
+- 不仅关注对我们个人最有利的事，也关注对整个社区最有利的事。
 
-Examples of unacceptable behavior include:
+不可接受的行为示例包括：
 
-- The use of sexualized language or imagery and unwanted sexual attention or advances
-- Trolling, insulting or derogatory comments, and personal or political attacks
-- Public or private harassment
-- Publishing others' private information without explicit permission
-- Other conduct which could reasonably be considered inappropriate in a professional setting
+- 使用性暗示语言或图像，以及不受欢迎的性关注或示好。
+- 挑衅、侮辱或贬损性评论，以及人身或政治攻击。
+- 公开或私下骚扰。
+- 未经明确许可发布他人的私密信息。
+- 其他可被合理认为不适合专业场合的行为。
 
-## Enforcement Responsibilities
+## 执行责任
 
-Project maintainers are responsible for clarifying and enforcing standards of
-acceptable behavior and will take appropriate and fair corrective action in response
-to any behavior they deem inappropriate, threatening, offensive, or harmful.
+项目维护者负责澄清并执行可接受行为的标准，并会对其认为不当、具有威胁性、冒犯性或有害的行为采取适当且公平的纠正措施。
 
-## Scope
+## 适用范围
 
-This Code of Conduct applies within all community spaces (GitHub Issues,
-Discussions, Pull Requests) and also when an individual is officially representing
-the project in public spaces.
+本行为准则适用于所有社区空间（GitHub Issues、Discussions、Pull Requests），也适用于个人在公共空间正式代表本项目的情况。
 
-## Enforcement
+## 执行
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported
-to the project maintainer at:
+可通过以下方式向项目维护者报告辱骂、骚扰或其他不可接受的行为：
 
-- **GitHub**: [@AgriciDaniel](https://github.com/AgriciDaniel)
-- **Private report**: [GitHub Security Advisory](https://github.com/AgriciDaniel/claude-ads/security/advisories/new)
+- **GitHub**：[@AgriciDaniel](https://github.com/AgriciDaniel)
+- **私密报告**：[GitHub Security Advisory](https://github.com/AgriciDaniel/claude-ads/security/advisories/new)
 
-All complaints will be reviewed and investigated promptly and fairly.
+所有投诉都会得到及时、公平的审查和调查。
 
-## Enforcement Guidelines
+## 执行指引
 
-Project maintainers will follow these Community Impact Guidelines in determining
-the consequences for any action they deem in violation of this Code of Conduct:
+在决定对违反本行为准则的行为采取何种后果时，项目维护者会遵循以下社区影响指引：
 
-**1. Correction**; A private written warning with clarity around the nature of
-the violation and an explanation of why the behavior was inappropriate.
+**1. 纠正**；私下发出书面警告，明确说明违规性质，以及该行为为何不当。
 
-**2. Warning**; A warning with consequences for continued behavior. No interaction
-with the people involved for a specified period of time.
+**2. 警告**；发出警告，并说明继续该行为的后果。在指定时间内不得与相关人员互动。
 
-**3. Temporary Ban**; A temporary ban from any sort of interaction or public
-communication with the community for a specified period of time.
+**3. 临时封禁**；在指定时间内，禁止与社区进行任何形式的互动或公开沟通。
 
-**4. Permanent Ban**; A permanent ban from any sort of public interaction within
-the community.
+**4. 永久封禁**；永久禁止在社区内进行任何形式的公开互动。
 
-## Attribution
+## 署名
 
-This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org),
-version 2.1, available at
-[https://www.contributor-covenant.org/version/2/1/code_of_conduct.html](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html).
+本行为准则改编自 [Contributor Covenant](https://www.contributor-covenant.org) 2.1 版，原文见 [https://www.contributor-covenant.org/version/2/1/code_of_conduct.html](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html)。

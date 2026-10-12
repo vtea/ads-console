@@ -38,7 +38,7 @@
       "requirements": [
         "All twelve platform contracts have normalized ingestion, findings, reports, fixtures, and tests.",
         "Capability status matches executable behavior and adapter evidence.",
-        "Every catalog check has a typed runtime disposition; account-health scoring stays disabled until an approved source, severity, input, weight, and regression profile exists."
+        "Every catalog check has a typed runtime disposition; account-health scoring stays disabled per platform until an approved source, severity, input, weight, and regression profile exists (currently enabled for Meta only: M01-M03)."
       ],
       "satisfied": true,
       "evidence": [
@@ -93,7 +93,7 @@
     "Required remote CI is skipped, unavailable, or failing."
   ],
   "blockers": [
-    "All twelve account-health scoring profiles are deliberately disabled. The audit catalog is typed for unscored discovery, but per-control severity, source, input, category-weight, and regression decisions have not been approved and must not be inferred.",
+    "Eleven of twelve account-health scoring profiles are deliberately disabled; only Meta is enabled, with three approved measurement controls (M01-M03, high, measurement=100). The remaining audit catalog is typed for unscored discovery, and per-control severity, source, input, category-weight, and regression decisions have not been approved and must not be inferred.",
     "The prior canonical Claude comparison, independent reviews, and remote CI bind commit 50eda33d73ab4f85fbb756a3bb032c8582adfcd9 only. They do not verify the current repository-cleanup subject.",
     "Fresh code, evidence, security, privacy, and licensing approvals must bind the final cleanup commit and tree.",
     "The final cleanup commit must pass the complete local, remote-CI, canonical-model, and release-evidence gates before merge or tag."

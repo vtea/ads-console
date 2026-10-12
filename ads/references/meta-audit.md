@@ -1,102 +1,102 @@
-# Meta Ads audit control catalog
+# Meta Ads 审计控制项目录
 
-<!-- Catalog IDs preserved from the legacy runtime; current platform facts require dated source or account evidence. -->
+<!-- 目录 ID 沿用旧版运行时；当前平台事实需要注明日期的来源或账户证据。 -->
 
-## Runtime evaluation contract
+## 运行时评估契约
 
-- Start with objective, geography, account type, campaign type, data window, conversion lag, sample size, and feature access.
-- Return `not_applicable` when the surface or requirement does not apply and `unknown` when the required evidence is absent.
-- A conditional control can affect health only when current account evidence, owner-defined economics, and an applicable official source establish the expectation.
-- Product adoption, availability, beta access, announcement awareness, and vendor-reported performance are not health controls. Record them only as unscored discovery.
-- Do not use fixed platform-wide thresholds, broad benchmarks, launch dates, sunset dates, or universal network, bidding, budget, audience, creative, or attribution rules from this catalog.
-- Validate mutable facts at run time. A confirmed policy, support-state, or migration requirement needs its own current claim coverage before it can create a finding.
+- 从目标、地理区域、账户类型、广告系列类型、数据窗口、转化延迟、样本量和功能访问权限开始。
+- 当广告载体或要求不适用时，返回 `not_applicable`；当所需证据缺失时，返回 `unknown`。
+- 只有当前账户证据、负责人定义的经济数据和适用官方来源共同确立预期时，条件性控制项才可影响健康状况。
+- 产品采用、可用性、测试版访问、公告知晓程度和供应商报告的表现不是健康控制项。仅将其记录为不评分的发现。
+- 不要从本目录采用固定的平台级阈值、广泛基准、上线日期、停用日期，或通用网络、出价、预算、受众、创意或归因规则。
+- 在运行时验证可变事实。已确认的政策、支持状态或迁移要求，在产生发现之前，需有自身的当前声明覆盖。
 
-## Source coverage boundary
+## 来源覆盖边界
 
-The registered sources below cover only the measurement, API, and import foundations stated in the claim ledger. They do not support every named product or control in this catalog. Until a narrower current claim exists, treat those names as routing labels and gather fresh official or in-account evidence.
+下列已登记来源仅涵盖声明台账中所述的衡量、API 和导入基础。它们并不支持本目录中每个具名产品或控制项。在存在更具体的当前声明之前，将这些名称视为路由标签，并收集最新官方或账户内证据。
 
-## Official evidence
+## 官方证据
 
-- `meta-marketing-api-official`: [Meta Marketing APIs documentation](https://developers.facebook.com/docs/marketing-apis/)
-- `meta-conversions-api-official`: [Meta Conversions API overview](https://www.facebook.com/business/help/AboutConversionsAPI)
+- `meta-marketing-api-official`：[Meta Marketing APIs 文档](https://developers.facebook.com/docs/marketing-apis/)
+- `meta-conversions-api-official`：[Meta Conversions API 概览](https://www.facebook.com/business/help/AboutConversionsAPI)
 
-## Control registry
+## 控制项注册表
 
-| ID | Audit intent | Runtime disposition |
+| ID | 审计意图 | 运行时处理 |
 |---|---|---|
-| M01 | Meta Pixel installed | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M02 | Conversions API applicability and status | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M03 | Event deduplication | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M04 | Event Match Quality diagnostics | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M05 | Domain verification | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M06 | Aggregated measurement applicability | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M07 | Standard events vs custom | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M08 | CAPI Gateway | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M09 | iOS attribution window | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M10 | Data freshness | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M25 | Creative format diversity | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M26 | Creative concept coverage | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M27 | Video aspect ratios | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M28 | Creative fatigue detection | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M29 | Hook rate | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M30 | Social proof utilization | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M31 | UGC / social-native content | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M32 | Advantage+ Creative | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M-CR1 | Creative freshness | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M-CR2 | Frequency: Prospecting | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M-CR3 | Frequency: Retargeting | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M-CR4 | CTR benchmark | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M11 | Campaign fragmentation | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M12 | Campaign- versus ad-set-budget control | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M13 | Learning phase status | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M14 | Learning phase resets | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M15 | Advantage+ Sales campaign | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M16 | Ad set consolidation | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M17 | Budget distribution | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M18 | Campaign objective alignment | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M33 | Advantage+ Placements | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M34 | Placement performance review | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M35 | Attribution setting | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M36 | Bid strategy appropriateness | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M37 | Frequency cap monitoring | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M38 | Breakdown reporting | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M39 | UTM parameters | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M40 | A/B testing active | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M-ST1 | Budget adequacy | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M-ST2 | Budget utilization | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M19 | Audience overlap | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M20 | Custom Audience freshness | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M21 | Lookalike source quality | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M22 | Advantage+ Audience testing | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M23 | Exclusion audiences | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M24 | First-party data utilization | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M-AN1 | Andromeda creative diversity | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M-AT1 | Attribution window post | Conditional evidence control: establish applicability and evaluate from current account evidence; otherwise return `unknown` or `not_applicable`. |
-| M-IA1 | Incremental Attribution testing | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M-TH1 | Threads placement evaluation | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M51 | Meta Ads MCP server inventory | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M52 | MCP paused-by-default enforcement | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M53 | MCP write-action governance | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M54 | Click-through metric-definition evidence | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M55 | Engage-through attribution column | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M56 | Engaged-view threshold | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M57 | Default attribution windows | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M58 | Historical baseline comparability | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M59 | View-through integration | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M60 | GEM claim provenance | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M61 | Lattice claim provenance | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M62 | Andromeda claim provenance | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M63 | ARM readiness | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M64 | Incremental Attribution as reporting view | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M65 | Ad-level placement control | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M66 | AI-generated Instant Forms | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M67 | Purchase audience retention governance | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M68 | Pixel auto-include detailed info governance | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M69 | Advantage+ Creative Image Generation Categories | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M70 | Automotive market-code migration evidence | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M71 | Digital Services Tax pass-through | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
-| M72 | CAPI one-click setup + EMQ | Unscored source-refresh discovery: verify current official availability, account eligibility, and governance need; non-adoption is never a failure. |
+| M01 | Meta Pixel 已安装 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M02 | Conversions API 适用性与状态 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M03 | 事件去重 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M04 | Event Match Quality 诊断 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M05 | 域名验证 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M06 | 汇总衡量适用性 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M07 | 标准事件与自定义事件 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M08 | CAPI Gateway | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M09 | iOS 归因窗口 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M10 | 数据新鲜度 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M25 | 创意格式多样性 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M26 | 创意概念覆盖 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M27 | 视频宽高比 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M28 | 创意疲劳检测 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M29 | 吸引率 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M30 | 社会认同利用 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M31 | UGC / 社交原生内容 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M32 | Advantage+ Creative | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M-CR1 | 创意新鲜度 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M-CR2 | 频次：新客开发 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M-CR3 | 频次：再定向 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M-CR4 | CTR 基准 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M11 | 广告系列碎片化 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M12 | 广告系列与广告组预算控制 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M13 | 学习阶段状态 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M14 | 学习阶段重置 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M15 | Advantage+ Sales 广告系列 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M16 | 广告组合并 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M17 | 预算分布 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M18 | 广告系列目标一致性 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M33 | Advantage+ Placements | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M34 | 版位表现审查 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M35 | 归因设置 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M36 | 出价策略适当性 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M37 | 频次上限监控 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M38 | 细分报告 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M39 | UTM 参数 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M40 | A/B 测试正在进行 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M-ST1 | 预算充足性 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M-ST2 | 预算利用率 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M19 | 受众重叠 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M20 | 自定义受众新鲜度 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M21 | 相似受众来源质量 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M22 | Advantage+ Audience 测试 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M23 | 排除受众 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M24 | 第一方数据利用 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M-AN1 | Andromeda 创意多样性 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M-AT1 | 归因窗口发布内容 | 条件性证据控制项：确定适用性，并依据当前账户证据评估；否则返回 `unknown` 或 `not_applicable`。 |
+| M-IA1 | 增量归因测试 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M-TH1 | Threads 版位评估 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M51 | Meta Ads MCP 服务器清单 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M52 | MCP 默认暂停强制执行 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M53 | MCP 写入操作治理 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M54 | 点击指标定义证据 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M55 | Engage-through 归因列 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M56 | Engaged-view 阈值 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M57 | 默认归因窗口 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M58 | 历史基线可比性 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M59 | 浏览归因集成 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M60 | GEM 声明溯源 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M61 | Lattice 声明溯源 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M62 | Andromeda 声明溯源 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M63 | ARM 准备情况 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M64 | 作为报告视图的增量归因 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M65 | 广告级版位控制 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M66 | AI 生成的即时表单 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M67 | 购买受众保留治理 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M68 | Pixel 自动包含详细信息治理 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M69 | Advantage+ Creative 图像生成类别 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M70 | 汽车市场代码迁移证据 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M71 | 数字服务税转嫁 | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
+| M72 | CAPI 一键设置 + EMQ | 不评分的来源刷新发现：核实当前官方可用性、账户资格和治理需求；未采用绝不算失败。 |
 
-## Recommendation boundary
+## 建议边界
 
-A recommendation must identify the observed evidence, account-specific baseline or owner threshold, expected mechanism, confidence, reversible next step, measurement window, and rollback condition. Do not infer a recommendation from the control name alone.
+建议必须指出观察到的证据、账户专属基线或负责人阈值、预期机制、置信度、可逆下一步、衡量窗口和回滚条件。不要仅从控制项名称推断建议。

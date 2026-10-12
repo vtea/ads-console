@@ -7,8 +7,10 @@ source bundle in the output.
 
 from __future__ import annotations
 
+import base64
 import html
 import importlib
+import io
 import json
 import os
 import re
@@ -18,6 +20,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from .contracts import ContractError, validate_contract
+from .i18n import catalog, label, locale_scope, resolve_locale, t
 
 
 class ReportRenderError(ValueError):
@@ -40,12 +43,23 @@ _SENSITIVE_KEY_RE = re.compile(
 )
 _CONTROL_CHARS_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
-_STATUS_LABELS = {
-    "normal": "Normal",
-    "provisional": "Provisional",
-    "insufficient_evidence": "Insufficient evidence",
-}
-_COMPLETENESS_LABELS = {"complete": "Complete", "partial": "Partial", "failed": "Failed"}
+def _display_label(group: str, value: Any, *, locale: str | None = None) -> str:
+    """Translate known labels only; preserve unknown/custom values as data."""
+
+    selected = resolve_locale(locale)
+    key = f"label.{group}.{value}"
+    if key in catalog(selected):
+        return label(group, value, locale=selected)
+    # Preserve the legacy English renderer's casing without translating prose.
+    if selected == "en":
+        return str(value).replace("_", " ").title() if group == "extension_field" else str(value).title()
+    return str(value)
+
+
+def _extension_value(key: str, value: Any, *, locale: str) -> str:
+    if locale != "en" and key in {"confidence", "severity", "status"}:
+        return label("extension_status" if key == "status" else key, value, locale=locale)
+    return _text(value)
 
 
 def _redact_text(value: str) -> str:
@@ -90,20 +104,21 @@ def _canonical_json(value: Any) -> str:
     return json.dumps(_redact_value(value), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def _validated_bundle(bundle: Mapping[str, Any]) -> Mapping[str, Any]:
-    try:
-        validate_contract("report-bundle", bundle)
-    except ContractError as exc:
-        raise ReportRenderError(f"invalid report bundle: {exc}") from exc
+def _validated_bundle(bundle: Mapping[str, Any], *, locale: str | None = None) -> Mapping[str, Any]:
+    with locale_scope(locale):
+        try:
+            validate_contract("report-bundle", bundle)
+        except ContractError as exc:
+            raise ReportRenderError(t("report.invalid_bundle", error=exc)) from exc
     for field in ("contradictions", "actions"):
         if field in bundle and not isinstance(bundle[field], list):
-            raise ReportRenderError(f"$.{field} must be an array when present")
+            raise ReportRenderError(t("report.invalid_array", locale=locale, field=field))
     return bundle
 
 
-def _score_text(score: Any) -> str:
+def _score_text(score: Any, *, locale: str | None = None) -> str:
     if score is None:
-        return "Not scored"
+        return t("report.not_scored", locale=locale)
     return f"{float(score):.2f} / 100"
 
 
@@ -123,14 +138,15 @@ def _categories(bundle: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     return sorted(bundle["scoring"]["categories"], key=lambda category: str(category.get("category", "")))
 
 
-def _extension_item_text(item: Any) -> str:
+def _extension_item_text(item: Any, *, locale: str | None = None) -> str:
+    locale = resolve_locale(locale)
     if isinstance(item, str):
         return _text(item)
     if isinstance(item, Mapping):
         preferred = ("summary", "title", "action", "claim", "description", "recommendation")
         headline = next((_text(item[key]) for key in preferred if item.get(key)), "")
         details = [
-            f"{str(key).replace('_', ' ').title()}: {_text(value)}"
+            f"{_display_label('extension_field', key, locale=locale)}: {_extension_value(str(key), value, locale=locale)}"
             for key, value in sorted(item.items(), key=lambda pair: str(pair[0]))
             if key not in preferred and value not in (None, "", [], {})
         ]
@@ -155,10 +171,11 @@ def _actions(bundle: Mapping[str, Any]) -> list[Any]:
     ]
 
 
-def render_markdown(bundle: Mapping[str, Any]) -> str:
-    """Render a validated ReportBundle as deterministic Markdown."""
+def render_markdown(bundle: Mapping[str, Any], *, locale: str | None = None) -> str:
+    """Render a validated ReportBundle without translating supplied free text."""
 
-    bundle = _validated_bundle(bundle)
+    locale = resolve_locale(locale)
+    bundle = _validated_bundle(bundle, locale=locale)
     manifest = bundle["run_manifest"]
     snapshot = bundle["account_snapshot"]
     scoring = bundle["scoring"]
@@ -167,70 +184,82 @@ def render_markdown(bundle: Mapping[str, Any]) -> str:
     score_status = str(scoring["status"])
     account = snapshot["account"]
 
-    lines = [
-        "# Claude Ads Audit Report",
-        "",
-        f"> Run completeness: **{_COMPLETENESS_LABELS[completeness]}** · Evidence status: **{_STATUS_LABELS[score_status]}**",
-        "",
-        "## Run summary",
-        "",
-        f"- Run ID: {_md(manifest['run_id'])}",
-        f"- Started: {_md(manifest['started_at'])}",
-        f"- Platform: {_md(str(account['platform']).title())}",
-        f"- Account: {_md(account.get('name') or account['account_id'])}",
-        f"- Window: {_md(snapshot['window']['start'])} to {_md(snapshot['window']['end'])}",
-        f"- Privacy class: {_md(str(manifest['privacy_class']).title())}",
-        "",
-        "## Decision status",
-        "",
-        f"- Run completeness: **{_COMPLETENESS_LABELS[completeness]}**",
-        f"- Evidence status: **{_STATUS_LABELS[score_status]}**",
-        f"- Health score: **{_score_text(scoring['health_score'])}**",
-        f"- Evidence coverage: **{_coverage_text(scoring['evidence_coverage'])}**",
-    ]
-    if completeness != "complete":
-        lines.extend(("", "> WARNING: Required work did not complete; this report must not be presented as a complete audit."))
-    if score_status == "provisional":
-        lines.extend(("", "> WARNING: The health score is provisional because evidence coverage is below the normal threshold."))
-    elif score_status == "insufficient_evidence":
-        lines.extend(("", "> WARNING: Evidence is insufficient for a defensible health score."))
+    def message(key: str, **values: Any) -> str:
+        return t(f"report.{key}", locale=locale, **values)
 
-    lines.extend(("", "## Category health", ""))
+    def display(group: str, value: Any) -> str:
+        return _md(_display_label(group, value, locale=locale))
+
+    completeness_text = label("completeness", completeness, locale=locale)
+    score_status_text = label("score_status", score_status, locale=locale)
+    lines = [
+        f"# {message('title')}",
+        "",
+        f"> {message('completeness')}: **{completeness_text}** · {message('evidence_status')}: **{score_status_text}**",
+        "",
+        f"## {message('run_summary')}",
+        "",
+        f"- {message('run_id')}: {_md(manifest['run_id'])}",
+        f"- {message('started')}: {_md(manifest['started_at'])}",
+        f"- {message('platform')}: {_md(str(account['platform']).title())}",
+        f"- {message('account')}: {_md(account.get('name') or account['account_id'])}",
+        f"- {message('window')}: {message('window_range', start=_md(snapshot['window']['start']), end=_md(snapshot['window']['end']))}",
+        f"- {message('privacy_class')}: {display('privacy_class', manifest['privacy_class'])}",
+        "",
+        f"## {message('decision_status')}",
+        "",
+        f"- {message('completeness')}: **{completeness_text}**",
+        f"- {message('evidence_status')}: **{score_status_text}**",
+        f"- {message('health_score')}: **{_score_text(scoring['health_score'], locale=locale)}**",
+        f"- {message('evidence_coverage')}: **{_coverage_text(scoring['evidence_coverage'])}**",
+    ]
+    warning_keys = []
+    if completeness != "complete":
+        warning_keys.append("warning_incomplete")
+    if score_status == "provisional":
+        warning_keys.append("warning_provisional")
+    elif score_status == "insufficient_evidence":
+        warning_keys.append("warning_insufficient")
+    for key in warning_keys:
+        lines.extend(("", f"> {message('warning').upper()}: {message(key)}"))
+
+    lines.extend(("", f"## {message('category_health')}", ""))
     categories = _categories(bundle)
     if categories:
         for category in categories:
             lines.append(
-                f"- **{_md(str(category.get('category', 'Uncategorized')).title())}:** "
-                f"{_score_text(category.get('health_score'))}; evidence {_coverage_text(category.get('evidence_coverage', 0))}"
+                f"- **{display('category', category.get('category', 'uncategorized'))}:** "
+                + message("category_score", score=_score_text(category.get("health_score"), locale=locale),
+                          coverage=_coverage_text(category.get("evidence_coverage", 0)))
             )
     else:
-        lines.append("No category scores were supplied.")
+        lines.append(message("no_categories"))
 
-    lines.extend(("", "## Findings", ""))
+    lines.extend(("", f"## {message('findings')}", ""))
     findings = _findings(bundle)
     if not findings:
-        lines.append("No findings were supplied.")
+        lines.append(message("no_findings"))
     for finding in findings:
         control = controls.get(str(finding["control_id"]), {})
         heading = (
-            f"### [{_md(str(finding['status']).replace('_', ' ').upper())}] "
-            f"{_md(finding['control_id'])} — {_md(str(control.get('category', 'uncategorized')).title())}"
+            f"### [{display('finding_status', finding['status'])}] "
+            f"{_md(finding['control_id'])} — {display('category', control.get('category', 'uncategorized'))}"
         )
         lines.extend(
             (
                 heading,
                 "",
-                f"- Severity: {_md(str(control.get('severity', 'not specified')).title())}",
-                f"- Confidence: {_md(str(finding['confidence']).title())}",
-                f"- Source classification: {_md(str(finding.get('source_classification', 'not specified')).replace('_', ' ').title())}",
+                f"- {message('severity')}: {display('severity', control.get('severity', 'not specified'))}",
+                f"- {message('confidence')}: {display('confidence', finding['confidence'])}",
+                f"- {message('source_classification')}: {display('source_classification', finding.get('source_classification', 'not specified'))}",
                 "",
-                f"**Observation:** {_md(finding['observation']) or 'Not supplied.'}",
+                f"**{message('observation')}:** {_md(finding['observation']) or message('not_supplied')}",
                 "",
-                f"**Diagnosis:** {_md(finding['diagnosis']) or 'Not supplied.'}",
+                f"**{message('diagnosis')}:** {_md(finding['diagnosis']) or message('not_supplied')}",
                 "",
-                f"**Recommended action:** {_md(finding['recommendation']) or 'No action supplied.'}",
+                f"**{message('recommendation')}:** {_md(finding['recommendation']) or message('no_action')}",
                 "",
-                "**Evidence:**",
+                f"**{message('evidence')}:**",
                 "",
             )
         )
@@ -238,23 +267,23 @@ def render_markdown(bundle: Mapping[str, Any]) -> str:
             for index, evidence in enumerate(finding["evidence"], start=1):
                 lines.extend((f"{index}.", "", f"        {_canonical_json(evidence)}", ""))
         else:
-            lines.extend(("No evidence was supplied.", ""))
+            lines.extend((message("no_evidence"), ""))
 
-    lines.extend(("## Contradictions", ""))
+    lines.extend((f"## {message('contradictions')}", ""))
     contradictions = list(bundle.get("contradictions", []))
     if contradictions:
-        lines.extend(f"- {_md(_extension_item_text(item))}" for item in contradictions)
+        lines.extend(f"- {_md(_extension_item_text(item, locale=locale))}" for item in contradictions)
     else:
-        lines.append("No contradictions were reported.")
+        lines.append(message("no_contradictions"))
 
-    lines.extend(("", "## Prioritized actions", ""))
+    lines.extend(("", f"## {message('actions')}", ""))
     actions = _actions(bundle)
     if actions:
-        lines.extend(f"{index}. {_md(_extension_item_text(item))}" for index, item in enumerate(actions, start=1))
+        lines.extend(f"{index}. {_md(_extension_item_text(item, locale=locale))}" for index, item in enumerate(actions, start=1))
     else:
-        lines.append("No follow-up actions were reported.")
+        lines.append(message("no_actions"))
 
-    lines.extend(("", "---", "", "Generated deterministically from ReportBundle JSON. Scores were not recalculated.", ""))
+    lines.extend(("", "---", "", message("footer"), ""))
     return "\n".join(lines)
 
 
@@ -265,10 +294,11 @@ main{max-width:960px;margin:32px auto;padding:40px;background:var(--paper);box-s
 """.strip()
 
 
-def render_html(bundle: Mapping[str, Any]) -> str:
+def render_html(bundle: Mapping[str, Any], *, locale: str | None = None) -> str:
     """Render a validated ReportBundle as self-contained deterministic HTML."""
 
-    bundle = _validated_bundle(bundle)
+    locale = resolve_locale(locale)
+    bundle = _validated_bundle(bundle, locale=locale)
     manifest = bundle["run_manifest"]
     snapshot = bundle["account_snapshot"]
     scoring = bundle["scoring"]
@@ -276,116 +306,238 @@ def render_html(bundle: Mapping[str, Any]) -> str:
     completeness = str(manifest["completeness"])
     score_status = str(scoring["status"])
     account = snapshot["account"]
+
+    def message(key: str, **values: Any) -> str:
+        return _html(t(f"report.{key}", locale=locale, **values))
+
+    def display(group: str, value: Any) -> str:
+        return _html(_display_label(group, value, locale=locale))
+
     warnings: list[str] = []
     if completeness != "complete":
-        warnings.append("Required work did not complete; this report must not be presented as a complete audit.")
+        warnings.append(message("warning_incomplete"))
     if score_status == "provisional":
-        warnings.append("The health score is provisional because evidence coverage is below the normal threshold.")
+        warnings.append(message("warning_provisional"))
     elif score_status == "insufficient_evidence":
-        warnings.append("Evidence is insufficient for a defensible health score.")
+        warnings.append(message("warning_insufficient"))
 
     category_html = "".join(
-        "<li><strong>{}</strong>: {}; evidence {}</li>".format(
-            _html(str(category.get("category", "Uncategorized")).title()),
-            _html(_score_text(category.get("health_score"))),
-            _html(_coverage_text(category.get("evidence_coverage", 0))),
+        "<li><strong>{}</strong>: {}</li>".format(
+            display("category", category.get("category", "uncategorized")),
+            message("category_score", score=_score_text(category.get("health_score"), locale=locale),
+                    coverage=_coverage_text(category.get("evidence_coverage", 0))),
         )
         for category in _categories(bundle)
-    ) or "<li>No category scores were supplied.</li>"
+    ) or f"<li>{message('no_categories')}</li>"
 
     finding_parts: list[str] = []
     for finding in _findings(bundle):
         control = controls.get(str(finding["control_id"]), {})
         evidence = "".join(f"<pre>{html.escape(_canonical_json(item))}</pre>" for item in finding["evidence"])
         if not evidence:
-            evidence = "<p>No evidence was supplied.</p>"
+            evidence = f"<p>{message('no_evidence')}</p>"
         status = str(finding["status"])
         finding_parts.append(
             f'<article class="finding status-{html.escape(status)}">'
-            f"<h3>[{_html(status.replace('_', ' ').upper())}] {_html(finding['control_id'])} — "
-            f"{_html(str(control.get('category', 'uncategorized')).title())}</h3>"
+            f"<h3>[{display('finding_status', status)}] {_html(finding['control_id'])} — "
+            f"{display('category', control.get('category', 'uncategorized'))}</h3>"
             "<dl>"
-            f"<dt>Severity</dt><dd>{_html(str(control.get('severity', 'not specified')).title())}</dd>"
-            f"<dt>Confidence</dt><dd>{_html(str(finding['confidence']).title())}</dd>"
-            f"<dt>Source classification</dt><dd>{_html(str(finding.get('source_classification', 'not specified')).replace('_', ' ').title())}</dd>"
-            f"<dt>Observation</dt><dd>{_html(finding['observation']) or 'Not supplied.'}</dd>"
-            f"<dt>Diagnosis</dt><dd>{_html(finding['diagnosis']) or 'Not supplied.'}</dd>"
-            f"<dt>Recommended action</dt><dd>{_html(finding['recommendation']) or 'No action supplied.'}</dd>"
-            f"</dl><h4>Evidence</h4>{evidence}</article>"
+            f"<dt>{message('severity')}</dt><dd>{display('severity', control.get('severity', 'not specified'))}</dd>"
+            f"<dt>{message('confidence')}</dt><dd>{display('confidence', finding['confidence'])}</dd>"
+            f"<dt>{message('source_classification')}</dt><dd>{display('source_classification', finding.get('source_classification', 'not specified'))}</dd>"
+            f"<dt>{message('observation')}</dt><dd>{_html(finding['observation']) or message('not_supplied')}</dd>"
+            f"<dt>{message('diagnosis')}</dt><dd>{_html(finding['diagnosis']) or message('not_supplied')}</dd>"
+            f"<dt>{message('recommendation')}</dt><dd>{_html(finding['recommendation']) or message('no_action')}</dd>"
+            f"</dl><h4>{message('evidence')}</h4>{evidence}</article>"
         )
-    findings_html = "".join(finding_parts) or "<p>No findings were supplied.</p>"
+    findings_html = "".join(finding_parts) or f"<p>{message('no_findings')}</p>"
 
     contradictions = list(bundle.get("contradictions", []))
     contradictions_html = (
-        "<ul>" + "".join(f"<li>{_html(_extension_item_text(item))}</li>" for item in contradictions) + "</ul>"
+        "<ul>" + "".join(f"<li>{_html(_extension_item_text(item, locale=locale))}</li>" for item in contradictions) + "</ul>"
         if contradictions
-        else "<p>No contradictions were reported.</p>"
+        else f"<p>{message('no_contradictions')}</p>"
     )
     actions = _actions(bundle)
     actions_html = (
-        "<ol>" + "".join(f"<li>{_html(_extension_item_text(item))}</li>" for item in actions) + "</ol>"
+        "<ol>" + "".join(f"<li>{_html(_extension_item_text(item, locale=locale))}</li>" for item in actions) + "</ol>"
         if actions
-        else "<p>No follow-up actions were reported.</p>"
+        else f"<p>{message('no_actions')}</p>"
     )
-    warnings_html = "".join(f'<p class="warning"><strong>Warning:</strong> {_html(item)}</p>' for item in warnings)
+    warnings_html = "".join(f'<p class="warning"><strong>{message("warning")}:</strong> {item}</p>' for item in warnings)
 
     return (
-        "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
-        "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
-        "<title>Claude Ads Audit Report</title><style>" + _HTML_STYLE + "</style></head><body><main>"
-        "<h1>Claude Ads Audit Report</h1>"
-        f'<p class="banner {html.escape(completeness)} {html.escape(score_status)}">Run completeness: '
-        f"{_html(_COMPLETENESS_LABELS[completeness])} · Evidence status: {_html(_STATUS_LABELS[score_status])}</p>"
-        "<h2>Run summary</h2><dl class=\"meta\">"
-        f"<dt>Run ID</dt><dd>{_html(manifest['run_id'])}</dd><dt>Started</dt><dd>{_html(manifest['started_at'])}</dd>"
-        f"<dt>Platform</dt><dd>{_html(str(account['platform']).title())}</dd>"
-        f"<dt>Account</dt><dd>{_html(account.get('name') or account['account_id'])}</dd>"
-        f"<dt>Window</dt><dd>{_html(snapshot['window']['start'])} to {_html(snapshot['window']['end'])}</dd>"
-        f"<dt>Privacy class</dt><dd>{_html(str(manifest['privacy_class']).title())}</dd></dl>"
-        "<h2>Decision status</h2><div class=\"metrics\">"
-        f'<div class="metric">Run completeness<strong>{_html(_COMPLETENESS_LABELS[completeness])}</strong></div>'
-        f'<div class="metric">Evidence status<strong>{_html(_STATUS_LABELS[score_status])}</strong></div>'
-        f'<div class="metric">Health score<strong>{_html(_score_text(scoring["health_score"]))}</strong></div>'
-        f'<div class="metric">Evidence coverage<strong>{_html(_coverage_text(scoring["evidence_coverage"]))}</strong></div></div>'
+        f'<!doctype html>\n<html lang="{locale}"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        f"<title>{message('title')}</title><style>" + _HTML_STYLE + "</style></head><body><main>"
+        f"<h1>{message('title')}</h1>"
+        f'<p class="banner {html.escape(completeness)} {html.escape(score_status)}">{message("completeness")}: '
+        f"{display('completeness', completeness)} · {message('evidence_status')}: {display('score_status', score_status)}</p>"
+        f'<h2>{message("run_summary")}</h2><dl class="meta">'
+        f"<dt>{message('run_id')}</dt><dd>{_html(manifest['run_id'])}</dd><dt>{message('started')}</dt><dd>{_html(manifest['started_at'])}</dd>"
+        f"<dt>{message('platform')}</dt><dd>{_html(str(account['platform']).title())}</dd>"
+        f"<dt>{message('account')}</dt><dd>{_html(account.get('name') or account['account_id'])}</dd>"
+        f"<dt>{message('window')}</dt><dd>{message('window_range', start=snapshot['window']['start'], end=snapshot['window']['end'])}</dd>"
+        f"<dt>{message('privacy_class')}</dt><dd>{display('privacy_class', manifest['privacy_class'])}</dd></dl>"
+        f'<h2>{message("decision_status")}</h2><div class="metrics">'
+        f'<div class="metric">{message("completeness")}<strong>{display("completeness", completeness)}</strong></div>'
+        f'<div class="metric">{message("evidence_status")}<strong>{display("score_status", score_status)}</strong></div>'
+        f'<div class="metric">{message("health_score")}<strong>{_html(_score_text(scoring["health_score"], locale=locale))}</strong></div>'
+        f'<div class="metric">{message("evidence_coverage")}<strong>{_html(_coverage_text(scoring["evidence_coverage"]))}</strong></div></div>'
         + warnings_html
-        + f"<h2>Category health</h2><ul>{category_html}</ul><h2>Findings</h2>{findings_html}"
-        + f"<h2>Contradictions</h2>{contradictions_html}<h2>Prioritized actions</h2>{actions_html}"
-        + "<footer>Generated deterministically from ReportBundle JSON. Scores were not recalculated.</footer>"
+        + f"<h2>{message('category_health')}</h2><ul>{category_html}</ul><h2>{message('findings')}</h2>{findings_html}"
+        + f"<h2>{message('contradictions')}</h2>{contradictions_html}<h2>{message('actions')}</h2>{actions_html}"
+        + f"<footer>{message('footer')}</footer>"
         + "</main></body></html>\n"
     )
 
 
-def render_pdf(bundle: Mapping[str, Any]) -> bytes:
-    """Render PDF bytes through the optional WeasyPrint bridge."""
+_CJK_RE = re.compile(r"[\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef\U00020000-\U000323af]")
+_FONT_SUFFIXES = {".ttf", ".otf", ".ttc", ".otc"}
+_MAX_FONT_BYTES = 64 * 1024 * 1024
 
-    source = render_html(bundle)
+
+def _system_font_roots() -> tuple[Path, ...]:
+    """Only OS font locations, never a directory supplied in report data."""
+
+    roots = (
+        Path("/System/Library/Fonts"), Path("/Library/Fonts"), Path.home() / "Library/Fonts",
+        Path("/usr/share/fonts"), Path("/usr/local/share/fonts"),
+        Path.home() / ".fonts", Path.home() / ".local/share/fonts",
+        Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts",
+    )
+    return tuple(root.resolve() for root in roots if root.is_dir())
+
+
+def _validated_font_path(font: str | Path, *, locale: str | None = None) -> Path:
+    path = Path(font)
+    try:
+        if not path.is_absolute() or path.suffix.lower() not in _FONT_SUFFIXES:
+            raise ValueError
+        resolved = path.resolve(strict=True)
+        if not any(resolved.is_relative_to(root) for root in _system_font_roots()):
+            raise ValueError
+        if not resolved.is_file() or not 0 < resolved.stat().st_size <= _MAX_FONT_BYTES:
+            raise ValueError
+        return resolved
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise PDFDependencyError(t("report.font_invalid", locale=locale)) from exc
+
+
+def _system_font_candidates() -> list[Path]:
+    candidates: set[Path] = set()
+    for root in _system_font_roots():
+        for directory, _subdirs, files in os.walk(root, followlinks=False):
+            for name in files:
+                if Path(name).suffix.lower() in _FONT_SUFFIXES:
+                    candidates.add(Path(directory) / name)
+    # Prefer common CJK families but verify actual coverage, not the filename.
+    names = ("notosanscjk", "notoserifcjk", "sourcehan", "pingfang", "songti", "heiti", "msyh", "simsun", "arial unicode")
+    return sorted(candidates, key=lambda path: (not any(name in path.name.lower() for name in names), str(path)))
+
+
+def _load_system_font(
+    text: str, *, font: str | Path | None = None, locale: str | None = None,
+    true_type_only: bool = False,
+) -> bytes | None:
+    """Return a verified standalone font, or fail before rendering CJK boxes.
+
+    The caller may explicitly name an installed system font. Report content
+    cannot choose any file. Font data is loaded once and passed as bytes so the
+    PDF renderer never receives filesystem URLs or arbitrary fetch authority.
+    """
+
+    locale = resolve_locale(locale)
+    explicit = _validated_font_path(font, locale=locale) if font is not None else None
+    if explicit is None and not _CJK_RE.search(text):
+        return None
+    try:
+        ttlib = importlib.import_module("fontTools.ttLib")
+    except (ImportError, OSError) as exc:
+        raise PDFDependencyError(t("report.font_dependency", locale=locale)) from exc
+    required = {ord(character) for character in text if not character.isspace() and ord(character) >= 32}
+    for candidate in [explicit] if explicit is not None else _system_font_candidates():
+        collection = None
+        faces = []
+        try:
+            path = _validated_font_path(candidate, locale=locale)
+            content = path.read_bytes()
+            if len(content) > _MAX_FONT_BYTES:
+                continue
+            if content.startswith(b"ttcf"):
+                collection = ttlib.TTCollection(io.BytesIO(content), lazy=False)
+                faces = collection.fonts
+            else:
+                faces = [ttlib.TTFont(io.BytesIO(content), lazy=False)]
+            for face in faces:
+                if true_type_only and "glyf" not in face:
+                    continue
+                cmap = face.getBestCmap() or {}
+                if not required.issubset(cmap) or any(cmap[codepoint] == ".notdef" for codepoint in required):
+                    continue
+                output = io.BytesIO()
+                face.save(output)
+                return output.getvalue()
+        except (OSError, ValueError, KeyError, ttlib.TTLibError):
+            continue
+        finally:
+            if collection is not None:
+                collection.close()
+            else:
+                for face in faces:
+                    face.close()
+    raise PDFDependencyError(t("report.font_dependency", locale=locale))
+
+
+def render_pdf(
+    bundle: Mapping[str, Any], *, locale: str | None = None, font: str | Path | None = None,
+) -> bytes:
+    """Render PDF bytes through the optional, offline WeasyPrint bridge."""
+
+    locale = resolve_locale(locale)
+    source = render_html(bundle, locale=locale)
+    explicit_font = _validated_font_path(font, locale=locale) if font is not None else None
     try:
         weasyprint = importlib.import_module("weasyprint")
     except (ImportError, OSError) as exc:
-        raise PDFDependencyError(
-            "PDF rendering requires the optional 'weasyprint' package and its system libraries; "
-            "install WeasyPrint or render Markdown/HTML instead"
-        ) from exc
+        raise PDFDependencyError(t("report.pdf_dependency", locale=locale)) from exc
+    font_bytes = _load_system_font(render_markdown(bundle, locale=locale), font=explicit_font, locale=locale)
+    font_url = "data:font/ttf;base64," + base64.b64encode(font_bytes).decode("ascii") if font_bytes else None
+    if font_url:
+        font_style = (
+            f'@font-face{{font-family:"ReportCJK";src:url("{font_url}")}}'
+            'body,pre,code{font-family:"ReportCJK",sans-serif}'
+        )
+        source = source.replace("</style>", font_style + "</style>", 1)
+
+    def fetch_asset(url: str, *args: Any, **kwargs: Any) -> Mapping[str, Any]:
+        if font_url is not None and url == font_url:
+            return {"string": font_bytes, "mime_type": "font/ttf"}
+        raise ReportRenderError(t("report.asset_blocked", locale=locale))
+
     try:
-        result = weasyprint.HTML(string=source, base_url=None).write_pdf()
+        result = weasyprint.HTML(string=source, base_url=None, url_fetcher=fetch_asset).write_pdf()
     except Exception as exc:
-        raise ReportRenderError(f"PDF rendering failed: {exc}") from exc
+        raise ReportRenderError(t("report.pdf_failed", locale=locale, error=_text(exc))) from exc
     if not isinstance(result, bytes):
-        raise ReportRenderError("PDF renderer returned an invalid result")
+        raise ReportRenderError(t("report.pdf_invalid_result", locale=locale))
     return result
 
 
-def render_report(bundle: Mapping[str, Any], output_format: str) -> str | bytes:
+def render_report(
+    bundle: Mapping[str, Any], output_format: str, *, locale: str | None = None,
+    font: str | Path | None = None,
+) -> str | bytes:
     """Render *bundle* to ``markdown``, ``html``, or ``pdf``."""
 
     normalized = output_format.lower()
     if normalized in {"md", "markdown"}:
-        return render_markdown(bundle)
+        return render_markdown(bundle, locale=locale)
     if normalized == "html":
-        return render_html(bundle)
+        return render_html(bundle, locale=locale)
     if normalized == "pdf":
-        return render_pdf(bundle)
-    raise ReportRenderError("format must be one of: markdown, html, pdf")
+        return render_pdf(bundle, locale=locale, font=font)
+    raise ReportRenderError(t("report.invalid_format", locale=locale))
 
 
 def resolve_report_path(root: str | Path, destination: str | Path) -> Path:
@@ -393,12 +545,12 @@ def resolve_report_path(root: str | Path, destination: str | Path) -> Path:
 
     relative = Path(destination)
     if relative.is_absolute() or not relative.name or any(part in {"", ".", ".."} for part in relative.parts):
-        raise ReportRenderError("report output must be a non-empty relative path without traversal")
+        raise ReportRenderError(t("report.path_relative"))
     root_path = Path(root)
     root_path.mkdir(parents=True, exist_ok=True)
     root_resolved = root_path.resolve(strict=True)
     if not root_resolved.is_dir():
-        raise ReportRenderError("report root must be a directory")
+        raise ReportRenderError(t("report.root_directory"))
 
     parent = root_resolved
     for part in relative.parts[:-1]:
@@ -406,20 +558,20 @@ def resolve_report_path(root: str | Path, destination: str | Path) -> Path:
         if os.path.lexists(candidate):
             mode = candidate.lstat().st_mode
             if stat.S_ISLNK(mode):
-                raise ReportRenderError("report output parent must not be a symlink")
+                raise ReportRenderError(t("report.parent_symlink"))
             if not stat.S_ISDIR(mode):
-                raise ReportRenderError("report output parent must be a directory")
+                raise ReportRenderError(t("report.parent_directory"))
         else:
             candidate.mkdir(mode=0o700)
         parent = candidate
 
     destination_path = parent / relative.name
     if os.path.lexists(destination_path) and stat.S_ISLNK(destination_path.lstat().st_mode):
-        raise ReportRenderError("report output must not be a symlink")
+        raise ReportRenderError(t("report.output_symlink"))
     try:
         parent.resolve(strict=True).relative_to(root_resolved)
     except (OSError, ValueError) as exc:
-        raise ReportRenderError("report output escapes the configured root") from exc
+        raise ReportRenderError(t("report.path_escape")) from exc
     return destination_path
 
 
@@ -441,7 +593,7 @@ def atomic_write_report(root: str | Path, destination: str | Path, content: str 
         # silently followed at commit time.
         checked_path = resolve_report_path(root, destination)
         if checked_path.parent.resolve(strict=True) != output_path.parent.resolve(strict=True):
-            raise ReportRenderError("report output parent changed during write")
+            raise ReportRenderError(t("report.parent_changed"))
         os.replace(temporary_path, checked_path)
         return checked_path
     except Exception:
@@ -454,7 +606,11 @@ def write_report_bundle(
     output_format: str,
     root: str | Path,
     destination: str | Path,
+    *,
+    locale: str | None = None,
+    font: str | Path | None = None,
 ) -> Path:
     """Validate, render, and atomically write a report bundle."""
 
-    return atomic_write_report(root, destination, render_report(bundle, output_format))
+    with locale_scope(locale):
+        return atomic_write_report(root, destination, render_report(bundle, output_format, font=font))

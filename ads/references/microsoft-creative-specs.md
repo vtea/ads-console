@@ -1,35 +1,20 @@
-# Microsoft Advertising creative generation contract
+# Microsoft Advertising 创意生成契约
 
-Use this reference for Microsoft Advertising creative planning. Microsoft formats,
-Copilot or partner inventory, import mappings, copy limits, dimensions, extensions,
-and account availability change. Verify them from dated official sources and live
-account evidence; do not assume Microsoft is a dimension-for-dimension Google copy.
+使用本参考文档规划 Microsoft Advertising 创意。Microsoft 格式、Copilot 或合作伙伴广告资源、导入映射、文案限制、尺寸、附加信息和账户可用性会变化。根据注明日期的官方来源和实时账户证据核实；不要假定 Microsoft 是与 Google 尺寸逐一对应的副本。
 
-## Specification gate
+## 规格关卡
 
-For each selected Search, Audience, multimedia, video, retail, native, Copilot, or
-other placement, record objective, network, geography, eligibility, official source
-ID, asset fields, dimensions, ratio, file limits, copy limits, destination behavior,
-and preview result.
+对于每个所选 Search、Audience、多媒体、视频、零售、原生、Copilot 或其他版位，记录目标、网络、地理区域、资格、官方来源 ID、素材字段、尺寸、比例、文件限制、文案限制、目标页面行为和预览结果。
 
-Imported Google assets are candidates, not validated Microsoft assets. Reconcile
-every mapped and omitted field, policy status, tracking parameter, extension, bid,
-budget, URL, and schedule. Missing current evidence is `needs_input`.
+导入的 Google 素材是候选项，不是已验证的 Microsoft 素材。核对每个已映射和遗漏字段、政策状态、跟踪参数、附加信息、出价、预算、URL 和投放时间。缺少当前证据即为 `needs_input`。
 
-## Microsoft-specific review
+## Microsoft 专属审查
 
-- Separate Microsoft Search, Audience Network, publisher/partner, and conversational
-  inventory in both specification and reporting.
-- Do not apply assumed CPC discounts, audience-age stereotypes, or generic
-  “professional” styling to creative decisions.
-- Treat Copilot and other announced or pilot surfaces as unscored discovery until
-  the current account confirms access and exposes auditable reporting.
-- Reuse an asset only when its rights, destination, crop, copy, format, and policy
-  state validate for Microsoft. A compatible ratio alone is insufficient.
+- 在规格和报告中均区分 Microsoft Search、Audience Network、发布商/合作伙伴和对话式广告资源。
+- 不要将假定的 CPC 折扣、受众年龄刻板印象或笼统的“专业”风格应用于创意决策。
+- 在当前账户确认访问权限并提供可审计报告前，将 Copilot 和其他已宣布或试点广告载体视为不评分的发现。
+- 只有素材的权利、目标页面、裁切、文案、格式和政策状态均针对 Microsoft 验证通过时，才可复用。仅比例兼容并不足够。
 
-## Output contract
+## 输出契约
 
-Record concept ID, placement/network, specification source IDs, dimensions, ratio,
-format, copy, import provenance, checksum, rights, safety review, and previews. The
-manifest must distinguish reused, transformed, and newly generated assets. Draft
-generation does not imply a live Microsoft upload or write capability.
+记录概念 ID、版位/网络、规格来源 ID、尺寸、比例、格式、文案、导入溯源、校验和、权利、安全审查和预览。清单必须区分复用、转换和新生成素材。草稿生成不意味着具备实时 Microsoft 上传或写入能力。

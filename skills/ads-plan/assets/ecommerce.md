@@ -1,38 +1,38 @@
-# E-commerce paid-media planning questions
+# 电商付费媒体规划问题
 
-> Status: qualitative, unscored planning aid.
+> 状态：定性、不计分的规划辅助资料。
 
-## Required gates
+## 必需门禁
 
-- Context gate: document product economics, fulfillment, inventory, seasonality, customer
-  type, geography, objective, conversion value, return behavior, and approved budget ceiling.
-- Evidence gate: use current catalog, margin, order, analytics, experiment, and current
-  official source IDs; distinguish platform-reported revenue from reconciled business value.
-- Feed gate: verify product identity, availability, price, destination, policy status, and
-  update ownership before relying on catalog-driven activity.
-- Regulatory gate: identify product, pricing, promotion, endorsement, privacy, age, and
-  regional obligations and obtain qualified review where needed.
-- Mutation gate: keep campaign, feed, price, audience, and budget changes as drafts until
-  exact approval, idempotency, verification, and rollback evidence exists.
+- 背景门禁：记录产品经济效益、履约、库存、季节性、客户
+  类型、地理区域、目标、转化价值、退货行为和已批准的预算上限。
+- 证据门禁：使用当前目录、利润率、订单、分析、实验和当前
+  官方来源 ID；区分平台报告的收入与已对账的业务价值。
+- 数据源门禁：在依赖目录驱动的活动之前，验证产品身份、可用性、价格、目标页、政策状态和
+  更新归属。
+- 监管门禁：识别产品、定价、促销、背书、隐私、年龄和
+  区域义务，并在必要时获取具备资格的审查。
+- 变更门禁：在具备精确批准、幂等性、验证和回滚证据之前，
+  广告系列、数据源、价格、受众和预算变更必须保持为草案。
 
-## Planning questions
+## 规划问题
 
-- Which products, categories, regions, and customer states are in scope?
-- How are contribution, returns, discounts, shipping, tax, and repeat value represented?
-- Which acquisition and retention outcomes can be reconciled outside ad platforms?
-- Which platform capabilities fit the catalog, intent, creative, and measurement evidence?
-- What audience use, suppression, consent, and retention boundaries apply?
-- Which creative and landing claims match the current product record?
-- What uncertainty could make a budget or product recommendation misleading?
+- 哪些产品、类别、区域和客户状态在范围内？
+- 如何表示贡献、退货、折扣、运费、税费和复购价值？
+- 哪些获客和留存成果可以在广告平台之外进行对账？
+- 哪些平台能力与目录、意图、创意和衡量证据相适配？
+- 适用哪些受众使用、抑制、同意和保留边界？
+- 哪些创意和落地页声明与当前产品记录一致？
+- 哪些不确定性可能使预算或产品建议产生误导？
 
-## Candidate considerations
+## 候选考量
 
-- Consider catalog, search, discovery, retargeting, and retention roles as hypotheses.
-- Compare new-customer and repeat-customer outcomes without blending their economics.
-- Use reversible experiments and account-defined guardrails rather than universal rules.
+- 将目录、搜索、发现、再营销和留存的角色作为假设考虑。
+- 比较新客户与复购客户的成果，但不得混合两者的经济效益。
+- 使用可逆实验和账户定义的防护规则，而不是普遍适用的规则。
 
-## Output guardrails
+## 输出防护规则
 
-- Return qualitative choices, tradeoffs, dependencies, source IDs, and measurement plans.
-- Do not prescribe channel shares, bid strategies, creative volumes, pacing thresholds,
-  or return targets.
+- 返回定性选择、权衡、依赖项、来源 ID 和衡量计划。
+- 不得规定渠道份额、出价策略、创意数量、投放节奏阈值
+  或回报目标。

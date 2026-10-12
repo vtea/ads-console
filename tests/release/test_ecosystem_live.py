@@ -9,6 +9,18 @@ from urllib.parse import quote
 
 import pytest
 
+from claude_ads_core.i18n import catalog, locale_scope
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _english_diagnostics():
+    """Keep legacy English assertions local; child processes inherit the locale."""
+    with pytest.MonkeyPatch.context() as environment:
+        environment.setenv("CLAUDE_ADS_LOCALE", "en")
+        with locale_scope("en"):
+            catalog("en")
+            yield
+
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "audit_ecosystem_live.py"
 SPEC = importlib.util.spec_from_file_location("claude_ads_ecosystem_live", SCRIPT)

@@ -1,71 +1,58 @@
-# Automation Delegation Classifier
+# 自动化授权分类器
 
-**Verified:** 2026-07-11
-**Refresh:** foundational review by 2027-01-07; platform modules at run time
-**Scope:** oversight and mutation risk, not an account-health score
+**已核验：** 2026-07-11
+**刷新：** 基础审查须于 2027-01-07 前完成；平台模块在运行时审查
+**范围：** 监督与变更风险，而非账户健康分数
 
-Classify what authority has been delegated, not whether a campaign carries an
-“automated” product label. One campaign can delegate bidding while keeping
-budget, targeting, creative, and approvals under human control.
+分类的是已委派的权限，而非广告系列是否带有“自动化”产品标签。一个广告系列可以委派出价，同时仍由人工控制预算、定向、创意和批准。
 
-## Delegation dimensions
+## 授权维度
 
-Observe each dimension separately:
+分别观察各维度：
 
-- Goal and conversion selection.
-- Bidding and bid targets.
-- Budget allocation and pacing.
-- Audience or query expansion and exclusions.
-- Placement selection.
-- Creative generation, variation, and destination selection.
-- Campaign creation and structural changes.
-- Monitoring, pausing, and incident containment.
-- External agent/MCP read and write authority.
+- 目标与转化选择。
+- 出价和出价目标。
+- 预算分配和投放节奏。
+- 受众或查询扩展及排除。
+- 版位选择。
+- 创意生成、变体和目标页面选择。
+- 广告系列创建与结构变更。
+- 监控、暂停和事件遏制。
+- 外部代理/MCP 读取与写入权限。
 
-Use the current account UI/API and capability manifest. Do not infer a module's
-state from the campaign name.
+使用当前账户 UI/API 和能力清单。不得根据广告系列名称推断模块状态。
 
-## Tiers
+## 等级
 
-| Tier | Definition | Required oversight |
+| 等级 | 定义 | 所需监督 |
 | --- | --- | --- |
-| T0 Observed manual | No decision module is delegated; tools may report only | Standard QA and change control |
-| T1 Assisted | Automation recommends or drafts, but a human selects and applies | Review evidence, applicability, and final diff |
-| T2 Bounded delegation | One or more modules act within explicit account-defined limits | Per-module goals, ceilings, monitoring, and rollback |
-| T3 Broad platform delegation | The platform controls most delivery modules while humans own goals, assets, and guardrails | Signal quality, objective, creative, exclusion, and marginal-outcome review |
-| T4 External agent write | An external agent can create or change account objects | Full mutation gate, least privilege, idempotency, independent verification, and incident response |
+| T0 已观察到的手动操作 | 未委派任何决策模块；工具只能报告 | 标准 QA 和变更控制 |
+| T1 辅助 | 自动化提供建议或草稿，但由人工选择和应用 | 审查证据、适用性和最终差异 |
+| T2 有界授权 | 一个或多个模块在账户明确规定的限制内操作 | 每个模块的目标、上限、监控和回滚 |
+| T3 广泛平台授权 | 平台控制大多数投放模块，而人工负责目标、素材和护栏 | 审查信号质量、目标、创意、排除和边际成果 |
+| T4 外部代理写入 | 外部代理可创建或更改账户对象 | 完整变更关卡、最小权限、幂等性、独立验证和事件响应 |
 
-The account tier is the highest active authority, but retain the dimension map;
-the summary tier alone is not decision-complete.
+账户等级取最高的活跃权限，但须保留维度映射；仅有汇总等级不足以支持完整决策。
 
-## Classification method
+## 分类方法
 
-1. Inventory active campaigns and connected integrations.
-2. Capture each dimension's observed state, owner, limits, and evidence timestamp.
-3. Separate recommendation, draft, apply, and autonomous-apply authority.
-4. Identify conflicting controllers, such as platform pacing plus an external
-   budget agent.
-5. Assign confidence and list unknown or unavailable states.
-6. Reclassify after material configuration or connector changes.
+1. 清点活跃广告系列和已连接集成。
+2. 记录各维度的观察状态、负责人、限制和证据时间戳。
+3. 区分建议、草稿、应用和自主应用权限。
+4. 识别冲突的控制方，例如平台投放节奏控制与外部预算代理并存。
+5. 指定置信度，并列出未知或不可用状态。
+6. 在发生重大配置或连接器变更后重新分类。
 
-## Review by tier
+## 按等级审查
 
-- T0: verify manual operations are intentional and monitored; manual is not
-  automatically safer or healthier.
-- T1: check recommendation quality and reviewer accountability.
-- T2: test ceilings, edge cases, alerting, and recovery for each delegated module.
-- T3: inspect business-goal alignment, conversion quality, marginal performance,
-  creative/destination controls, exclusions, and platform eligibility.
-- T4: apply `mcp-integration.md`; no write without exact capability verification,
-  approval, audit, remote verification, and rollback.
+- T0：验证手动操作是有意选择且受到监控；手动并不自动意味着更安全或更健康。
+- T1：检查建议质量和审查者责任。
+- T2：测试每个已委派模块的上限、边界情况、告警和恢复。
+- T3：检查与业务目标的一致性、转化质量、边际表现、创意/目标页面控制、排除和平台资格。
+- T4：应用 `mcp-integration.md`；没有对精确能力的验证、批准、审计、远端验证和回滚，就不得写入。
 
-## Findings
+## 发现
 
-Automation adoption and novelty are unscored context. Score only a stable control
-such as missing approval, absent ceiling, conflicting automation, unauthorized
-scope, broken monitoring, or no rollback when applicable.
+自动化采用程度和新颖性属于不评分的背景信息。仅对适用的稳定控制项评分，例如缺少批准、没有上限、自动化冲突、未经授权的范围、监控失效或没有回滚。
 
-Return platform, campaign/object IDs, dimension, observed authority, tier,
-evidence, confidence, risk, owner, and remediation. Do not prescribe “more
-automation” or “more manual control” without a diagnosed account problem and a
-testable expected result.
+返回平台、广告系列/对象 ID、维度、观察到的权限、等级、证据、置信度、风险、负责人和补救措施。未诊断账户问题、未明确可测试的预期结果前，不得笼统提出“更多自动化”或“更多人工控制”。

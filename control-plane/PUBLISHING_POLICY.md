@@ -1,57 +1,44 @@
-# Publishing Policy
+# 公开发布策略
 
-The canonical development repository remains private until the owner approves
-a separate public-release gate. Repository visibility and any Pages or release
-asset visibility must be checked independently.
+在所有者批准独立的公开发布门禁之前，规范开发仓库保持私有。仓库可见性与任何 Pages 或发行资产的可见性必须独立检查。
 
-## Classification
+## 分类
 
-### Public-safe
+### 可安全公开
 
-- Original code, schemas, tests, templates, and synthesized operating doctrine.
-- Dated citations and links to public sources.
-- Sanitized fixtures that cannot identify a person, client, account, or local
-  machine.
-- High-level capability and maturity status that matches verification evidence.
-- Short quotations within the source license and applicable quotation limits.
+- 原创代码、schema、测试、模板以及综合形成的操作原则。
+- 注明日期的引文和指向公开来源的链接。
+- 无法识别个人、客户、账户或本地机器的脱敏固定测试数据。
+- 与验证证据一致的高层能力和成熟度状态。
+- 符合来源许可证和适用引用限额的简短引文。
 
-### Private
+### 私有
 
-- Client and account exports, IDs, budgets, audiences, creatives, and reports.
-- Internal roadmaps, unreleased product decisions, and private issue context.
-- Evaluation transcripts or agent task/result packets that contain private
-  inputs.
-- Private research notes whose redistribution is not approved.
+- 客户及账户导出文件、ID、预算、受众、创意和报告。
+- 内部路线图、未发布的产品决策和私有 issue 上下文。
+- 包含私有输入的评估会话记录或代理任务/结果包。
+- 未批准再分发的私有研究笔记。
 
-### Restricted: never package or publish
+### 受限：绝不打包或公开
 
-- Credentials, tokens, cookies, OAuth material, signing keys, and secrets.
-- Raw captured prompts, leaked prompt corpora, or large third-party excerpts.
-- Personal data not explicitly created as a sanitized fixture.
-- Local absolute paths, machine state, browser profiles, or session artifacts.
-- Third-party code or content without a compatible license and attribution.
+- 凭据、令牌、Cookie、OAuth 材料、签名密钥和秘密。
+- 原始捕获提示词、泄露的提示词语料或大量第三方摘录。
+- 未明确作为脱敏固定测试数据创建的个人数据。
+- 本地绝对路径、机器状态、浏览器配置或会话产物。
+- 缺乏兼容许可证及署名的第三方代码或内容。
 
-## Clean-room rule
+## 洁净室规则
 
-Private Fable research may inform abstract principles such as explicit
-checklists, instruction precedence, effort calibration, examples, safety
-repetition, and verification. It must not be copied, closely paraphrased, or
-committed. Brainstein's Apache-2.0 patterns may inform original implementation;
-reuse of code requires normal license and notice review.
+私有 Fable 研究可为明确检查清单、指令优先级、投入程度校准、示例、安全规则重复和验证等抽象原则提供参考。不得复制、近似改写或提交这些研究。Brainstein 的 Apache-2.0 模式可为原创实现提供参考；复用代码需要正常进行许可证及声明审查。
 
-## Public-release gate
+## 公开发布门禁
 
-Before changing visibility or publishing an artifact:
+在变更可见性或公开产物之前：
 
-1. Obtain explicit owner approval for that specific repository or artifact.
-2. Scan the complete Git history, working tree, generated archives, and release
-   metadata for secrets, personal data, raw research, and local paths.
-3. Verify the source and claim ledgers are current and redistribution fields
-   permit publication.
-4. Verify all dependencies and incorporated contributions have compatible
-   licenses and notices.
-5. Build from a clean checkout; verify the manifest, checksums, SBOM, and ZIP
-   contents.
-6. Run the full local and required remote CI matrix in a fresh context.
-7. Confirm public documentation does not advertise disabled capabilities or
-   expose private repository URLs in public installation paths.
+1. 获得所有者对该特定仓库或产物的明确批准。
+2. 扫描完整 Git 历史、工作树、生成的归档及发行元数据，查找秘密、个人数据、原始研究和本地路径。
+3. 验证来源和声明台账处于当前有效状态，且再分发字段允许公开发布。
+4. 验证所有依赖和已纳入的贡献均具有兼容的许可证及声明。
+5. 从干净检出构建；验证清单、校验和、SBOM 和 ZIP 内容。
+6. 在全新上下文中运行完整本地及必需的远程 CI 矩阵。
+7. 确认公开文档没有宣传禁用能力，也没有在公开安装路径中暴露私有仓库 URL。

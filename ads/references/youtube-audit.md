@@ -1,55 +1,43 @@
-# YouTube Ads control reference
+# YouTube Ads 控制项参考
 
-Retrieved: 2026-07-11. Refresh official product, API, policy, and availability
-sources before using this reference after its control-plane refresh date.
+检索日期：2026-07-11。在本参考文档的控制平面刷新日期之后使用前，请刷新官方产品、API、政策和可用性来源。
 
-## Category model
+## 类别模型
 
-This reference does not define an executable scoring profile. Bind a versioned
-profile whose categories cover the applicable controls and whose weights total 100;
-otherwise produce findings without a health score. The deterministic engine applies
-weights only after scoring applicable controls within each category.
+本参考文档不定义可执行的评分配置。绑定一个带版本的配置，其类别须涵盖适用控制项，且权重总计为 100；否则，只生成发现，不提供健康分数。确定性引擎仅在对各类别内的适用控制项评分后应用权重。
 
-## Runtime evaluation contract
+## 运行时评估契约
 
-- Treat each row as an applicability-first evidence question. Missing evidence is
-  `unknown`; unavailable or ineligible surfaces are `not_applicable`.
-- Verify campaign subtype, inventory, objective, geography, format, reporting
-  fields, measurement path, and account eligibility before evaluation.
-- The registered source below grounds Google Ads API video campaign support only.
-  Current Demand Gen, migration, engagement-goal, creative, policy, and availability
-  claims require additional dated official source IDs or account evidence.
-- This reference is advisory and export-read only. It does not provide a live
-  Google/YouTube API reader or mutation adapter.
+- 将每一行视为优先检查适用性的证据问题。缺失证据为 `unknown`；不可用或不符合资格的广告载体为 `not_applicable`。
+- 评估前核实广告系列子类型、广告资源、目标、地理区域、格式、报告字段、衡量路径和账户资格。
+- 下列已登记来源仅为 Google Ads API 视频广告系列支持提供依据。当前 Demand Gen、迁移、互动目标、创意、政策和可用性声明，需要额外的注明日期的官方来源 ID 或账户证据。
+- 本参考文档仅用于咨询和读取导出数据。它不提供实时 Google/YouTube API 读取器或变更适配器。
 
-## Controls
+## 控制项
 
-| ID | Category | Evidence question |
+| ID | 类别 | 证据问题 |
 | --- | --- | --- |
-| YT-M01 | Measurement | Primary conversion or engagement goal and its counting role are explicit. |
-| YT-M02 | Measurement | Google Ads, GA4, channel-link, view-through, and assisted measurement choices are reconciled. |
-| YT-M03 | Measurement | YouTube and non-YouTube Demand Gen inventory are separated in reporting where needed. |
-| YT-M04 | Measurement | Brand-lift or incrementality methods are used when direct response cannot answer the objective. |
-| YT-S01 | Structure | Campaign subtype, channel controls, objective, bidding, and inventory match the intended outcome. |
-| YT-S02 | Structure | Migrated or legacy Video Action Campaign state and incompatible settings are reviewed. |
-| YT-A01 | Audience | Audience signals or segments match intent and first-party exclusions avoid overlap. |
-| YT-A02 | Audience | Content suitability, placements, topics, and inventory controls are intentionally governed. |
-| YT-C01 | Creative | The opening earns attention before skip behavior and communicates the offer clearly. |
-| YT-C02 | Creative | Horizontal, vertical, square, short, and long formats cover intended inventory. |
-| YT-C03 | Creative | Materially different concepts and hooks are available, not cosmetic variants. |
-| YT-C04 | Creative | Demand Gen asset and product-feed choices are deliberate and eligible. |
-| YT-B01 | Budget | Bid and budget strategy fit the objective, evidence volume, and campaign maturity. |
-| YT-R01 | Reporting | View, engagement, click, conversion, and cost metrics use a consistent window and definition. |
-| YT-P01 | Policy | Content suitability, brand safety, disclosures, and regulated-category obligations are checked. |
-| YT-E01 | Experiment | Creative or audience experiments isolate one decision and account for conversion lag. |
+| YT-M01 | 衡量 | 主要转化或互动目标及其计数角色明确。 |
+| YT-M02 | 衡量 | Google Ads、GA4、频道关联、浏览归因和辅助衡量选择已核对。 |
+| YT-M03 | 衡量 | 需要时，报告中区分 YouTube 与非 YouTube 的 Demand Gen 广告资源。 |
+| YT-M04 | 衡量 | 当直接响应无法回答目标时，采用品牌提升或增量效果方法。 |
+| YT-S01 | 结构 | 广告系列子类型、渠道控制、目标、出价和广告资源匹配预期成果。 |
+| YT-S02 | 结构 | 已审查迁移后或旧版 Video Action Campaign 状态及不兼容设置。 |
+| YT-A01 | 受众 | 受众信号或细分匹配意图，第一方排除避免重叠。 |
+| YT-A02 | 受众 | 内容适宜性、版位、主题和广告资源控制得到有意治理。 |
+| YT-C01 | 创意 | 开场在跳过行为发生前赢得注意，并清晰传达优惠。 |
+| YT-C02 | 创意 | 横屏、竖屏、方形、短和长格式覆盖计划广告资源。 |
+| YT-C03 | 创意 | 有实质不同的概念和吸引点，而非表面变体。 |
+| YT-C04 | 创意 | Demand Gen 素材和商品 Feed 选择出于明确意图且符合资格。 |
+| YT-B01 | 预算 | 出价和预算策略适合目标、证据量和广告系列成熟度。 |
+| YT-R01 | 报告 | 观看、互动、点击、转化和成本指标使用一致窗口与定义。 |
+| YT-P01 | 政策 | 已检查内容适宜性、品牌安全、披露和受监管类别义务。 |
+| YT-E01 | 实验 | 创意或受众实验隔离一项决策，并考虑转化延迟。 |
 
-Use `pass`, `fail`, `unknown`, or `not_applicable`. Unknown controls reduce
-coverage. Optional, beta, premium, unavailable, immutable, or ineligible features
-are unscored opportunities.
+使用 `pass`、`fail`、`unknown` 或 `not_applicable`。未知控制项会降低覆盖率。可选、测试版、高级、不可用、不可变或不符合资格的功能作为不评分的机会。
 
-## Registered official evidence
+## 已登记官方证据
 
-- `youtube-google-ads-video-official`: [Google Ads API video campaigns](https://developers.google.com/google-ads/api/docs/video/overview)
+- `youtube-google-ads-video-official`：[Google Ads API 视频广告系列](https://developers.google.com/google-ads/api/docs/video/overview)
 
-Official sources override this summary when they change. Unsupported controls stay
-`unknown`; vendor case studies remain labeled and contextual.
+官方来源发生变化时，以官方来源为准，而非本概述。缺乏支持的控制项保持为 `unknown`；供应商案例研究仍须标注来源并结合具体背景使用。

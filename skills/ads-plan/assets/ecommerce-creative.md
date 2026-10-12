@@ -1,39 +1,39 @@
-# E-commerce creative planning questions
+# 电商创意规划问题
 
-> Status: qualitative, unscored planning aid.
+> 状态：定性、不计分的规划辅助资料。
 
-## Required gates
+## 必需门禁
 
-- Context gate: identify the product, offer, audience, funnel stage, placements, locale,
-  inventory state, margin context, rights-cleared assets, and approved claims.
-- Evidence gate: resolve live copy and asset requirements through current official source
-  IDs and label all practitioner patterns as hypotheses.
-- Rights gate: verify ownership, consent, likeness, trademark, music, testimonial,
-  endorsement, and synthetic-media permissions before production.
-- Regulatory gate: identify product, pricing, promotion, environmental, health, age,
-  and regional disclosure requirements and route uncertainty to qualified review.
-- Capability gate: record provider operations, accepted inputs, privacy behavior, cost
-  boundary, and verification path before generating or editing any asset.
+- 背景门禁：明确产品、优惠、受众、漏斗阶段、版位、地区、
+  库存状态、利润率背景、已完成权利许可的素材和已批准的声明。
+- 证据门禁：通过当前官方来源 ID 确定线上文案与素材要求，
+  并将所有从业者经验模式标记为假设。
+- 权利门禁：在制作之前验证所有权、同意、肖像、商标、音乐、客户推荐、
+  背书和合成媒体许可。
+- 监管门禁：识别产品、定价、促销、环境、健康、年龄
+  和区域披露要求，并将不确定性转交具备资格的审查。
+- 能力门禁：在生成或编辑任何素材之前，记录提供方操作、接受的输入、隐私行为、费用
+  边界和验证路径。
 
-## Planning questions
+## 规划问题
 
-- Which product facts and differentiators are verified and material to the audience?
-- Is the concept for discovery, evaluation, purchase, retention, or another approved job?
-- Which creative formats are currently eligible for each requested placement?
-- What source material proves price, availability, comparison, review, or testimonial claims?
-- How should product accuracy, brand consistency, accessibility, and copy zones be reviewed?
-- Which variables can be compared without changing audience, offer, and measurement together?
-- What would make an asset unusable because of rights, policy, evidence, or catalog mismatch?
+- 哪些产品事实和差异点已经验证，且对受众具有实质意义？
+- 该概念用于发现、评估、购买、留存，还是其他已批准的任务？
+- 对每个请求的版位，哪些创意格式当前符合资格？
+- 哪些来源资料能证明价格、可用性、比较、评价或客户推荐声明？
+- 应如何审查产品准确性、品牌一致性、无障碍和文案区域？
+- 在不同时改变受众、优惠和衡量方式的情况下，哪些变量可以比较？
+- 哪些权利、政策、证据或目录不匹配问题会使素材无法使用？
 
-## Candidate considerations
+## 候选考量
 
-- Consider product demonstration, context-of-use, proof, education, comparison, or story
-  concepts only when the required facts and rights are supplied.
-- Separate message hypotheses from visual treatments and placement adaptations.
-- Preserve a control asset and document each meaningful variation.
+- 仅在提供了所需事实和权利时，才考虑产品演示、使用场景、证明、教育、比较或故事
+  概念。
+- 将信息假设与视觉处理及版位适配分开。
+- 保留对照素材，并记录每项有意义的变体。
 
-## Output guardrails
+## 输出防护规则
 
-- Return unscored concept questions, source IDs, rights status, validation needs, and owners.
-- Do not prescribe platform priority, asset counts, aspect ratios, durations, allocations,
-  or performance claims from this template.
+- 返回不计分的概念问题、来源 ID、权利状态、验证需求和负责人。
+- 不得依据此模板规定平台优先级、素材数量、宽高比、时长、分配比例
+  或表现声明。

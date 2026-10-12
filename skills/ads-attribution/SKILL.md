@@ -1,32 +1,34 @@
 ---
 name: ads-attribution
-description: "Audit cross-platform attribution, conversion definitions, reporting windows, GA4, AdServices and AdAttributionKit, MMPs, browser and server events, offline conversions, and platform reconciliation. Use for attribution audit, attribution models, conversion windows, requests to add or total Meta and Google conversions, incompatible reporting-window aggregation, GA4 attribution, MMP review, AppsFlyer, Adjust, Branch, Singular, or cross-platform discrepancies."
+description: "审计跨平台归因、转化定义、报告窗口、GA4、AdServices 和 AdAttributionKit、MMP、浏览器与服务器事件、离线转化以及平台对账。适用于归因审计、归因模型、转化窗口、相加或汇总 Meta 与 Google 转化的请求、不兼容报告窗口的聚合、GA4 归因、MMP 检查、AppsFlyer、Adjust、Branch、Singular 或跨平台差异。"
 ---
 
-# Attribution Audit
+# 归因审计
 
-1. Read the main `ads` contract and normalized account snapshots.
-2. Declare the business conversion, value, data window, timezone, currency, and
-   decision the attribution analysis must support.
-3. Inventory every browser, server, platform, analytics, MMP, offline, and app
-   attribution source with its identity, counting, deduplication, and privacy rules.
-4. Reconcile comparable events and explain differences caused by eligibility,
-   view-through rules, consent, modeled data, conversion lag, thresholds, or scope.
-5. Separate measurement quality from platform-reported performance.
-6. Return findings, contradictions, confidence, missing evidence, and a measurement
-   improvement plan through the common JSON contract.
+操作语言默认使用简体中文：首次回复、工具前说明、过程进度、AskUserQuestion 的问题、选项和说明，以及最终报告均使用中文；用户明确指定其他操作语言时遵从。广告投放语言独立于操作语言。JSON keys/enums 和原始证据不翻译。委派任务时必须传递操作语言要求。
 
-Do not assume one platform is ground truth, add incompatible reports together, or
-recommend an attribution model without the operator's decision context.
+1. 阅读主 `ads` 契约和已规范化的账户快照。
+2. 明确业务转化、价值、数据窗口、时区、币种，
+   以及归因分析必须支持的决策。
+3. 盘点每个浏览器、服务器、平台、分析、MMP、离线和应用
+   归因来源，记录其身份标识、计数、去重和隐私规则。
+4. 对可比事件进行对账，并说明由资格、
+   浏览归因规则、同意机制、建模数据、转化延迟、阈值或范围造成的差异。
+5. 将衡量质量与平台报告的表现分开。
+6. 通过通用 JSON 契约返回发现、矛盾、置信度、缺失证据
+   和衡量改进计划。
 
-## Comparability gate
+不得假定某个平台是真实情况的唯一标准、将不兼容的报告相加，
+或在没有操作者决策背景的情况下推荐归因模型。
 
-Reject aggregation until the sources share, or are explicitly normalized to, the
-same conversion event and value definition, attribution window, click/view scope,
-counting method, deduplication identity, timezone, currency, attribution model,
-and modeled-data treatment. Until then, report the values side by side with their
-definitions; do not compute a total.
+## 可比性门禁
 
-Example: Meta seven-day conversions and Google thirty-day conversions are
-incompatible. Refuse to add them, reconcile windows and definitions first, and
-only aggregate a newly comparable dataset.
+在各来源采用相同口径或已明确规范化为相同口径之前，必须拒绝聚合；
+这些口径包括转化事件和价值定义、归因窗口、点击/浏览范围、
+计数方法、去重标识、时区、币种、归因模型
+以及建模数据处理方式。在此之前，应将数值及其定义并列报告；
+不得计算总计。
+
+示例：Meta 七天转化与 Google 三十天转化
+不兼容。拒绝将其相加，先对齐窗口和定义，
+然后仅聚合新形成的可比数据集。

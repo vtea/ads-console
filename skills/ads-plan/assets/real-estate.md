@@ -1,40 +1,40 @@
-# Real-estate paid-media planning questions
+# 房地产付费媒体规划问题
 
-> Status: qualitative, unscored planning aid; not fair-housing, licensing, or legal advice.
+> 状态：定性、不计分的规划辅助资料；不构成公平住房、许可或法律建议。
 
-## Required gates
+## 必需门禁
 
-- Context gate: identify the advertiser role, property or service, buyer or seller job,
-  geography, listing status, objective, qualified outcome, and accountable reviewer.
-- Evidence gate: verify listings, locations, prices, availability, credentials, claims,
-  and current official source IDs from platforms and regulators.
-- Fairness gate: block targeting, exclusions, delivery inputs, or creative that lack current
-  evidence and qualified review for housing and protected-class requirements.
-- Regulatory gate: obtain current fair-housing, licensing, disclosure, privacy, consent,
-  feed, and platform-category review for every applicable jurisdiction.
-- Feed gate: establish listing ownership, update source, status reconciliation, stale-item
-  handling, image rights, and destination accuracy.
-- Measurement gate: distinguish inquiry, qualified lead, appointment, application,
-  transaction, and offline reconciliation without inferring protected traits.
+- 背景门禁：明确广告主角色、房产或服务、买方或卖方任务、
+  地理区域、房源状态、目标、合格成果和承担责任的审查者。
+- 证据门禁：验证房源、位置、价格、可用性、资质、声明，
+  以及来自平台和监管机构的当前官方来源 ID。
+- 公平性门禁：对于缺少有关住房和受保护群体要求的当前
+  证据及具备资格审查的定向、排除项、投放输入或创意，必须予以阻止。
+- 监管门禁：为每个适用司法辖区获取当前公平住房、许可、披露、隐私、同意、
+  数据源和平台类别审查。
+- 数据源门禁：确定房源归属、更新来源、状态对账、过期条目
+  处理、图片权利和目标页准确性。
+- 衡量门禁：区分咨询、合格潜在客户、预约、申请、
+  交易和离线对账，不得推断受保护特征。
 
-## Planning questions
+## 规划问题
 
-- What is being advertised and which licensed entity owns the representation?
-- Which listing or service facts are current, approved, and consistently displayed?
-- Which audiences, locations, placements, and optimization inputs are eligible now?
-- Could copy, imagery, exclusions, or delivery create discriminatory steering or exclusion?
-- How will listing changes, complaints, consent, lead routing, and data retention be handled?
-- Which platform capabilities and creative formats have current source coverage?
-- What specialist approval is required before the plan can move beyond a draft?
+- 正在宣传什么？由哪个持牌实体负责该表述？
+- 哪些房源或服务事实当前有效、已获批准且展示一致？
+- 哪些受众、位置、版位和优化输入目前符合资格？
+- 文案、图像、排除项或投放是否可能造成歧视性引导或排斥？
+- 如何处理房源变化、投诉、同意、潜在客户分流和数据保留？
+- 哪些平台能力和创意格式具备当前来源覆盖？
+- 计划超出草案阶段之前需要哪些专家批准？
 
-## Candidate considerations
+## 候选考量
 
-- Consider listing discovery, service education, market context, and brand hypotheses only
-  after fairness, evidence, feed, and policy gates pass.
-- Keep buyer, seller, renter, investor, and service-provider outcomes distinct when lawful.
+- 仅在公平性、证据、数据源和政策门禁通过后，才考虑房源发现、服务教育、市场背景和品牌
+  假设。
+- 在合法前提下，区分买方、卖方、租客、投资者和服务提供方的成果。
 
-## Output guardrails
+## 输出防护规则
 
-- Return questions, source IDs, approvals, fairness risks, owners, and stop conditions.
-- Do not prescribe targeting radii, audience traits, platform shares, bids, schedules,
-  lead targets, or legal conclusions.
+- 返回问题、来源 ID、批准、公平性风险、负责人和停止条件。
+- 不得规定定向半径、受众特征、平台份额、出价、排期、
+  潜在客户目标或法律结论。

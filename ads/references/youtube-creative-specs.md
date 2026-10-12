@@ -1,38 +1,21 @@
-# YouTube Ads creative generation contract
+# YouTube Ads 创意生成契约
 
-Use this reference for video briefs, storyboards, thumbnails, companion assets, and
-Demand Gen assets intended for YouTube inventory. Exact duration, skippability,
-ratio, resolution, file size, safe zone, thumbnail control, and copy limits depend
-on campaign subtype and placement. Verify them from current official sources and
-the selected Google Ads account.
+使用本参考文档规划面向 YouTube 广告资源的视频简报、分镜、缩略图、配套素材和 Demand Gen 素材。精确时长、可跳过性、比例、分辨率、文件大小、安全区域、缩略图控制和文案限制取决于广告系列子类型及版位。根据当前官方来源和所选 Google Ads 账户核实。
 
-## Specification gate
+## 规格关卡
 
-For every intended in-stream, in-feed, Shorts, bumper, connected-TV, Demand Gen, or
-other surface, record objective, campaign subtype, inventory, geography, account
-eligibility, official source ID, duration, ratio, dimensions, file/codec limits,
-companion fields, safe areas, and skip or interaction behavior.
+对于每个计划使用的 in-stream、in-feed、Shorts、bumper、联网电视、Demand Gen 或其他广告载体，记录目标、广告系列子类型、广告资源、地理区域、账户资格、官方来源 ID、时长、比例、尺寸、文件/编解码器限制、配套字段、安全区域，以及跳过或互动行为。
 
-Return `needs_input` when a current load-bearing specification is absent. Do not
-carry forward historical duration or skip rules, assume a custom thumbnail is
-available, or state that a visual treatment universally improves CTR.
+缺少当前关键规格时，返回 `needs_input`。不要沿用历史时长或跳过规则，不要假定自定义缩略图可用，也不要声称某种视觉处理会普遍提高 CTR。
 
-## YouTube-specific review
+## YouTube 专属审查
 
-- Treat the opening, narrative, brand reveal, CTA, captions, audio, and landing page
-  as one concept; a single storyboard frame is not a completed video ad.
-- Generate materially different hooks and stories. Color saturation, faces, shock,
-  and curiosity are hypotheses to test, not psychological laws.
-- Preview each horizontal, square, or vertical deliverable in its intended surface
-  using current overlays. Avoid hardcoded safe-zone pixels without a dated template.
-- Distinguish YouTube inventory from non-YouTube Demand Gen inventory in the asset
-  manifest and subsequent report.
-- Never claim the static image workflow renders a playable video. If no approved
-  video capability is installed, deliver a brief, storyboard, and asset plan only.
+- 将开场、叙事、品牌揭示、CTA、字幕、音频和落地页视为一个概念；单张分镜画面不是完成的视频广告。
+- 生成实质不同的吸引点和故事。色彩饱和度、面孔、震撼和好奇心是待测试的假设，不是心理学定律。
+- 使用当前叠加层，在目标广告载体中预览每个横屏、方形或竖屏交付物。没有注明日期的模板时，避免硬编码安全区域像素。
+- 在素材清单和后续报告中，区分 YouTube 广告资源与非 YouTube 的 Demand Gen 广告资源。
+- 绝不要声称静态图像工作流渲染了可播放视频。若未安装已批准的视频能力，仅交付简报、分镜和素材计划。
 
-## Output contract
+## 输出契约
 
-Record concept ID, surface, source IDs, duration, ratio, dimensions, format/codec,
-copy, captions/audio plan, checksum, provenance, rights, safety review, and preview
-results. Assets remain drafts until approved and upload-validated; no live YouTube
-write capability is implied.
+记录概念 ID、广告载体、来源 ID、时长、比例、尺寸、格式/编解码器、文案、字幕/音频计划、校验和、溯源、权利、安全审查和预览结果。素材在获批准并通过上传验证前保持草稿；不意味着具备实时 YouTube 写入能力。

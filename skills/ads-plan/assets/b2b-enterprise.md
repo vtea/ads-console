@@ -1,39 +1,39 @@
-# B2B enterprise paid-media planning questions
+# B2B 企业付费媒体规划问题
 
-> Status: qualitative, unscored planning aid.
+> 状态：定性、不计分的规划辅助资料。
 
-## Required gates
+## 必需门禁
 
-- Context gate: document the offer, buying process, decision roles, target accounts,
-  sales ownership, regions, contract motion, conversion definition, and data window.
-- Evidence gate: ground account selection, channel fit, claims, and proof in approved CRM,
-  account, research, and current official source IDs.
-- Privacy gate: confirm lawful use, minimization, matching terms, retention, and access
-  controls before using account or contact data.
-- Regulatory gate: identify applicable industry, employment, credit, privacy, disclosure,
-  and regional constraints and route uncertainty to qualified review.
-- Measurement gate: define how ad interactions connect to account progression, pipeline,
-  revenue, and sales feedback without presenting influence as causation.
+- 背景门禁：记录优惠、购买流程、决策角色、目标客户企业、
+  销售归属、区域、合同成交模式、转化定义和数据窗口。
+- 证据门禁：以已批准的 CRM、
+  账户、研究和当前官方来源 ID 为依据，进行客户企业选择、渠道适配、声明和证明。
+- 隐私门禁：使用客户企业或联系人数据之前，确认合法使用、最小化、匹配条款、保留期限和访问
+  控制。
+- 监管门禁：识别适用的行业、就业、信贷、隐私、披露
+  和区域约束，并将不确定性转交具备资格的审查。
+- 衡量门禁：定义广告互动如何关联客户企业推进、销售管道、
+  收入和销售反馈，不得将影响呈现为因果关系。
 
-## Planning questions
+## 规划问题
 
-- Who participates in the decision, and what evidence does each role need?
-- Which accounts and segments are approved, reachable, sufficiently populated, and current?
-- What distinguishes awareness, consideration, evaluation, purchase, and expansion signals?
-- Which offers and proof assets have owner approval and substantiation?
-- How will marketing and sales handle routing, follow-up, suppression, and disagreement?
-- Which platform capabilities and formats are currently eligible for the account and locale?
-- What observation window matches the buying process and the available outcome latency?
+- 谁参与决策？每个角色需要哪些证据？
+- 哪些客户企业和细分群体已获批准、可触达、规模充足且信息当前有效？
+- 如何区分认知、考虑、评估、购买和扩展信号？
+- 哪些优惠和证明素材已获负责人批准并具备佐证？
+- 营销和销售将如何处理分流、跟进、抑制和分歧？
+- 对该账户和地区，哪些平台能力和格式当前符合资格？
+- 什么观察窗口与购买流程及可用成果延迟相匹配？
 
-## Candidate considerations
+## 候选考量
 
-- Consider role-specific or stage-specific hypotheses only when the supporting context exists.
-- Consider account-level measurement alongside person-level signals without merging identities.
-- Use platform and search roles as hypotheses, not a fixed hierarchy or budget mix.
-- Treat content, event, demo, and sales-conversation outcomes as distinct evidence classes.
+- 仅在具备支持背景时，才考虑针对角色或阶段的假设。
+- 在不合并身份的前提下，将客户企业层面的衡量与个人层面的信号一并考虑。
+- 将平台和搜索的角色视为假设，而不是固定层级或预算组合。
+- 将内容、活动、演示和销售对话的成果视为不同的证据类别。
 
-## Output guardrails
+## 输出防护规则
 
-- Return qualitative options, dependencies, source IDs, owners, and measurement questions.
-- Do not prescribe platform shares, audience sizes, bid strategies, attribution windows,
-  pipeline ratios, or performance targets.
+- 返回定性选项、依赖项、来源 ID、负责人和衡量问题。
+- 不得规定平台份额、受众规模、出价策略、归因窗口、
+  销售管道比率或表现目标。

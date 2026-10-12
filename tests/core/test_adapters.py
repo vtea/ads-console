@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from claude_ads_core.i18n import locale_scope
+
 from claude_ads_core.adapters import (
     Adapter,
     CSVExportError,
@@ -16,6 +18,13 @@ from claude_ads_core.contracts import PLATFORMS, validate_contract
 
 
 FIXTURE_ROOT = Path(__file__).resolve().parents[1] / "fixtures" / "exports"
+
+
+@pytest.fixture(autouse=True)
+def _explicit_english_contract_messages():
+    """Retain the original English failure assertions in this module."""
+    with locale_scope("en"):
+        yield
 
 
 def write_export(tmp_path: Path, rows: list[dict[str, str]], name: str = "export.csv") -> Path:

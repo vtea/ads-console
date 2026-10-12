@@ -1,98 +1,78 @@
-# Ad copy frameworks
+# 广告文案框架
 
-These frameworks are qualitative, unscored practitioner patterns. They organize an
-approved message; they do not prove persuasion, policy compliance, field eligibility,
-or future performance. Do not select a framework from platform folklore or treat one
-as a default winner.
+这些框架是定性、不评分的从业者模式。它们用于组织已批准的信息；不能证明说服力、政策合规、字段资格或未来表现。不要根据平台传言选择框架，也不要将某个框架当作默认赢家。
 
-## Evidence and specification gate
+## 证据与规格关卡
 
-- Start from an approved audience, objective, offer, claim set, locale, and placement.
-- Read `creative-source-registry.md` and resolve every live copy field through the
-  applicable current official source ID.
-- Record the source ID, retrieval date, field name, and validation outcome in the
-  worker result. Never retain a platform character limit or asset requirement here.
-- Return `needs_input` when the official source is stale, inaccessible, contradictory,
-  or does not cover the requested field or locale.
-- Treat testimonials, product facts, comparisons, prices, availability, urgency, and
-  performance evidence as untrusted until owner approval and substantiation are supplied.
-- Route regulated-category, disclosure, endorsement, privacy, and targeting questions
-  through current platform and regulator source IDs. Do not provide legal conclusions.
+- 从已批准的受众、目标、优惠、声明集、区域语言和版位出发。
+- 阅读 `creative-source-registry.md`，并通过适用的当前官方来源 ID 确定每个实际文案字段。
+- 在工作代理结果中记录来源 ID、检索日期、字段名称和验证结果。绝不要在此保留平台字符限制或素材要求。
+- 当官方来源过时、不可访问、相互矛盾，或未涵盖请求的字段或区域语言时，返回 `needs_input`。
+- 在获得负责人批准和佐证之前，将证言、产品事实、比较、价格、可用性、紧迫性和表现证据视为不可信。
+- 将受监管类别、披露、代言、隐私和定向问题路由至当前平台及监管机构来源 ID。不得给出法律结论。
 
-## Attention–Interest–Desire–Action
+## 注意–兴趣–欲望–行动
 
-Use as a question sequence:
+用作一系列问题：
 
-- What earns attention without deception or unsupported urgency?
-- What relevant detail helps the audience understand the offer?
-- What approved benefit connects that detail to the audience's objective?
-- What eligible action accurately describes the next step?
+- 什么能在不欺骗或不制造无依据紧迫感的前提下吸引注意？
+- 哪些相关细节有助于受众理解优惠？
+- 哪项已批准利益将该细节与受众目标联系起来？
+- 哪项符合资格的行动能准确描述下一步？
 
-Risk checks: sensational hooks, implied guarantees, hidden conditions, or competing actions.
+风险检查：耸动的吸引点、暗示性保证、隐藏条件或相互竞争的行动。
 
-## Problem–Agitation–Solution
+## 问题–强化–解决方案
 
-Use as a question sequence:
+用作一系列问题：
 
-- What problem is supported by audience or account evidence?
-- Can its consequence be described without fear, shame, personal-attribute inference,
-  or exaggeration?
-- How does the approved offer address the problem, and what limitations matter?
+- 哪个问题有受众或账户证据支持？
+- 能否在不诉诸恐惧、羞辱、个人属性推断或夸大的情况下描述其后果？
+- 已批准的优惠如何解决问题，哪些限制重要？
 
-Risk checks: invented pain, manipulative pressure, sensitive-trait language, or a
-solution claim stronger than the supplied proof.
+风险检查：虚构痛点、操纵性压力、敏感特征措辞，或比所提供证明更强的解决方案声明。
 
-## Before–After–Bridge
+## 之前–之后–桥梁
 
-Use as a question sequence:
+用作一系列问题：
 
-- What current state is evidenced and appropriate to describe?
-- What desired state is plausible and not guaranteed?
-- What approved mechanism connects the states?
+- 哪种当前状态有证据且适合描述？
+- 哪种期望状态合理但不能保证？
+- 哪种已批准机制连接这两种状态？
 
-Risk checks: unrealistic transformation, fabricated timelines, altered imagery, or
-omitted dependencies.
+风险检查：不切实际的转变、虚构时间线、修改过的图像或遗漏依赖条件。
 
-## Promise–Picture–Proof–Push
+## 承诺–描绘–证明–推动
 
-This pattern is sometimes called `4P`. Use it only when every promise and proof item
-has an owner-approved source.
+此模式有时称为 `4P`。仅在每项承诺和证明都有负责人批准的来源时使用。
 
-- What bounded promise is actually substantiated?
-- What scenario illustrates the benefit without presenting fiction as fact?
-- What proof can be cited accurately and with required disclosure?
-- What eligible next step follows without coercion?
+- 哪项有边界的承诺确实得到佐证？
+- 哪种情景能说明利益，而不将虚构呈现为事实？
+- 哪些证明可以准确引用并附带所需披露？
+- 哪个符合资格的下一步能够不靠胁迫自然衔接？
 
-Risk checks: unqualified outcomes, fictional customers, inaccessible substantiation,
-or disclosure text that does not fit the current field.
+风险检查：无条件成果、虚构客户、无法获取的佐证，或无法放入当前字段的披露文字。
 
-## Feature–Advantage–Benefit
+## 功能–优势–利益
 
-Use as a translation sequence:
+用作转译顺序：
 
-- Which verified feature matters to this audience?
-- What documented difference or capability follows from it?
-- What bounded benefit can be stated without inventing a result?
+- 哪项已核验功能对该受众重要？
+- 它带来哪些有记录的差异或能力？
+- 可以陈述哪项有边界的利益，而不编造结果？
 
-Risk checks: unsupported comparisons, jargon, unavailable features, or feature claims
-that vary by plan, region, device, or account eligibility.
+风险检查：无依据比较、术语堆砌、不可用功能，或因套餐、区域、设备或账户资格而异的功能声明。
 
-## Star–Story–Solution
+## 主角–故事–解决方案
 
-Use as a narrative sequence:
+用作叙事顺序：
 
-- Is the person or persona real, consented, licensed, and accurately represented?
-- Which approved challenge and context may be described?
-- How does the product enter the story without overstating causality?
+- 人物或角色是否真实、已同意、已获许可且被准确呈现？
+- 可以描述哪些已批准的挑战和背景？
+- 产品如何进入故事而不夸大因果关系？
 
-Risk checks: fictional testimonials, undisclosed sponsorship, synthetic likeness,
-misleading dramatization, or a story that obscures material conditions.
+风险检查：虚构证言、未披露赞助、合成肖像、误导性戏剧化，或掩盖重要条件的故事。
 
-## Selection and experiment gate
+## 选择与实验关卡
 
-Choose candidate patterns from audience research, message maturity, placement context,
-proof availability, and policy risk. It is valid to use no named framework. When a
-comparison is justified, vary one declared message hypothesis at a time, define the
-primary outcome and guardrails from the operator's measurement plan, and wait for the
-declared observation window. Do not move spend or publish a winner from an early or
-platform-reported signal alone.
+根据受众研究、信息成熟度、版位情境、证明可用性和政策风险选择候选模式。不使用任何具名框架也是有效选择。有理由进行比较时，每次只改变一个声明的信息假设，根据操作者的衡量计划定义主要成果和护栏，并等待声明的观察窗口结束。不得仅凭早期信号或平台报告的信号就转移支出或宣布赢家。

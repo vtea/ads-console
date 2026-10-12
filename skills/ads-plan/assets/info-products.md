@@ -1,38 +1,38 @@
-# Information-product paid-media planning questions
+# 信息产品付费媒体规划问题
 
-> Status: qualitative, unscored planning aid.
+> 状态：定性、不计分的规划辅助资料。
 
-## Required gates
+## 必需门禁
 
-- Context gate: identify the product, instructor or publisher, audience, objective,
-  fulfillment, pricing context, refund terms, geography, and conversion definition.
-- Evidence gate: substantiate credentials, curriculum, testimonials, outcomes, comparisons,
-  availability, and offer terms; use current official source IDs from platforms and regulators.
-- Endorsement gate: apply `ftc-endorsement-guides-official` when relevant and document
-  consent, typicality, material connections, edits, and required disclosure.
-- Regulatory gate: identify education, employment, income, health, finance, age, privacy,
-  and regional risks and obtain qualified review for high-stakes claims.
-- Measurement gate: separate lead, attendance, purchase, refund, completion, and downstream
-  outcomes instead of treating funnel progress as customer success.
+- 背景门禁：明确产品、讲师或出版方、受众、目标、
+  履约、定价背景、退款条款、地理区域和转化定义。
+- 证据门禁：为资质、课程、客户推荐、效果、比较、
+  可用性和优惠条款提供佐证；使用来自平台和监管机构的当前官方来源 ID。
+- 背书门禁：适用时使用 `ftc-endorsement-guides-official`，并记录
+  同意、典型性、重要关系、编辑修改和所需披露。
+- 监管门禁：识别教育、就业、收入、健康、金融、年龄、隐私
+  和区域风险，并为高风险声明获取具备资格的审查。
+- 衡量门禁：区分潜在客户、出席、购买、退款、完成和下游
+  成果，而不是把漏斗推进视为客户成功。
 
-## Planning questions
+## 规划问题
 
-- What does the product actually teach or provide, and what does it not provide?
-- Which audience need is supported by research rather than personal-attribute inference?
-- Which proof is verified, representative, consented, and presented with limitations?
-- Which offer, refund, renewal, access, and support terms need clear disclosure?
-- Which content or event can demonstrate value without manufacturing urgency or fear?
-- How will refunds, cancellations, complaints, completion, and quality feedback inform review?
-- Which platforms and placements are currently eligible for the category and locale?
+- 该产品实际教授或提供什么？不提供什么？
+- 哪些受众需求有研究支持，而不是来自个人属性推断？
+- 哪些证明已验证、具有代表性、已获同意，并说明了限制？
+- 哪些优惠、退款、续费、访问和支持条款需要清晰披露？
+- 哪些内容或活动能够展示价值，而无需制造紧迫感或恐惧？
+- 退款、取消、投诉、完成情况和质量反馈将如何为审查提供依据？
+- 对该类别和地区，哪些平台和版位当前符合资格？
 
-## Candidate considerations
+## 候选考量
 
-- Consider education, demonstration, instructor perspective, curriculum, or learner-story
-  hypotheses only when evidence and rights are supplied.
-- Treat lead magnets, events, purchases, and later outcomes as distinct measurements.
+- 仅在提供了证据和权利时，才考虑教育、演示、讲师观点、课程或学员故事
+  假设。
+- 将获客诱因、活动、购买和后续成果视为不同的衡量事项。
 
-## Output guardrails
+## 输出防护规则
 
-- Return qualitative options, proof gaps, source IDs, owners, and measurement questions.
-- Do not prescribe funnel shares, platform priority, urgency, income outcomes, bid rules,
-  or performance targets.
+- 返回定性选项、证明缺口、来源 ID、负责人和衡量问题。
+- 不得规定漏斗份额、平台优先级、紧迫性、收入结果、出价规则
+  或表现目标。

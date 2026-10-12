@@ -7,8 +7,17 @@ from pathlib import Path
 
 import pytest
 
+from claude_ads_core.i18n import locale_scope
+
 from claude_ads_core.cli import main
 from claude_ads_core.product_status import ProductStatusError, RELEASE_CHECK_IDS, evaluate_product_status
+
+
+@pytest.fixture(autouse=True)
+def _explicit_english_contract_messages():
+    """Retain the original English failure assertions in this module."""
+    with locale_scope("en"):
+        yield
 
 
 def _artifact_root(tmp_path: Path, repo_root: Path) -> Path:
@@ -23,7 +32,7 @@ def test_current_repository_status_has_one_declared_next_blocker(repo_root: Path
     result = evaluate_product_status(repo_root, as_of=date(2026, 7, 11))
     assert result["maturity"]["current"] == "domain-integrated"
     assert result["evidence"]["stale_load_bearing_claims"] == []
-    assert len(result["scoring_profiles"]["disabled"]) == 12
+    assert len(result["scoring_profiles"]["disabled"]) == 11
     assert result["next_blocker"]["kind"] == "maturity-blocker"
     assert result["next_blocker"]["id"] == "maturity-blocker-001"
     assert result["next_blocker"]["evidence_paths"] == [

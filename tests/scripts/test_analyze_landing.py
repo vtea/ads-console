@@ -16,6 +16,15 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[2] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import analyze_landing as analyze_landing_module  # noqa: E402
+from claude_ads_core.i18n import locale_scope  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def english_output(monkeypatch):
+    monkeypatch.setenv("CLAUDE_ADS_LOCALE", "en")
+    with locale_scope("en"):
+        yield
+
 
 
 def _successful_result() -> dict:

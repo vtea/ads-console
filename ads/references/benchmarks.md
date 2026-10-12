@@ -1,50 +1,44 @@
-# Contextual Benchmarks
+# 情境化基准
 
-**Verified:** 2026-07-11
-**Refresh:** quarterly, and whenever a cited dataset changes
-**Evidence status:** no numeric benchmark is bundled as a universal account threshold
+**已核验：** 2026-07-11
+**刷新：** 每季度，以及引用数据集发生变化时
+**证据状态：** 未将任何数值基准作为通用账户阈值随包提供
 
-Benchmarks are comparison evidence, not pass/fail controls. Use them to form a
-question, then decide from the advertiser's economics, cohort, and same-window
-account data. Do not score an account down merely because it differs from a
-cross-industry median.
+基准是比较证据，不是通过/失败控制项。用其提出问题，再依据广告主的经济数据、群组和同窗口账户数据作出决策。不得仅因账户偏离跨行业中位数就降低其分数。
 
-## Evidence contract
+## 证据契约
 
-Before quoting any external benchmark, record:
+引用任何外部基准前，记录：
 
-| Field | Required value |
+| 字段 | 必需值 |
 | --- | --- |
-| Source | Publisher, direct URL, and source-ledger ID |
-| Provenance | Platform, independent researcher, agency/vendor, or account data |
-| Publication | Publication date and retrieval date |
-| Population | Platform, objective, format, geography, industry, and sample size |
-| Statistic | Mean, median, percentile, modeled result, or case study |
-| Measurement | Numerator, denominator, attribution window, currency, and taxes/fees |
-| Time | Observation window and seasonality |
-| Fit | Why the cohort is comparable to this account |
-| Limits | Sponsorship, exclusions, survivorship bias, or missing methodology |
+| 来源 | 发布者、直接 URL 和来源台账 ID |
+| 溯源 | 平台、独立研究者、代理机构/供应商或账户数据 |
+| 发布 | 发布日期和检索日期 |
+| 总体 | 平台、目标、格式、地理区域、行业和样本量 |
+| 统计量 | 均值、中位数、百分位数、建模结果或案例研究 |
+| 衡量 | 分子、分母、归因窗口、货币和税费 |
+| 时间 | 观察窗口和季节性 |
+| 适配性 | 为什么该群组与此账户可比 |
+| 局限 | 赞助、排除条件、幸存者偏差或方法缺失 |
 
-If any field that could change the conclusion is unknown, label the benchmark
-`provisional`. Platform-published uplift figures are `vendor-supplied`; a case
-study is not a general baseline.
+任何可能改变结论的字段未知时，将基准标记为 `provisional`。平台发布的提升数字为 `vendor-supplied`；案例研究不是通用基线。
 
-## Comparison order
+## 比较顺序
 
-Use the narrowest defensible comparison:
+使用最窄且可辩护的比较：
 
-1. Same account, same objective, same attribution definition, prior comparable period.
-2. Same account experiment or holdout with an agreed success metric.
-3. First-party CRM or revenue cohort joined to spend.
-4. Comparable peer cohort with disclosed methodology.
-5. Broad industry or platform benchmark, labeled directional only.
+1. 同一账户、相同目标、相同归因定义的前一个可比时期。
+2. 同一账户内具有约定成功指标的实验或留出组。
+3. 与支出关联的第一方 CRM 或收入群组。
+4. 方法公开的可比同类群组。
+5. 广泛行业或平台基准，并注明仅供方向性参考。
 
-Never blend sources with different attribution windows, currencies, conversion
-definitions, or funnel stages without normalizing and disclosing the conversion.
+归因窗口、货币、转化定义或漏斗阶段不同的来源，未经标准化并披露换算，不得混合。
 
-## Account-specific baseline
+## 账户专属基线
 
-Build a baseline from complete periods only:
+仅根据完整时期构建基线：
 
 ```text
 baseline_window = periods before the evaluated change, excluding known outages
@@ -52,12 +46,9 @@ comparison_window = same duration and conversion-lag maturity
 delta = (comparison - baseline) / baseline
 ```
 
-Segment by platform, objective, campaign type, geography, new/returning customer,
-and device only when the segment has enough observations to be decision-useful.
-Report low-volume segments as uncertain rather than replacing them with an
-industry average.
+只有细分群体拥有足以支持决策的观察数量时，才按平台、目标、广告系列类型、地理区域、新客/回头客和设备细分。将低量细分报告为不确定，而非用行业平均值代替。
 
-For cost and value metrics, reconcile:
+对于成本和价值指标，核对：
 
 ```text
 CPA  = spend / accepted conversions
@@ -65,39 +56,30 @@ ROAS = accepted conversion value / spend
 MER  = business revenue / total advertising spend
 ```
 
-State whether revenue is gross or net and whether spend includes fees, credits,
-and taxes. Platform ROAS and business MER answer different questions and should
-not be treated as interchangeable.
+说明收入为总收入还是净收入，以及支出是否包括费用、抵扣和税项。平台 ROAS 与业务 MER 回答不同问题，不应互换使用。
 
-## Evidence questions by metric
+## 按指标划分的证据问题
 
-| Metric | Ask before interpreting |
+| 指标 | 解读前应询问 |
 | --- | --- |
-| CTR | Which impression and click definitions, placement mix, and objective? |
-| CPC/CPM | Which auction, geography, season, currency, and billing basis? |
-| CVR | Which conversion, denominator, lag, and consent population? |
-| CPA/CPL | Was lead quality or downstream acceptance included? |
-| ROAS | Which value source, returns/cancellations, attribution, and customer cohort? |
-| Frequency | Which reach window and audience overlap; is measured performance deteriorating? |
-| Creative fatigue | Is there a sustained change versus a comparable baseline after mix and spend shifts? |
+| CTR | 使用哪些展示和点击定义、版位组合及目标？ |
+| CPC/CPM | 哪种竞价、地理区域、季节、货币和计费基础？ |
+| CVR | 哪种转化、分母、延迟和同意人群？ |
+| CPA/CPL | 是否计入线索质量或下游接受情况？ |
+| ROAS | 哪种价值来源、退货/取消、归因和客户群组？ |
+| 频次 | 哪个覆盖窗口和受众重叠；实测表现是否恶化？ |
+| 创意疲劳 | 在组合和支出变化之后，相对可比基线是否发生持续变化？ |
 
-## Output contract
+## 输出契约
 
-Every benchmark comparison must include the observed account value, benchmark
-value, cohort fit, source ID, confidence, and the decision it informs. A gap is
-an observation, not a diagnosis. Recommendation language must connect the gap to
-account evidence such as marginal efficiency, query quality, creative-level
-decay, conversion quality, or incrementality.
+每项基准比较必须包含观察到的账户值、基准值、群组适配性、来源 ID、置信度以及所支持的决策。差距是观察结果，而非诊断。建议措辞必须将差距与账户证据关联，例如边际效率、查询质量、创意层面的衰退、转化质量或增量效果。
 
-## Prohibited uses
+## 禁止的用法
 
-- Fixed minimum monthly budgets presented as platform requirements.
-- Fixed conversion-count, frequency, creative-life, or budget-to-CPA thresholds
-  presented as universal truths.
-- Vendor uplift percentages presented as expected account outcomes.
-- Cross-platform cost comparisons without normalizing objective and outcome quality.
-- “Top performer” or percentile claims without a population and statistic definition.
+- 将固定最低月预算表述为平台要求。
+- 将固定转化数量、频次、创意寿命或预算与 CPA 比值阈值表述为普遍真理。
+- 将供应商提升百分比表述为账户预期结果。
+- 未对目标和成果质量进行标准化就跨平台比较成本。
+- 没有总体和统计量定义就声称“表现最佳”或达到某个百分位数。
 
-For platform-specific observed facts, use the relevant audit reference and its
-dated source. If no current source pack fits the account, omit the number and
-turn it into a measurement question.
+对于平台专属的观察事实，使用相关审计参考文档及其注明日期的来源。若没有适合账户的当前来源包，省略数字，将其转为衡量问题。

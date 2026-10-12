@@ -6,8 +6,17 @@ from pathlib import Path
 
 import pytest
 
+from claude_ads_core.i18n import locale_scope
+
 from claude_ads_core.contracts import PLATFORMS
 from claude_ads_core.control_registry import RegistryError, load_control_registry
+
+
+@pytest.fixture(autouse=True)
+def _explicit_english_contract_messages():
+    """Retain the original English failure assertions in this module."""
+    with locale_scope("en"):
+        yield
 
 
 def test_registry_covers_every_catalog_id_exactly_once(check_catalog, repo_root: Path):
@@ -30,19 +39,42 @@ def test_registry_is_reproducibly_generated(repo_root: Path):
     assert json.loads((manifests / "scoring-profiles.json").read_text(encoding="utf-8")) == expected_profiles
 
 
-def test_current_catalog_is_explicitly_unscored_without_invented_severity(repo_root: Path):
+APPROVED_HEALTH_CONTROLS = {("meta", "M01"), ("meta", "M02"), ("meta", "M03")}
+
+
+def test_only_approved_controls_are_scoreable_without_invented_severity(repo_root: Path):
     registry = load_control_registry(repo_root)
     assert registry.entries
-    assert all(entry.disposition != "health" for entry in registry.entries)
-    assert all(entry.control_definition["severity"] == "informational" for entry in registry.entries)
-    assert all(entry.control_definition["scoring_behavior"] in {"watchlist", "opportunity"} for entry in registry.entries)
+    health = {(entry.platform, entry.control_id) for entry in registry.entries if entry.disposition == "health"}
+    assert health == APPROVED_HEALTH_CONTROLS
+    for entry in registry.entries:
+        if (entry.platform, entry.control_id) in APPROVED_HEALTH_CONTROLS:
+            assert entry.control_definition["severity"] == "high"
+            assert entry.control_definition["scoring_behavior"] == "health"
+        else:
+            assert entry.control_definition["severity"] == "informational"
+            assert entry.control_definition["scoring_behavior"] in {"watchlist", "opportunity"}
     assert all(entry.control_definition["required_inputs"] for entry in registry.entries)
 
 
-def test_all_twelve_profiles_are_versioned_disabled_and_fail_closed(repo_root: Path):
+def test_meta_profile_is_enabled_with_approved_measurement_controls(repo_root: Path):
+    registry = load_control_registry(repo_root)
+    profile = registry.profile_for("meta")
+    assert profile.status == "enabled"
+    assert profile.disabled_reason is None
+    assert dict(profile.category_weights) == {"measurement": 100}
+    assert profile.health_control_ids == ("M01", "M02", "M03")
+    controls, weights = registry.scoring_inputs("meta")
+    assert len(controls) == 3
+    assert dict(weights) == {"measurement": 100}
+    empty = registry.score_platform("meta", [])
+    assert empty.health_score is None
+
+
+def test_remaining_eleven_profiles_are_versioned_disabled_and_fail_closed(repo_root: Path):
     registry = load_control_registry(repo_root)
     assert {profile.platform for profile in registry.profiles} == PLATFORMS
-    for platform in PLATFORMS:
+    for platform in PLATFORMS - {"meta"}:
         profile = registry.profile_for(platform)
         assert profile.status == "disabled"
         assert "invent" in (profile.disabled_reason or "")

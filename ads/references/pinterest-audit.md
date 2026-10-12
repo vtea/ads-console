@@ -1,54 +1,43 @@
-# Pinterest Ads control reference
+# Pinterest Ads 控制项参考
 
-Retrieved: 2026-07-11. Refresh official platform and policy sources before using
-this reference after its control-plane refresh date.
+检索日期：2026-07-11。在本参考文档的控制平面刷新日期之后使用前，请刷新官方平台和政策来源。
 
-## Category model
+## 类别模型
 
-This reference does not define an executable scoring profile. Bind a versioned
-profile whose categories cover the applicable controls and whose weights total 100;
-otherwise produce findings without a health score.
+本参考文档不定义可执行的评分配置。绑定一个带版本的配置，其类别须涵盖适用控制项，且权重总计为 100；否则，只生成发现，不提供健康分数。
 
-## Runtime evaluation contract
+## 运行时评估契约
 
-- Treat each row as an applicability-first evidence question. Missing evidence is
-  `unknown`; unavailable or ineligible surfaces are `not_applicable`.
-- Verify objective, placement, geography, measurement path, domain/catalog state,
-  privacy choices, policy, and account eligibility before evaluation.
-- The registered source below grounds the Conversions API only. Current catalog,
-  Performance+, collections, targeting, format, policy, and availability claims
-  require additional dated official source IDs or account evidence.
-- This reference is advisory and export-read only. It does not provide a live
-  Pinterest API reader or mutation adapter.
+- 将每一行视为优先检查适用性的证据问题。缺失证据为 `unknown`；不可用或不符合资格的广告载体为 `not_applicable`。
+- 评估前核实目标、版位、地理区域、衡量路径、域名/商品目录状态、隐私选择、政策和账户资格。
+- 下列已登记来源仅为 Conversions API 提供依据。当前商品目录、Performance+、合集、定向、格式、政策和可用性声明，需要额外的注明日期的官方来源 ID 或账户证据。
+- 本参考文档仅用于咨询和读取导出数据。它不提供实时 Pinterest API 读取器或变更适配器。
 
-## Controls
+## 控制项
 
-| ID | Category | Evidence question |
+| ID | 类别 | 证据问题 |
 | --- | --- | --- |
-| PN-M01 | Measurement | Pinterest Tag, Conversions API, MMP, or offline source is declared and verified. |
-| PN-M02 | Measurement | Browser and server events use event IDs or the documented deduplication mechanism. |
-| PN-M03 | Measurement | Event quality, latency, diagnostics, and representative test events have been reviewed. |
-| PN-M04 | Measurement | Privacy flags and data-use choices match applicable geography and consent. |
-| PN-R01 | Retail | Catalog required fields, variants, prices, availability, links, and images validate. |
-| PN-R02 | Retail | Catalog refreshes prevent stale or unavailable products from serving. |
-| PN-R03 | Retail | Claimed-domain, destination, and tracking behavior are consistent. |
-| PN-S01 | Structure | Objective, optimization event, and campaign type match the business outcome. |
-| PN-S02 | Structure | Automation such as Performance+ is intentionally configured and eligible. |
-| PN-A01 | Audience | First-party, interest, keyword, and expansion choices reflect search and discovery intent. |
-| PN-C01 | Creative | Pins meet format requirements and communicate value without relying on unsupported assumptions. |
-| PN-C02 | Creative | Creative diversity covers materially different concepts, formats, and funnel stages. |
-| PN-C03 | Creative | Landing pages preserve the Pin promise, product, and tracking parameters. |
-| PN-B01 | Budget | Budget and bidding are viable for the optimization event and evidence volume. |
-| PN-P01 | Policy | Merchant, creative, privacy, AI-disclosure, and regulated-category obligations are reviewed. |
-| PN-E01 | Experiment | Tests isolate one decision with a declared audience, window, and success measure. |
+| PN-M01 | 衡量 | 已声明并验证 Pinterest Tag、Conversions API、MMP 或线下来源。 |
+| PN-M02 | 衡量 | 浏览器和服务器事件使用事件 ID 或文档规定的去重机制。 |
+| PN-M03 | 衡量 | 已审查事件质量、延迟、诊断和有代表性的测试事件。 |
+| PN-M04 | 衡量 | 隐私标志和数据使用选择与适用地理区域及同意相符。 |
+| PN-R01 | 零售 | 商品目录必需字段、变体、价格、可用性、链接和图像验证通过。 |
+| PN-R02 | 零售 | 商品目录刷新防止过时或不可用商品被投放。 |
+| PN-R03 | 零售 | 已认领域名、目标页面和跟踪行为一致。 |
+| PN-S01 | 结构 | 目标、优化事件和广告系列类型匹配业务成果。 |
+| PN-S02 | 结构 | Performance+ 等自动化出于明确意图配置，且符合资格。 |
+| PN-A01 | 受众 | 第一方、兴趣、关键词和扩展选择反映搜索与发现意图。 |
+| PN-C01 | 创意 | Pin 满足格式要求，并在不依赖无依据假设的情况下传达价值。 |
+| PN-C02 | 创意 | 创意多样性覆盖实质不同的概念、格式和漏斗阶段。 |
+| PN-C03 | 创意 | 落地页保留 Pin 的承诺、产品和跟踪参数。 |
+| PN-B01 | 预算 | 预算和出价对于优化事件及证据量而言可行。 |
+| PN-P01 | 政策 | 已审查商家、创意、隐私、AI 披露和受监管类别义务。 |
+| PN-E01 | 实验 | 测试隔离一项决策，并声明受众、窗口和成功指标。 |
 
-Results use `pass`, `fail`, `unknown`, or `not_applicable`. Unknown controls
-reduce evidence coverage; unavailable, beta, premium, or ineligible features are
-unscored opportunities.
+结果使用 `pass`、`fail`、`unknown` 或 `not_applicable`。未知控制项降低证据覆盖率；不可用、测试版、高级或不符合资格的功能作为不评分的机会。
 
-## Registered official evidence
+## 已登记官方证据
 
-- `pinterest-conversions-api`: [Pinterest API for Conversions](https://help.pinterest.com/en/business/article/the-pinterest-api-for-conversions)
+- `pinterest-conversions-api`：[Pinterest API for Conversions](https://help.pinterest.com/en/business/article/the-pinterest-api-for-conversions)
 
-Official sources override this summary when they change. Unsupported controls stay
-`unknown`; practitioner material may supplement but not replace official evidence.
+官方来源发生变化时，以官方来源为准，而非本概述。缺乏支持的控制项保持为 `unknown`；从业者材料可以补充，但不能替代官方证据。

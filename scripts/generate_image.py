@@ -24,7 +24,6 @@ Environment variables:
 See ads/references/image-providers.md for pricing and capability details.
 """
 
-import argparse
 import base64
 from contextlib import contextmanager
 import hashlib
@@ -42,11 +41,17 @@ from pathlib import Path
 from typing import Any, Mapping
 from urllib.parse import urlparse
 
+# Source checkouts keep core beside scripts; installed layouts keep it inside scripts.
+if not (Path(__file__).resolve().parent / "claude_ads_core").is_dir():
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from claude_ads_core.contracts import ContractError, load_contract, validate_contract
+from claude_ads_core.cli_support import LocaleArgumentParser, LocaleRawDescriptionHelpFormatter, cli_locale
+from claude_ads_core.i18n import locale_scope, t
 # Single source of truth for credential redaction (see scripts/url_utils.py).
 # Re-exported under the local _sanitize_error name so existing call sites do
 # not need to change.
-from url_utils import artifact_locator, guarded_request, resolve_output_path, sanitize_error as _sanitize_error
+from url_utils import artifact_locator, guarded_request, resolve_output_path, sanitize_error as _sanitize_error, sanitize_url
 
 # Aspect ratio shorthand → (width, height)
 ASPECT_RATIOS = {
@@ -286,9 +291,9 @@ def _windows_open_path_guard(path: Path, anchor: int) -> int:
         raise ctypes.WinError(ctypes.get_last_error())
     try:
         if _windows_file_identity(guard) != _windows_file_identity(anchor):
-            raise PermissionError("Private file path no longer identifies the created object")
+            raise PermissionError(t("tools.image.private_path_changed"))
         if not _windows_handle_has_owner_only_acl(guard):
-            raise PermissionError("Private file path has an invalid owner or DACL")
+            raise PermissionError(t("tools.image.private_path_acl"))
         return guard
     except Exception:
         kernel32.CloseHandle(guard)
@@ -388,7 +393,7 @@ def _windows_create_private_temp(
             if error not in {80, 183}:  # ERROR_FILE_EXISTS / ERROR_ALREADY_EXISTS
                 raise ctypes.WinError(error)
         if path is None or file_handle == invalid_handle:
-            raise FileExistsError("Could not allocate a unique private temporary file")
+            raise FileExistsError(t("tools.image.temp_unique"))
         acl_handle = kernel32.ReOpenFile(
             file_handle,
             0x00060000,  # READ_CONTROL|WRITE_DAC
@@ -403,7 +408,7 @@ def _windows_create_private_temp(
         if result:
             raise ctypes.WinError(result)
         if not _windows_handle_has_owner_only_acl(acl_handle):
-            raise PermissionError(f"Owner-only Windows ACL verification failed for {path.name}")
+            raise PermissionError(t("tools.image.windows_acl", name=_sanitize_error(path.name)))
         descriptor = msvcrt.open_osfhandle(
             file_handle, os.O_RDWR | getattr(os, "O_BINARY", 0)
         )
@@ -430,7 +435,7 @@ def _close_windows_handle(handle: int | None) -> None:
         return
     _, wintypes, kernel32, _ = _windows_acl_api()
     if not kernel32.CloseHandle(wintypes.HANDLE(handle)):
-        raise OSError("Could not close the Windows ACL anchor handle")
+        raise OSError(t("tools.image.windows_close"))
 
 
 def _windows_path_has_owner_only_acl(path: Path) -> bool:
@@ -463,7 +468,7 @@ def _windows_path_has_owner_only_acl(path: Path) -> bool:
 def _set_private_permissions(path: Path, descriptor: int | None = None) -> None:
     """Apply and verify owner-only permissions on the current platform."""
     if os.name == "nt":
-        raise RuntimeError("Windows private files must use atomic CreateFileW creation")
+        raise RuntimeError(t("tools.image.windows_creation"))
     elif descriptor is not None and hasattr(os, "fchmod"):
         os.fchmod(descriptor, 0o600)
     else:
@@ -486,14 +491,14 @@ _WINDOWS_RESERVED_NAMES = {
     "com¹", "com²", "com³", "lpt¹", "lpt²", "lpt³",
 }
 
-_PROMPT_SUMMARY = "[redacted: raw prompt is ephemeral and is not persisted]"
+_PROMPT_SUMMARY_KEY = "tools.image.prompt_summary"
 
 
 def _prompt_record(prompt: str) -> dict[str, str]:
     """Return the irreversible prompt identity allowed in shipped JSON."""
     return {
         "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
-        "prompt_summary": _PROMPT_SUMMARY,
+        "prompt_summary": t(_PROMPT_SUMMARY_KEY),
     }
 
 
@@ -502,15 +507,15 @@ def _reference_input_root(input_root: str | None) -> Path:
     configured = input_root or os.environ.get("CLAUDE_ADS_INPUT_ROOT")
     if not configured:
         raise ValueError(
-            "Reference images require --input-root or CLAUDE_ADS_INPUT_ROOT"
+            t("tools.image.input_root_required")
         )
     candidate = Path(configured).expanduser()
     try:
         resolved = candidate.resolve(strict=True)
     except OSError as exc:
-        raise ValueError("Reference-image input root does not exist") from exc
+        raise ValueError(t("tools.image.input_root_missing")) from exc
     if not resolved.is_dir():
-        raise ValueError("Reference-image input root must be a directory")
+        raise ValueError(t("tools.image.input_root_directory"))
     return resolved
 
 
@@ -522,9 +527,9 @@ def _resolve_reference_source(reference: Any, input_root: Path) -> Path:
     symlinks, and must resolve to a bounded regular image file.
     """
     if not isinstance(reference, str) or not reference or "\x00" in reference:
-        raise ValueError("Reference image must be a non-empty relative path")
+        raise ValueError(t("tools.image.reference_nonempty"))
     if reference != reference.strip():
-        raise ValueError("Reference image path may not have surrounding whitespace")
+        raise ValueError(t("tools.image.reference_whitespace"))
     value = reference
     if (
         Path(value).is_absolute()
@@ -532,35 +537,35 @@ def _resolve_reference_source(reference: Any, input_root: Path) -> Path:
         or re.match(r"^[A-Za-z]:", value)
         or "\\" in value
     ):
-        raise ValueError("Reference image must be relative to the configured input root")
+        raise ValueError(t("tools.image.reference_relative"))
     parts = Path(value).parts
     if not parts or any(part in {"", ".", ".."} for part in parts):
-        raise ValueError("Reference image path traversal is forbidden")
+        raise ValueError(t("tools.image.reference_traversal"))
     if any(ord(character) < 32 or ord(character) == 127 for character in value):
-        raise ValueError("Reference image path contains a control character")
+        raise ValueError(t("tools.image.reference_control"))
     for part in parts:
         if re.search(r'[<>:"|?*]', part):
-            raise ValueError("Reference image path is not portable")
+            raise ValueError(t("tools.image.reference_portable"))
         if part.endswith((" ", ".")):
-            raise ValueError("Reference image path has a trailing space or dot")
+            raise ValueError(t("tools.image.reference_trailing"))
         if part.split(".", 1)[0].casefold() in _WINDOWS_RESERVED_NAMES:
-            raise ValueError("Reference image path uses a Windows-reserved name")
+            raise ValueError(t("tools.image.reference_reserved"))
     if Path(value).suffix.lower() not in _ALLOWED_IMAGE_EXTENSIONS:
-        raise ValueError("Unsupported reference image format")
+        raise ValueError(t("tools.image.reference_format"))
 
     lexical = input_root.joinpath(*parts)
     current = input_root
     for part in parts:
         current = current / part
         if current.is_symlink():
-            raise ValueError("Symlinked reference images and parent paths are forbidden")
+            raise ValueError(t("tools.image.reference_symlink"))
     try:
         resolved = lexical.resolve(strict=True)
         resolved.relative_to(input_root)
     except (OSError, ValueError) as exc:
-        raise ValueError("Reference image escapes the configured input root") from exc
+        raise ValueError(t("tools.image.reference_escape")) from exc
     if not resolved.is_file():
-        raise ValueError("Reference image must be a regular file")
+        raise ValueError(t("tools.image.reference_regular"))
     return resolved, parts
 
 
@@ -586,7 +591,7 @@ def _assert_descriptor_beneath_root(
             ctypes.c_void_p(handle), buffer, len(buffer), 0
         )
         if not length or length >= len(buffer):
-            raise ValueError("Cannot verify the opened reference-image handle")
+            raise ValueError(t("tools.image.reference_handle"))
         final_name = buffer.value
         if final_name.startswith("\\\\?\\UNC\\"):
             final_name = "\\\\" + final_name[8:]
@@ -596,7 +601,7 @@ def _assert_descriptor_beneath_root(
         try:
             final_path.relative_to(input_root)
         except ValueError as exc:
-            raise ValueError("Opened reference image escapes the configured input root") from exc
+            raise ValueError(t("tools.image.reference_opened_escape")) from exc
         return
 
     proc_descriptor = Path(f"/proc/self/fd/{descriptor}")
@@ -604,7 +609,7 @@ def _assert_descriptor_beneath_root(
         try:
             proc_descriptor.resolve(strict=True).relative_to(input_root)
         except (OSError, ValueError) as exc:
-            raise ValueError("Opened reference image escapes the configured input root") from exc
+            raise ValueError(t("tools.image.reference_opened_escape")) from exc
         return
 
     if sys.platform == "darwin":  # pragma: no cover - exercised by native macOS CI
@@ -615,10 +620,10 @@ def _assert_descriptor_beneath_root(
             final_path = Path(raw_path.split(b"\x00", 1)[0].decode()).resolve(strict=True)
             final_path.relative_to(input_root)
         except (OSError, UnicodeDecodeError, ValueError) as exc:
-            raise ValueError("Opened reference image escapes the configured input root") from exc
+            raise ValueError(t("tools.image.reference_opened_escape")) from exc
         return
 
-    raise ValueError("This platform cannot attest the opened reference-image path")
+    raise ValueError(t("tools.image.reference_platform"))
 
 
 def _open_reference_beneath(
@@ -670,7 +675,7 @@ def _open_reference_beneath(
 def _validate_reference_payload(payload: bytes, suffix: str) -> None:
     """Validate a bounded, decodable PNG raster—not only a spoofable prefix."""
     if suffix != ".png" or not _validate_png(payload):
-        raise ValueError("Reference image bytes do not form a valid supported PNG")
+        raise ValueError(t("tools.image.reference_png"))
 
 
 def _validate_png(payload: bytes) -> bool:
@@ -773,13 +778,13 @@ def _private_reference_snapshot(reference: Any, input_root: Path):
     try:
         metadata = os.fstat(descriptor)
         if not stat.S_ISREG(metadata.st_mode):
-            raise ValueError("Reference image must be a regular file")
+            raise ValueError(t("tools.image.reference_regular"))
         if metadata.st_size > MAX_REFERENCE_IMAGE_BYTES:
-            raise ValueError("Reference image exceeds the 20 MiB limit")
+            raise ValueError(t("tools.image.reference_large"))
         with os.fdopen(descriptor, "rb", closefd=False) as stream:
             payload = stream.read(MAX_REFERENCE_IMAGE_BYTES + 1)
         if len(payload) > MAX_REFERENCE_IMAGE_BYTES:
-            raise ValueError("Reference image exceeds the 20 MiB limit")
+            raise ValueError(t("tools.image.reference_large"))
         _validate_reference_payload(payload, source.suffix.lower())
     finally:
         os.close(descriptor)
@@ -884,21 +889,21 @@ def _actual_dimensions(image_bytes: bytes) -> tuple[int, int] | None:
 def _require_generated_png(image_bytes: bytes) -> tuple[int, int]:
     """Fail closed unless provider output is a bounded, fully validated PNG."""
     if not isinstance(image_bytes, bytes):
-        raise RuntimeError("Image provider returned a non-bytes payload")
+        raise RuntimeError(t("tools.image.payload_bytes"))
     if not image_bytes:
-        raise RuntimeError("Image provider returned an empty payload")
+        raise RuntimeError(t("tools.image.payload_empty"))
     if len(image_bytes) > MAX_GENERATED_IMAGE_BYTES:
-        raise RuntimeError("Image provider output exceeds the 25 MiB limit")
+        raise RuntimeError(t("tools.image.payload_large"))
     dimensions = _actual_dimensions(image_bytes)
     if dimensions is None:
-        raise RuntimeError("Image provider output is not a valid supported PNG image")
+        raise RuntimeError(t("tools.image.payload_png"))
     return dimensions
 
 
 def _require_png_output_path(path: str | Path) -> None:
     """Keep the declared output extension consistent with the validated bytes."""
     if Path(path).suffix.casefold() != ".png":
-        raise ValueError("Generated image output path must use the .png extension")
+        raise ValueError(t("tools.image.output_png"))
 
 
 def _bounded_png_response(response: Any, operation: str) -> bytes:
@@ -906,34 +911,34 @@ def _bounded_png_response(response: Any, operation: str) -> bytes:
     try:
         status_code = getattr(response, "status_code", None)
         if not isinstance(status_code, int) or not 200 <= status_code < 300:
-            raise RuntimeError(f"{operation} failed with HTTP {status_code}")
+            raise RuntimeError(t("tools.image.http_failed", operation=_sanitize_error(operation), status=_sanitize_error(status_code)))
 
         headers = getattr(response, "headers", {})
         content_type = str(headers.get("content-type", "")).split(";", 1)[0].strip().lower()
         if content_type and content_type != "image/png":
-            raise RuntimeError(f"{operation} returned unsupported content type {content_type}")
+            raise RuntimeError(t("tools.image.content_type", operation=_sanitize_error(operation), content_type=_sanitize_error(content_type)))
         content_length = headers.get("content-length")
         if content_length is not None:
             try:
                 declared_size = int(content_length)
             except (TypeError, ValueError) as exc:
-                raise RuntimeError(f"{operation} returned an invalid Content-Length") from exc
+                raise RuntimeError(t("tools.image.content_length", operation=_sanitize_error(operation))) from exc
             if declared_size < 0 or declared_size > MAX_GENERATED_IMAGE_BYTES:
-                raise RuntimeError(f"{operation} output exceeds the 25 MiB limit")
+                raise RuntimeError(t("tools.image.operation_large", operation=_sanitize_error(operation)))
 
         iterator = getattr(response, "iter_content", None)
         if not callable(iterator):
-            raise RuntimeError(f"{operation} response is not stream-readable")
+            raise RuntimeError(t("tools.image.stream_required", operation=_sanitize_error(operation)))
         chunks: list[bytes] = []
         total = 0
         for chunk in iterator(chunk_size=64 * 1024):
             if not chunk:
                 continue
             if not isinstance(chunk, bytes):
-                raise RuntimeError(f"{operation} returned a non-bytes response chunk")
+                raise RuntimeError(t("tools.image.chunk_bytes", operation=_sanitize_error(operation)))
             total += len(chunk)
             if total > MAX_GENERATED_IMAGE_BYTES:
-                raise RuntimeError(f"{operation} output exceeds the 25 MiB limit")
+                raise RuntimeError(t("tools.image.operation_large", operation=_sanitize_error(operation)))
             chunks.append(chunk)
         return b"".join(chunks)
     finally:
@@ -953,7 +958,7 @@ def _get_api_key(provider: str) -> str:
 
     if provider not in key_map:
         print(
-            f"Error: Unknown provider '{provider}'. Valid options: gemini, openai, stability, replicate",
+            t("tools.image.unknown_provider_choices", provider=_sanitize_error(provider)),
             file=sys.stderr,
         )
         sys.exit(1)
@@ -963,12 +968,7 @@ def _get_api_key(provider: str) -> str:
 
     if not key:
         print(
-            f"Error: {env_var} not set.\n"
-            f"To use the {provider} provider:\n"
-            f"  export {env_var}=\"your-key\"\n"
-            f"  Get a key at: {url}\n"
-            f"\nTo use a different approved capability, set both "
-            f"ADS_IMAGE_PROVIDER and ADS_IMAGE_MODEL explicitly.",
+            t("tools.image.key_missing", variable=env_var, provider=provider, url=url),
             file=sys.stderr,
         )
         sys.exit(1)
@@ -985,12 +985,12 @@ def _dims_from_ratio(ratio: str) -> tuple[int, int]:
         try:
             w, h = int(ratio.lower().split("x")[0]), int(ratio.lower().split("x")[1])
             if w < 1 or h < 1 or w > MAX_DIMENSION or h > MAX_DIMENSION:
-                print(f"Error: Dimensions must be 1-{MAX_DIMENSION}. Got {w}x{h}", file=sys.stderr)
+                print(t("tools.image.dimension_range", maximum=MAX_DIMENSION, width=w, height=h), file=sys.stderr)
                 sys.exit(1)
             return w, h
         except (ValueError, IndexError):
             pass
-    print(f"Error: Unknown ratio '{ratio}'. Use one of: {', '.join(ASPECT_RATIOS.keys())} or WxH (e.g. 1200x628)", file=sys.stderr)
+    print(t("tools.image.unknown_ratio", ratio=_sanitize_error(ratio), choices=', '.join(ASPECT_RATIOS.keys())), file=sys.stderr)
     sys.exit(1)
 
 
@@ -1007,8 +1007,7 @@ def generate_gemini(prompt: str, width: int, height: int, api_key: str, model: s
         from google.genai import types
     except ImportError:
         print(
-            "Error: google-genai package required.\n"
-            "Install with: pip install google-genai>=1.16.0",
+            t("tools.image.genai_required"),
             file=sys.stderr,
         )
         sys.exit(1)
@@ -1026,7 +1025,7 @@ def generate_gemini(prompt: str, width: int, height: int, api_key: str, model: s
     # Build contents, with optional brand reference image for style guidance
     if reference_image_path and os.path.exists(reference_image_path):
         if Path(reference_image_path).suffix.lower() not in _ALLOWED_IMAGE_EXTENSIONS:
-            raise ValueError(f"Unsupported reference image format: {Path(reference_image_path).suffix}")
+            raise ValueError(t("tools.image.reference_format_suffix", suffix=_sanitize_error(Path(reference_image_path).suffix)))
         with open(reference_image_path, 'rb') as f:
             ref_bytes = f.read()
         mime = {
@@ -1058,17 +1057,17 @@ def generate_gemini(prompt: str, width: int, height: int, api_key: str, model: s
                     mime_type = getattr(part.inline_data, "mime_type", None)
                     if mime_type and mime_type != "image/png":
                         raise RuntimeError(
-                            f"Gemini returned unsupported image content type {mime_type}"
+                            t("tools.image.gemini_content_type", content_type=_sanitize_error(mime_type))
                         )
                     return part.inline_data.data  # already bytes in google-genai >= 1.16.0
-            raise RuntimeError("No image data in Gemini response")
+            raise RuntimeError(t("tools.image.gemini_empty"))
 
         except Exception as e:
             err_str = _sanitize_error(e)
             if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
                 if attempt < MAX_RETRIES - 1:
                     wait = RETRY_BACKOFF[attempt]
-                    print(f"Rate limit hit, retrying in {wait}s...", file=sys.stderr)
+                    print(t("tools.image.rate_limited", wait=wait), file=sys.stderr)
                     time.sleep(wait)
                     continue
             raise
@@ -1080,8 +1079,7 @@ def generate_openai(prompt: str, width: int, height: int, api_key: str, model: s
         from openai import OpenAI
     except ImportError:
         print(
-            "Error: openai package required.\n"
-            "Install with: pip install openai>=1.75.0",
+            t("tools.image.openai_required"),
             file=sys.stderr,
         )
         sys.exit(1)
@@ -1106,7 +1104,7 @@ def generate_openai(prompt: str, width: int, height: int, api_key: str, model: s
     try:
         return base64.b64decode(response.data[0].b64_json, validate=True)
     except (ValueError, TypeError) as exc:
-        raise RuntimeError("OpenAI returned invalid base64 image data") from exc
+        raise RuntimeError(t("tools.image.openai_base64")) from exc
 
 
 def generate_stability(prompt: str, width: int, height: int, api_key: str, model: str) -> bytes:
@@ -1114,7 +1112,7 @@ def generate_stability(prompt: str, width: int, height: int, api_key: str, model
     try:
         import requests
     except ImportError:
-        print("Error: requests package required. pip install requests", file=sys.stderr)
+        print(t("tools.image.requests_required"), file=sys.stderr)
         sys.exit(1)
 
     url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
@@ -1138,7 +1136,7 @@ def generate_stability(prompt: str, width: int, height: int, api_key: str, model
         stream=True,
         timeout=120,
     )
-    return _bounded_png_response(resp, "Stability API image generation")
+    return _bounded_png_response(resp, t("tools.image.stability_operation"))
 
 
 def _nearest_stability_ratio(width: int, height: int) -> str:
@@ -1163,8 +1161,7 @@ def generate_replicate(prompt: str, width: int, height: int, api_key: str, model
         import requests
     except ImportError:
         print(
-            "Error: replicate package required.\n"
-            "Install with: pip install replicate>=1.0.4",
+            t("tools.image.replicate_required"),
             file=sys.stderr,
         )
         sys.exit(1)
@@ -1182,18 +1179,18 @@ def generate_replicate(prompt: str, width: int, height: int, api_key: str, model
     # Output is a URL or list of URLs
     url = output[0] if isinstance(output, list) else str(output)
     if urlparse(url).scheme != "https":
-        raise RuntimeError(f"Replicate returned non-HTTPS URL: {url[:100]}")
+        raise RuntimeError(t("tools.image.replicate_https", url=sanitize_url(url)[:100]))
     # Defense-in-depth: Replicate is trusted but revalidate against the SSRF
     # blocklist so an upstream compromise can't redirect us to a private IP.
     try:
         from url_utils import validate_url as _validate_url
         _validate_url(url)
     except ValueError as ve:
-        raise RuntimeError(f"Replicate URL failed SSRF validation: {ve}") from ve
+        raise RuntimeError(t("tools.image.replicate_ssrf", error=_sanitize_error(ve))) from ve
     # allow_redirects=False — the SSRF check above only validated the original
     # URL. A redirect target could be a private IP; refuse to follow at all.
     resp = guarded_request(requests, "GET", url, stream=True, timeout=120)
-    return _bounded_png_response(resp, "Replicate image download")
+    return _bounded_png_response(resp, t("tools.image.replicate_operation"))
 
 
 def generate_image(
@@ -1217,26 +1214,23 @@ def generate_image(
     elif provider == "openai":
         if reference_image_path:
             raise ValueError(
-                "The openai adapter does not declare reference-image support; "
-                "choose a verified compatible capability or omit the reference image"
+                t("tools.image.reference_unsupported", provider="openai")
             )
         image_bytes = generate_openai(prompt, width, height, api_key, model)
     elif provider == "stability":
         if reference_image_path:
             raise ValueError(
-                "The stability adapter does not declare reference-image support; "
-                "choose a verified compatible capability or omit the reference image"
+                t("tools.image.reference_unsupported", provider="stability")
             )
         image_bytes = generate_stability(prompt, width, height, api_key, model)
     elif provider == "replicate":
         if reference_image_path:
             raise ValueError(
-                "The replicate adapter does not declare reference-image support; "
-                "choose a verified compatible capability or omit the reference image"
+                t("tools.image.reference_unsupported", provider="replicate")
             )
         image_bytes = generate_replicate(prompt, width, height, api_key, model)
     else:
-        print(f"Error: Unknown provider '{provider}'", file=sys.stderr)
+        print(t("tools.image.unknown_provider", provider=_sanitize_error(provider)), file=sys.stderr)
         sys.exit(1)
 
     # Validate the complete raster before it can become a trusted artifact.
@@ -1252,13 +1246,11 @@ def _require_selection(provider: str | None, model: str | None) -> tuple[str, st
     selected_model = (model or "").strip()
     if not selected_provider:
         raise ValueError(
-            "Image provider is required; use --provider or ADS_IMAGE_PROVIDER "
-            "after capability discovery"
+            t("tools.image.provider_required")
         )
     if not selected_model:
         raise ValueError(
-            "Image model is required; use --model or ADS_IMAGE_MODEL after "
-            "capability discovery"
+            t("tools.image.model_required")
         )
     return selected_provider, selected_model
 
@@ -1288,11 +1280,11 @@ def run_batch(
         jobs = json.load(f)
 
     if not isinstance(jobs, list) or any(not isinstance(job, dict) for job in jobs):
-        raise ValueError("Batch file must contain a JSON array of job objects")
+        raise ValueError(t("tools.image.batch_array"))
     has_references = any(job.get("reference_image") is not None for job in jobs)
     reference_root = _reference_input_root(input_root) if has_references else Path.cwd()
     if len(jobs) > MAX_BATCH_SIZE:
-        print(f"Error: Batch file contains {len(jobs)} jobs, max is {MAX_BATCH_SIZE}", file=sys.stderr)
+        print(t("tools.image.batch_large", count=len(jobs), maximum=MAX_BATCH_SIZE), file=sys.stderr)
         sys.exit(1)
 
     output_dir_path = resolve_output_path(output_dir)
@@ -1322,7 +1314,7 @@ def run_batch(
         }
 
         try:
-            print(f"[{i+1}/{len(jobs)}] Generating {output_name}...", file=sys.stderr)
+            print(t("tools.image.generating", index=i+1, count=len(jobs), name=_sanitize_error(output_name)), file=sys.stderr)
             _require_png_output_path(output_name)
             with _private_reference_snapshot(reference_image, reference_root) as (
                 reference_snapshot,
@@ -1336,54 +1328,51 @@ def run_batch(
             result["generation_success"] = True
             result["width"] = width
             result["height"] = height
-            print(f"  ✓ Saved artifact {artifact_locator(output_path)} ({width}×{height})", file=sys.stderr)
+            print(t("tools.image.saved", locator=_sanitize_error(artifact_locator(output_path)), width=width, height=height), file=sys.stderr)
         except Exception as e:
-            result["error"] = "generation failed; inspect private ephemeral runtime logs"
-            print(f"  ✗ Error: {_sanitize_error(e)}", file=sys.stderr)
+            result["error"] = t("tools.image.failed")
+            print(t("tools.image.failure_detail", error=_sanitize_error(e)), file=sys.stderr)
 
         results.append(result)
 
     if as_json:
-        print(json.dumps(results, indent=2))
+        print(json.dumps(results, indent=2, ensure_ascii=False))
     else:
         passed = sum(1 for r in results if r["generation_success"])
-        print(f"\nBatch complete: {passed}/{len(results)} images generated")
+        print(t("tools.image.batch_complete", passed=passed, count=len(results)))
         for r in results:
-            status = "✓" if r["generation_success"] else "✗"
-            print(f"  {status} {r['file_locator']}")
+            status = t("tools.image.batch_success") if r["generation_success"] else t("tools.image.batch_failure")
+            print(f"  {status} {_sanitize_error(r['file_locator'])}")
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Generate ad creative images using a pluggable image generation API",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python generate_image.py "approved creative prompt" --provider "$ADS_IMAGE_PROVIDER" --model "$ADS_IMAGE_MODEL" --ratio 16:9 --output ad.png
-  python generate_image.py --batch prompts.json --provider "$ADS_IMAGE_PROVIDER" --model "$ADS_IMAGE_MODEL" --output-dir ./ad-assets/
+def main(argv: list[str] | None = None):
+    with locale_scope(cli_locale(argv)):
+        try:
+            return _main(argv)
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(t("tools.common.error", error=_sanitize_error(exc)), file=sys.stderr)
+            sys.exit(1)
 
-Supported ratios: 1:1  9:16  16:9  4:5  4:3  3:4  1.91:1  4:1  21:9
-Or use --size WxH for exact dimensions (e.g. --size 1200x628)
 
-Both provider and model are required. Discover an approved capability first, then
-use --provider/--model or ADS_IMAGE_PROVIDER/ADS_IMAGE_MODEL.
-""",
+def _main(argv: list[str] | None):
+    parser = LocaleArgumentParser(
+        description=t("tools.image.description"),
+        formatter_class=LocaleRawDescriptionHelpFormatter,
+        epilog=t("tools.image.epilog"),
     )
 
     # Prompt or batch mode
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("prompt", nargs="?", help="Image generation prompt")
-    group.add_argument("--batch", "-b", metavar="FILE", help="Batch JSON file with multiple generation jobs")
+    group.add_argument("prompt", nargs="?", help=t("tools.image.prompt_help"))
+    group.add_argument("--batch", "-b", metavar="FILE", help=t("tools.image.batch_help"))
 
     # Output options
-    parser.add_argument("--output", "-o", metavar="FILE", help="Output file path (default: ad_[ratio].png)")
-    parser.add_argument("--output-dir", metavar="DIR", default=".", help="Output directory for batch mode")
+    parser.add_argument("--output", "-o", metavar="FILE", help=t("tools.image.output_help"))
+    parser.add_argument("--output-dir", metavar="DIR", default=".", help=t("tools.image.output_dir_help"))
     parser.add_argument(
         "--input-root",
         metavar="DIR",
-        help="Root containing rights-cleared reference images. Batch references must "
-             "be relative paths beneath this root. CLAUDE_ADS_INPUT_ROOT is used "
-             "when this option is omitted; one of them is required for references.",
+        help=t("tools.image.input_root_help"),
     )
 
     # Dimension options
@@ -1391,42 +1380,41 @@ use --provider/--model or ADS_IMAGE_PROVIDER/ADS_IMAGE_MODEL.
     dim_group.add_argument(
         "--ratio", "-r",
         default="1:1",
-        help="Aspect ratio shorthand (e.g. 9:16, 16:9, 4:5, 1:1). Default: 1:1",
+        help=t("tools.image.ratio_help"),
     )
     dim_group.add_argument(
         "--size", "-s",
         metavar="WxH",
-        help="Exact dimensions (e.g. 1200x628). Overrides --ratio.",
+        help=t("tools.image.size_help"),
     )
 
     # Provider / model
     parser.add_argument(
         "--provider", "-p",
         default=None,
-        help="Required provider adapter ID. Overrides ADS_IMAGE_PROVIDER.",
+        help=t("tools.image.provider_help"),
     )
     parser.add_argument(
         "--model", "-m",
         default=None,
-        help="Required model ID from current capability evidence. Overrides ADS_IMAGE_MODEL.",
+        help=t("tools.image.model_help"),
     )
     parser.add_argument(
         "--reference-image", "-i",
         metavar="FILE",
         dest="reference_image",
-        help="Path to a rights-cleared brand reference image. Requires explicit "
-             "support from the selected provider/model adapter.",
+        help=t("tools.image.reference_help"),
     )
 
     # Output format
-    parser.add_argument("--json", "-j", action="store_true", help="Output result as JSON")
+    parser.add_argument("--json", "-j", action="store_true", help=t("tools.image.json_help"))
     parser.add_argument(
         "--data-lifecycle",
         required=True,
-        help="Path to a valid data-lifecycle JSON contract for this generation run.",
+        help=t("tools.image.lifecycle_help"),
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Resolve the explicitly selected, capability-verified provider and model.
     try:
@@ -1435,13 +1423,13 @@ use --provider/--model or ADS_IMAGE_PROVIDER/ADS_IMAGE_MODEL.
             args.model or os.environ.get("ADS_IMAGE_MODEL"),
         )
     except ValueError as exc:
-        parser.error(str(exc))
+        parser.error(_sanitize_error(exc))
     api_key = _get_api_key(provider)
 
     try:
         data_lifecycle = load_contract("data-lifecycle", args.data_lifecycle)
     except ContractError as exc:
-        print(f"Error: {_sanitize_error(exc)}", file=sys.stderr)
+        print(t("tools.common.error", error=_sanitize_error(exc)), file=sys.stderr)
         sys.exit(1)
 
     # Batch mode
@@ -1469,7 +1457,7 @@ use --provider/--model or ADS_IMAGE_PROVIDER/ADS_IMAGE_MODEL.
     try:
         _require_png_output_path(output_path)
     except ValueError as exc:
-        print(f"Error: {_sanitize_error(exc)}", file=sys.stderr)
+        print(t("tools.common.error", error=_sanitize_error(exc)), file=sys.stderr)
         sys.exit(1)
 
     try:
@@ -1477,8 +1465,7 @@ use --provider/--model or ADS_IMAGE_PROVIDER/ADS_IMAGE_MODEL.
             args.input_root or os.environ.get("CLAUDE_ADS_INPUT_ROOT")
         ):
             raise ValueError(
-                "--reference-image requires --input-root or CLAUDE_ADS_INPUT_ROOT; "
-                "use a relative path beneath that root"
+                t("tools.image.reference_root_required")
             )
         direct_root = _reference_input_root(args.input_root) if args.reference_image else Path.cwd()
         with _private_reference_snapshot(args.reference_image, direct_root) as (
@@ -1489,13 +1476,13 @@ use --provider/--model or ADS_IMAGE_PROVIDER/ADS_IMAGE_MODEL.
                 args.prompt, ratio, provider, model, api_key, reference_snapshot
             )
     except Exception as e:
-        print(f"Error: {_sanitize_error(e)}", file=sys.stderr)
+        print(t("tools.common.error", error=_sanitize_error(e)), file=sys.stderr)
         sys.exit(1)
 
     try:
         resolved_output = resolve_output_path(output_path, create_parent=True)
     except ValueError as exc:
-        print(f"Error: {_sanitize_error(exc)}", file=sys.stderr)
+        print(t("tools.common.error", error=_sanitize_error(exc)), file=sys.stderr)
         sys.exit(1)
     _write_private(resolved_output, image_bytes)
 
@@ -1513,9 +1500,9 @@ use --provider/--model or ADS_IMAGE_PROVIDER/ADS_IMAGE_MODEL.
     }
 
     if args.json:
-        print(json.dumps(result, indent=2))
+        print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
-        print(f"✓ Generated {width}×{height} image → {artifact_locator(resolved_output)}")
+        print(t("tools.image.generated", width=width, height=height, locator=_sanitize_error(artifact_locator(resolved_output))))
 
 
 if __name__ == "__main__":

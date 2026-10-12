@@ -1,299 +1,181 @@
-# The 10-Principle Thinking Framework
+# 十原则思维框架
 
-The shared cognitive discipline that runs underneath every claude-ads command.
-Load this file at the start of any audit, plan, or creative-output task. It
-is not a checklist or a phase model — it is a mindset gate. The framework is
-what separates a number-crunching report from a strategic deliverable.
+这是贯穿每个 claude-ads 命令的共享认知纪律。在任何审计、规划或创意输出任务开始时加载本文件。它不是检查清单，也不是阶段模型——而是思维方式关卡。该框架使战略性交付物有别于单纯计算数字的报告。
 
-The principles cluster in five pairs: two **OBSERVE** modes (looking out and
-looking in), one **LISTEN** mode (active receptivity), one **THINK** mode
-(critical processing), two **CONNECT** modes (lateral insight and system
-orchestration), one **FEEL** mode (emotional intelligence), one **ACCEPT**
-mode (intellectual humility), one **CREATE** mode (generative output), and
-one **GROW** mode (the iterative loop that closes the cycle).
+这些原则聚合成五对：两种 **观察** 模式（向外看与向内看）、一种 **倾听** 模式（主动接纳）、一种 **思考** 模式（批判处理）、两种 **连接** 模式（横向洞察与系统编排）、一种 **感受** 模式（情绪智能）、一种 **接受** 模式（认知谦逊）、一种 **创造** 模式（生成输出），以及一种 **成长** 模式（闭合循环的迭代回路）。
 
-When in doubt, ask: *which principle am I in right now, and which one am I
-skipping?* The skipped principle is usually where the work is weakest.
+拿不准时，问：*我现在处于哪条原则中，又跳过了哪一条？* 被跳过的原则通常就是工作最薄弱的地方。
 
 ---
 
-## 1. OBSERVE — External Input
+## 1. 观察 — 外部输入
 
-**Definition.** Thinking begins with data collection. Look at the environment,
-analyze the landscape, and spot patterns and inefficiencies *without rushing
-to solve them*. Read the raw inputs of the situation.
+**定义。** 思考从收集数据开始。观察环境、分析格局、识别模式和低效之处，*不要急着解决它们*。阅读情境的原始输入。
 
-**In ads work.**
-- Export the actual account data — search-term reports, GAQL queries, ad
-  library screenshots, MMP dashboards — before forming any hypothesis.
-- Capture the SERP and the competitor ad surface. What does the user see
-  before they click your client's ad?
-- Pull the landing page exactly as the ad audience pulls it (mobile, paid
-  source, fresh session). Don't audit a homepage when the ad goes to a PDP.
+**在广告工作中。**
+- 在形成任何假设之前，导出实际账户数据——搜索词报告、GAQL 查询、广告资料库截图、MMP 仪表板。
+- 捕获 SERP 和竞品广告载体。用户在点击客户广告之前看到了什么？
+- 完全按照广告受众的方式获取落地页（移动端、付费来源、新会话）。广告指向 PDP 时，不要审计首页。
 
-**Anti-pattern.** Diagnosing the problem from memory or from a generic
-checklist before opening the account. Recommending Smart Bidding without
-checking conversion volume. Critiquing a creative without seeing the safe
-zone overlay.
+**反模式。** 打开账户之前就凭记忆或通用清单诊断问题。未检查转化数量就推荐 Smart Bidding。未看到安全区域叠加层就批评创意。
 
-**Example trigger.** First step of every `/ads audit`, `/ads competitor`,
-`/ads dna`. The Context Intake section in `ads/SKILL.md` enforces this gate.
+**示例触发点。** 每次 `/ads audit`、`/ads competitor`、`/ads dna` 的第一步。`ads/SKILL.md` 中的“背景信息收集”部分强制执行此关卡。
 
 ---
 
-## 2. OBSERVE — Internal Metacognition
+## 2. 观察 — 内部元认知
 
-**Definition.** Observe yourself. Audit how you are thinking. Are you
-operating on assumptions? Do you have a bias in this analysis?
-Clarity requires stepping back and inspecting your own mental models.
+**定义。** 观察自己。审查你如何思考。你是否基于假设行事？这项分析中是否存在偏见？清晰需要退一步，检查自己的心智模型。
 
-**In ads work.**
-- Notice when you are applying B2B-SaaS heuristics to a local plumber, or
-  e-commerce ROAS targets to a brand-awareness campaign.
-- Notice when you are penalizing an account because it doesn't match *your*
-  preferred structure (SKAG vs broad-match, manual vs Smart Bidding).
-- Notice when you are anchoring on the first KPI you saw and ignoring the
-  funnel beneath it.
+**在广告工作中。**
+- 注意自己何时将 B2B-SaaS 启发式应用于本地水管工，或将电商 ROAS 目标应用于品牌认知广告系列。
+- 注意自己何时因账户不符合*你*偏好的结构而处罚它（SKAG 与广泛匹配、手动与 Smart Bidding）。
+- 注意自己何时锚定于看到的第一个 KPI，而忽视其下方漏斗。
 
-**Anti-pattern.** Confidence in a recommendation that has not been stress-
-tested against a counter-hypothesis. "This campaign should be paused" with
-no acknowledgment that the campaign might be load-bearing in attribution
-that isn't visible to you yet.
+**反模式。** 对尚未通过反假设压力测试的建议充满信心。说“这个广告系列应当暂停”，却没有承认它可能在你尚不可见的归因中承担关键作用。
 
-**Example trigger.** Before finalizing the prioritized action plan in any
-audit. Before recommending a structural change (rebuild vs optimize).
+**示例触发点。** 完成任何审计的优先行动计划之前。建议结构变更（重建还是优化）之前。
 
 ---
 
-## 3. LISTEN — Active Receptivity
+## 3. 倾听 — 主动接纳
 
-**Definition.** Shut down the ego and absorb external feedback. Pay attention
-to user intent, community discussions, and the subtle signals in the noise
-that tell you what people *actually* need rather than what you think they
-need.
+**定义。** 放下自我，吸收外部反馈。关注用户意图、社区讨论和噪声中的微妙信号，它们告诉你人们*实际*需要什么，而不是你认为他们需要什么。
 
-**In ads work.**
-- Read the campaign brief verbatim. What did the client actually say their
-  goal is, in their words? Don't translate "more leads" into "lower CPL"
-  without checking that's what they meant.
-- Listen to platform-side guidance (Google blog, Meta engineering, Microsoft
-  Advertising blog, Apple WWDC sessions) before recommending a feature.
-- Listen to the community: PPC subreddits, advertiser Slack groups, agency
-  practitioners reporting real-world results that diverge from vendor claims.
+**在广告工作中。**
+- 逐字阅读广告系列简报。客户用自己的话实际说目标是什么？未经确认，不要将“更多线索”翻译成“更低 CPL”。
+- 推荐功能前，听取平台方指导（Google 博客、Meta 工程、Microsoft Advertising 博客、Apple WWDC 会议）。
+- 倾听社区：PPC subreddit、广告主 Slack 群组、报告与供应商声明不同的实际结果的代理机构从业者。
 
-**Anti-pattern.** Telling a brand-awareness advertiser to optimize for ROAS
-because that is what most audits recommend. Citing a vendor's official
-performance lift without sanity-checking against independent advertiser data.
+**反模式。** 因大多数审计都这样建议，就告诉品牌认知广告主优化 ROAS。引用供应商官方表现提升，却未用独立广告主数据进行合理性检查。
 
-**Example trigger.** `/ads create` and `/ads dna` — these commands are
-fundamentally about listening (to the client and to the brand respectively).
-Also: the Context Intake step at the start of every audit.
+**示例触发点。** `/ads create` 和 `/ads dna`——这些命令本质上关乎倾听（分别倾听客户和品牌）。此外还有每次审计开始时的背景信息收集步骤。
 
 ---
 
-## 4. THINK — Critical Processing
+## 4. 思考 — 批判处理
 
-**Definition.** Once you have the inputs, break the problem down to first
-principles. Structure the logic, map the workflows, evaluate the constraints,
-and synthesize the raw data into a coherent strategy.
+**定义。** 获得输入后，将问题拆解至第一性原理。组织逻辑、映射工作流、评估约束，并将原始数据综合成连贯策略。
 
-**In ads work.**
-- Compute unit economics by hand. Don't trust platform-attributed ROAS —
-  derive CAC, LTV:CAC, payback period, and MER from raw data. See
-  `references/budget-allocation.md` for the math.
-- Build the funnel: impression → click → landing → micro-conversion →
-  primary conversion → revenue → repeat. Where does the leak live?
-- Evaluate constraints from current eligibility, account history, conversion lag,
-  data volume, economics, and official documentation. Platform examples and
-  practitioner ratios are hypotheses, not universal budget or volume floors.
+**在广告工作中。**
+- 手动计算单位经济性。不要信任平台归因 ROAS——从原始数据推导 CAC、LTV:CAC、回收期和 MER。计算方法见 `references/budget-allocation.md`。
+- 构建漏斗：展示 → 点击 → 落地 → 微转化 → 主要转化 → 收入 → 复购。漏洞在哪里？
+- 根据当前资格、账户历史、转化延迟、数据量、经济数据和官方文档评估约束。平台示例和从业者比率是假设，不是通用预算或数量下限。
 
-**Anti-pattern.** Copying a "best practice" without checking whether the
-account meets the prerequisites. Trusting platform attribution as ground truth
-when the MMP, server-side, and platform numbers materially disagree without first
-reconciling definitions, windows, identity, consent, deduplication, currency, and
-timezone.
+**反模式。** 未检查账户是否满足前提就照搬“最佳实践”。当 MMP、服务器端和平台数字存在重大分歧时，未先核对定义、窗口、身份、同意、去重、货币和时区，就将平台归因视为事实真值。
 
-**Example trigger.** `/ads math`, `/ads budget`, `/ads test`. Also the
-scoring and prioritization step of every audit.
+**示例触发点。** `/ads math`、`/ads budget`、`/ads test`。以及每次审计的评分和优先排序步骤。
 
 ---
 
-## 5. CONNECT — Associative / Lateral Thinking
+## 5. 连接 — 联想 / 横向思维
 
-**Definition.** Great insight lives at intersections. Take two seemingly
-unrelated concepts and link them to form a novel observation. The "aha"
-moment of finding the hidden relationship between distinct variables.
+**定义。** 优秀洞察存在于交叉点。将两个看似无关的概念连接起来，形成新观察。发现不同变量之间隐藏关系的“顿悟”时刻。
 
-**In ads work.**
-- A creative-similarity pattern may explain delivery only after account evidence
-  separates concept, audience, placement, bid, budget, and learning effects.
-- Search automation and feed-based inventory can change the role of keywords, but
-  current query evidence and campaign controls decide whether match types remain
-  material for this account.
-- App attribution, consent signals, browser and server events, and analytics form a
-  measurement system. A recommendation in one layer must be coherent with the
-  others and with the applicable geography and consent state.
+**在广告工作中。**
+- 只有账户证据区分了概念、受众、版位、出价、预算和学习影响之后，创意相似性模式才可能解释投放。
+- 搜索自动化和基于 Feed 的广告资源可能改变关键词作用，但当前查询证据和广告系列控制决定匹配类型对此账户是否仍有实质影响。
+- 应用归因、同意信号、浏览器与服务器事件，以及分析工具共同形成衡量系统。某一层的建议必须与其他层一致，并符合适用地理区域和同意状态。
 
-**Anti-pattern.** Siloed platform audits that miss the cross-platform
-leverage. Recommending Meta creative diversity changes without noticing the
-same principle may apply to another platform after its delivery evidence is checked.
+**反模式。** 各自孤立的平台审计错失跨平台杠杆。推荐 Meta 创意多样性变更，却未注意到在核实另一平台投放证据后，同样原则也可能适用。
 
-**Example trigger.** `/ads plan`, `/ads competitor`, the synthesis step of
-`/ads audit` after sub-agents return.
+**示例触发点。** `/ads plan`、`/ads competitor`，以及 `/ads audit` 中子代理返回后的综合步骤。
 
 ---
 
-## 6. CONNECT — System Orchestration
+## 6. 连接 — 系统编排
 
-**Definition.** Move from isolated idea to integrated system. How do
-individual thoughts, tools, and agents plug into one another to create a
-seamless, functioning whole? The principle of building the wiring.
+**定义。** 从孤立想法迈向集成系统。个体想法、工具和代理如何相互接入，构成无缝且正常运作的整体？这是搭建连接的原则。
 
-**In ads work.**
-- The creative pipeline IS a connected system:
-  `/ads dna` → `/ads create` → `/ads generate` → `/ads photoshoot`. Each
-  output feeds the next. Don't run them in isolation.
-- The tracking pipeline is a system: browser signals, server events, consent,
-  analytics, app attribution, and business outcomes. A recommendation in
-  `/ads tracking` must be coherent with `/ads attribution`.
-- Bounded workers in `/ads audit` are orchestrated, not parallel-only. Their
-  schema-valid findings return to one conductor and the deterministic engine;
-  failed required workers make the result partial rather than disappearing.
+**在广告工作中。**
+- 创意流水线就是一个互联系统：`/ads dna` → `/ads create` → `/ads generate` → `/ads photoshoot`。每项输出进入下一步。不要孤立运行。
+- 跟踪流水线是一个系统：浏览器信号、服务器事件、同意、分析工具、应用归因和业务成果。`/ads tracking` 中的建议必须与 `/ads attribution` 一致。
+- `/ads audit` 中的有界工作代理是经过编排的，而非仅仅并行。它们符合 schema 的发现返回给同一协调者和确定性引擎；必需工作代理失败会使结果变为部分完成，而不是悄然消失。
 
-**Anti-pattern.** Recommending fixes that conflict with each other.
-"Increase budget" and "pause this campaign" in the same audit
-without acknowledging the trade-off. Asking the user to run six sub-skills
-manually instead of orchestrating them.
+**反模式。** 推荐相互冲突的修复。在同一审计中说“增加预算”和“暂停这个广告系列”，却不承认其中权衡。要求用户手动运行六个子技能，而非编排它们。
 
-**Example trigger.** Every full audit (`/ads audit`). Every multi-step
-deliverable (`/ads plan` → `/ads create` → `/ads generate`).
+**示例触发点。** 每次全面审计（`/ads audit`）。每个多步骤交付物（`/ads plan` → `/ads create` → `/ads generate`）。
 
 ---
 
-## 7. FEEL — Emotional Intelligence & Intuition
+## 7. 感受 — 情绪智能与直觉
 
-**Definition.** Pure logic is brittle without empathy. Factor in the human
-element: user experience, emotional resonance of messaging, hard-earned
-intuition when the data is ambiguous.
+**定义。** 缺乏同理心的纯逻辑是脆弱的。纳入人的因素：用户体验、信息的情感共鸣，以及数据模糊时积累而来的直觉。
 
-**In ads work.**
-- Read the ad copy emotionally. Does the headline make a user feel something
-  *they want to feel*? See `references/copy-frameworks.md` for the six
-  proven emotional frameworks.
-- Look at the landing page as a first-time visitor would. Where is the
-  curiosity? Where is the resolution? Is the CTA at the right moment?
-- Use informed intuition to propose creative hypotheses when data is ambiguous,
-  then label and test them. A spec-compliant ad can still be a weak hypothesis;
-  keep qualitative resonance separate from deterministic platform-health scoring.
-- Brand voice mapping: `references/voice-to-style.md` translates emotional
-  attributes into concrete visual choices.
+**在广告工作中。**
+- 从情感角度阅读广告文案。标题是否让用户感受到*他们想感受的东西*？六种经过验证的情感框架见 `references/copy-frameworks.md`。
+- 像首次访问者一样看落地页。好奇点在哪里？解答在哪里？CTA 是否在恰当时机出现？
+- 数据模糊时，使用有依据的直觉提出创意假设，然后标注并测试。符合规格的广告仍可能是假设薄弱的广告；将定性共鸣与确定性平台健康评分分开。
+- 品牌语气映射：`references/voice-to-style.md` 将情感属性转化为具体视觉选择。
 
-**Anti-pattern.** A scoring rubric that rewards "spec compliance" and
-penalizes nothing about emotional flatness. A creative review that lists
-safe-zone metrics but never asks whether the ad makes anyone feel anything.
+**反模式。** 评分标准奖励“符合规格”，却完全不考虑情感平淡。创意审查列出安全区域指标，却从不问广告是否让任何人有所感受。
 
-**Example trigger.** `/ads creative`, `/ads landing`, `/ads create`,
-`/ads generate`, `/ads photoshoot`.
+**示例触发点。** `/ads creative`、`/ads landing`、`/ads create`、`/ads generate`、`/ads photoshoot`。
 
 ---
 
-## 8. ACCEPT — Intellectual Humility
+## 8. 接受 — 认知谦逊
 
-**Definition.** No plan survives first contact with reality. Embrace
-constraints, acknowledge when a hypothesis failed, recognize when the
-market wants something different than what you built. Let go of sunk costs
-to pivot efficiently.
+**定义。** 没有计划能原封不动地挺过与现实的首次接触。拥抱约束，承认假设失败，认识到市场想要的可能不同于你构建的东西。放下沉没成本，以高效转向。
 
-**In ads work.**
-- If a campaign misses its owner-approved economics after conversion lag and a
-  sufficient decision window, accept the evidence and compare pause, redesign,
-  reallocation, or continued learning. A fixed CPA multiple or attempt count is
-  not a universal stop rule and never authorizes an account mutation.
-- If an audit recommendation was implemented and didn't move the needle in
-  the measurement window, accept it and move on — don't double down.
-- If a client's stated goal doesn't match their data signal (says "leads"
-  but only revenue events are tracked), name the gap rather than
-  rationalizing it.
+**在广告工作中。**
+- 如果广告系列在度过转化延迟和足够决策窗口后，仍未达到负责人批准的经济标准，接受证据，并比较暂停、重新设计、重新分配或继续学习。固定 CPA 倍数或尝试次数不是通用停止规则，也绝不授权账户变更。
+- 如果审计建议实施后在衡量窗口内没有产生作用，接受并继续前进——不要加码坚持。
+- 如果客户陈述的目标与数据信号不匹配（说要“线索”，却只跟踪收入事件），指出差距，而不是为其合理化。
 
-**Anti-pattern.** Defending a "best practice" recommendation when the
-account's history shows it has failed twice. Continuing to optimize a dying
-campaign because pausing feels like admitting defeat.
+**反模式。** 当账户历史已表明“最佳实践”建议失败两次，仍为其辩护。因为暂停感觉像承认失败，就继续优化濒临失败的广告系列。
 
-**Example trigger.** `/ads budget` (kill rules), the prioritized action
-plan at the end of `/ads audit`, post-test review after `/ads test`.
+**示例触发点。** `/ads budget`（停止规则）、`/ads audit` 末尾的优先行动计划，以及 `/ads test` 之后的测试复盘。
 
 ---
 
-## 9. CREATE — Generative Output
+## 9. 创造 — 生成输出
 
-**Definition.** Analysis paralysis is the enemy of progress. At some point
-you stop strategizing and start producing. Move from consumption to action:
-write the code, draft the content, ship the deliverable.
+**定义。** 分析瘫痪是进步的敌人。在某个时刻，你要停止制定策略，开始产出。从吸收转向行动：编写代码、起草内容、交付成果。
 
-**In ads work.**
-- Ship the audit report. Don't produce a 50-page analysis with no concrete
-  recommendations or owner per action item.
-- Write the actual ad copy, not a copy brief about a copy brief.
-- Generate the ad assets through `/ads generate` — don't stop at the
-  conceptual stage.
-- Render requested formats from the canonical JSON bundle. Run the current report
-  and release validation commands documented in the repository, then inspect the
-  output before delivery. Do not name a script or format that is absent.
+**在广告工作中。**
+- 交付审计报告。不要产出没有具体建议、也没有逐项负责人分配的 50 页分析。
+- 写出实际广告文案，而不是“关于文案简报的文案简报”。
+- 通过 `/ads generate` 生成广告素材——不要停留在概念阶段。
+- 从规范 JSON 结果包渲染所请求格式。运行仓库中记录的当前报告和发布验证命令，然后在交付前检查输出。不要提及不存在的脚本或格式。
 
-**Anti-pattern.** Endless "more analysis needed" loops. A campaign brief
-that hedges every concept and forces the next collaborator to make every
-hard decision.
+**反模式。** 无休止的“需要更多分析”循环。广告系列简报对每个概念都含糊保留，迫使下一位协作者作出所有困难决定。
 
-**Example trigger.** `/ads create`, `/ads generate`, `/ads photoshoot`,
-`/ads report`. Also the final synthesis step of any audit.
+**示例触发点。** `/ads create`、`/ads generate`、`/ads photoshoot`、`/ads report`。以及任何审计的最终综合步骤。
 
 ---
 
-## 10. GROW — The Iterative Loop
+## 10. 成长 — 迭代循环
 
-**Definition.** Thinking is not a straight line; it is a feedback loop.
-Take what you built (CREATE), see how it performs in reality, and use
-those lessons to upgrade your skills and expand your capacity for the next
-cycle.
+**定义。** 思考不是直线，而是反馈回路。拿出你构建的内容（创造），观察它在现实中的表现，并利用这些经验提升技能、扩展下一循环的能力。
 
-**In ads work.**
-- Every audit recommendation has a measurement plan attached. If you can't
-  measure whether it worked, you can't grow from it.
-- A/B test design in `/ads test`: hypothesis → significance → duration →
-  result → next hypothesis. The loop is the point.
-- Re-audit after a decision-appropriate observation window. Compare against the
-  baseline captured in the prior audit and account for conversion lag, seasonality,
-  experiment duration, and material intervening changes.
-- Carry forward what worked and what didn't into the next campaign brief.
-  `brand-profile.json` should evolve, not stay frozen.
+**在广告工作中。**
+- 每项审计建议都附带衡量计划。如果不能衡量它是否有效，就无法从中成长。
+- `/ads test` 中的 A/B 测试设计：假设 → 显著性 → 时长 → 结果 → 下一个假设。循环本身就是重点。
+- 在适合决策的观察窗口后重新审计。与上次审计捕获的基线比较，并考虑转化延迟、季节性、实验时长和期间发生的重大变化。
+- 将有效和无效的经验带入下一份广告系列简报。`brand-profile.json` 应持续演变，而非保持冻结。
 
-**Anti-pattern.** One-shot audits with no follow-up. Recommendations
-without measurement criteria. Treating each campaign as if the lessons from
-the last one don't apply.
+**反模式。** 没有后续跟进的一次性审计。没有衡量标准的建议。对待每个广告系列时，仿佛上一个的经验不适用。
 
-**Example trigger.** Closing step of every major deliverable. Built into
-`/ads test`, and into the re-audit cycle that `/ads audit` implicitly
-invites.
+**示例触发点。** 每个重大交付物的收尾步骤。内置于 `/ads test`，以及 `/ads audit` 隐含引导的重新审计周期。
 
 ---
 
-## Workflow map
+## 工作流映射
 
-Which principle dominates at each step of the canonical workflow:
+规范工作流每一步由哪些原则主导：
 
-| Stage | Dominant principles | Why |
+| 阶段 | 主导原则 | 原因 |
 |---|---|---|
-| Context Intake (start of every command) | OBSERVE (External), LISTEN | Read the account, read the brief |
-| `/ads dna <url>` | OBSERVE, LISTEN | Brand listening made concrete |
-| `/ads audit` — data collection | OBSERVE, OBSERVE-Internal | Pull data; check your own biases |
-| `/ads audit` — analysis | THINK, CONNECT-Lateral | First-principles math; cross-platform synthesis |
-| `/ads audit` — synthesis & scoring | CONNECT-System, ACCEPT | Wire findings together; accept uncertainty and failed hypotheses |
-| `/ads plan` | THINK, CONNECT-Lateral, FEEL | Strategy = math + insight + empathy |
-| `/ads create` | LISTEN, FEEL, CREATE | Hear the brand; feel the audience; ship the brief |
-| `/ads generate` / `/ads photoshoot` | FEEL, CREATE | Produce with emotional intent |
-| `/ads report` | CREATE | Render the deliverable; close the loop |
-| Post-deliverable | GROW | Measure, learn, set up the next cycle |
+| 背景信息收集（每个命令开始时） | 观察（外部）、倾听 | 阅读账户，阅读简报 |
+| `/ads dna <url>` | 观察、倾听 | 使品牌倾听具体化 |
+| `/ads audit` — 数据收集 | 观察、内部观察 | 获取数据；检查自身偏见 |
+| `/ads audit` — 分析 | 思考、横向连接 | 第一性原理计算；跨平台综合 |
+| `/ads audit` — 综合与评分 | 系统连接、接受 | 将发现连接起来；接受不确定性和失败假设 |
+| `/ads plan` | 思考、横向连接、感受 | 策略 = 计算 + 洞察 + 同理心 |
+| `/ads create` | 倾听、感受、创造 | 听见品牌；感受受众；交付简报 |
+| `/ads generate` / `/ads photoshoot` | 感受、创造 | 带着情感意图产出 |
+| `/ads report` | 创造 | 渲染交付物；闭合循环 |
+| 交付后 | 成长 | 衡量、学习、准备下一循环 |
 
-If a stage you are in does not have its dominant principle engaged, you are
-producing weaker work than you could. Slow down and find which principle is
-missing.
+如果当前阶段没有运用其主导原则，你产出的工作就弱于本可达到的水平。放慢速度，找出缺失的原则。

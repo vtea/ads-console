@@ -15,7 +15,21 @@ import zipfile
 import pytest
 from jsonschema import Draft202012Validator
 
+from claude_ads_core.i18n import catalog, locale_scope
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _english_diagnostics():
+    """Keep legacy English assertions local; child processes inherit the locale."""
+    with pytest.MonkeyPatch.context() as environment:
+        environment.setenv("CLAUDE_ADS_LOCALE", "en")
+        with locale_scope("en"):
+            catalog("en")
+            yield
+
+
 RELEASE_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "release.py"
+ENGLISH_DOCUMENTS = RELEASE_SCRIPT.parents[1] / "claude_ads_core/locales/en/documents"
 SPEC = importlib.util.spec_from_file_location("claude_ads_release", RELEASE_SCRIPT)
 assert SPEC and SPEC.loader
 release = importlib.util.module_from_spec(SPEC)
@@ -267,13 +281,17 @@ def test_audit_rejects_case_insensitive_path_collisions(tmp_path: Path) -> None:
 
 def test_marketplace_install_identifier_is_normalized() -> None:
     root = RELEASE_SCRIPT.parents[1]
-    readme = (root / "README.md").read_text(encoding="utf-8")
+    english_readme = (ENGLISH_DOCUMENTS / "README.md").read_text(encoding="utf-8")
+    chinese_readme = (root / "README.md").read_text(encoding="utf-8")
     marketplace = json.loads(
         (root / ".claude-plugin/marketplace.json").read_text(encoding="utf-8")
     )
-    assert "/plugin marketplace add agricidaniel/claude-ads" in readme
-    assert "/plugin marketplace add AgriciDaniel/claude-ads" not in readme
-    assert f"/plugin install claude-ads@{marketplace['name']}" in readme
+    assert "For Claude Code, the native plugin flow is:" in english_readme
+    assert "Claude Code 的原生插件流程如下：" in chinese_readme
+    for readme in (english_readme, chinese_readme):
+        assert "/plugin marketplace add agricidaniel/claude-ads" in readme
+        assert "/plugin marketplace add AgriciDaniel/claude-ads" not in readme
+        assert f"/plugin install claude-ads@{marketplace['name']}" in readme
 
 
 def test_package_is_deterministic_public_safe_and_verifiable(tmp_path: Path) -> None:
@@ -653,9 +671,12 @@ def test_claude_command_contract_distinguishes_plugin_namespace() -> None:
         "claude_standalone_skill": "/ads",
         "claude_plugin": "/claude-ads:ads",
     }
-    readme = (root / "README.md").read_text(encoding="utf-8")
+    english_readme = (ENGLISH_DOCUMENTS / "README.md").read_text(encoding="utf-8")
+    chinese_readme = (root / "README.md").read_text(encoding="utf-8")
     boundaries = (root / "control-plane/PRODUCT_BOUNDARIES.md").read_text(encoding="utf-8")
-    for text in (readme, boundaries):
+    assert "Standalone installs use `/ads`. Claude Code plugins are namespaced and use" in english_readme
+    assert "独立安装使用 `/ads`。Claude Code 插件采用命名空间，使用 `/claude-ads:ads`。" in chinese_readme
+    for text in (english_readme, chinese_readme, boundaries):
         assert "/ads" in text
         assert "/claude-ads:ads" in text
 

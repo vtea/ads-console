@@ -1,57 +1,35 @@
-# Product Boundaries
+# 产品边界
 
-## Buyer and promise
+## 目标客户与承诺
 
-Claude Ads serves agencies, consultants, and in-house paid-media teams that
-need repeatable, evidence-backed audits, plans, creative workflows, monitoring,
-experiments, and reports across major advertising platforms.
+Claude Ads 服务于代理商、顾问和企业内部付费媒体团队，满足他们在主流广告平台上对可重复、以证据为依据的审计、计划、创意工作流、监控、实验和报告的需求。
 
-It turns authorized exports or account reads into normalized observations,
-findings, recommendations, and client-ready deliverables. It is advisory and
-read-only by default.
+它将获授权的导出文件或账户读取结果转化为标准化观察、发现、建议和可交付客户的产物。默认提供咨询建议并保持只读。
 
-## Supported product surface
+## 支持的产品范围
 
-- Primary runtime: Claude Code through `/ads` for a standalone skill install or
-  `/claude-ads:ads` for the necessarily namespaced plugin install.
-- Portable surface: Agent Skills-compatible runtimes and a matching CLI where
-  executable support exists.
-- Target platforms: Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, Apple,
-  Amazon, Reddit, Pinterest, Snapchat, and X Ads.
-- Cross-platform workflows: attribution, tracking, creative, landing pages,
-  budgeting, forecasting, experiments, competitor research, policy, privacy,
-  and regulatory review.
-- Canonical machine output: versioned JSON. Human formats are renderings of the
-  same run bundle.
+- 主要运行时：Claude Code；独立技能安装使用 `/ads`，必须采用命名空间的插件安装使用 `/claude-ads:ads`。
+- 可移植范围：兼容 Agent Skills 的运行时，以及在已有可执行支持的地方提供对应 CLI。
+- 目标平台：Google、Meta、YouTube、LinkedIn、TikTok、Microsoft、Apple、Amazon、Reddit、Pinterest、Snapchat 和 X Ads。
+- 跨平台工作流：归因、追踪、创意、落地页、预算、预测、实验、竞争对手研究、政策、隐私和监管审查。
+- 规范机器输出：版本化 JSON。面向人的格式均由同一运行包渲染。
 
-## Non-promises
+## 不作出的承诺
 
-- A skill file is not proof of a working integration.
-- A benchmark is not a guarantee of future performance or platform approval.
-- A recommendation is not legal, tax, accounting, or investment advice.
-- Claude Ads does not bypass platform policy, consent requirements, access
-  controls, or geographic restrictions.
-- Claude Ads does not infer missing account facts and present them as observed.
-- Claude Ads does not guarantee live read or write support for every platform.
-  Availability is declared per capability and adapter.
-- Claude Ads does not produce platform health from an audit checklist alone.
-  Disabled scoring profiles yield no health score; watchlist findings remain
-  unscored until their evidence and severity contract is approved.
-- Claude Ads does not permanently delete campaigns or account objects in v2.
-- Claude Ads does not publish client data, raw private research, captured
-  prompts, or credentials.
+- 技能文件并不证明集成能够工作。
+- 基准不保证未来表现，也不保证平台批准。
+- 建议不构成法律、税务、会计或投资意见。
+- Claude Ads 不绕过平台政策、同意要求、访问控制或地域限制。
+- Claude Ads 不推断缺失的账户事实并将其呈现为已观察到的事实。
+- Claude Ads 不保证每个平台都支持线上读取或写入。可用性按能力和适配器分别声明。
+- Claude Ads 不会仅凭审计清单生成平台健康度。禁用的评分配置不会给出健康度分数；观察清单中的发现，在其证据和严重程度契约获得批准前不参与评分。
+- Claude Ads v2 不会永久删除广告系列或账户对象。
+- Claude Ads 不发布客户数据、原始私有研究、捕获的提示词或凭据。
 
-## Mutation boundary
+## 变更边界
 
-Account writes are disabled unless the platform capability is independently
-enabled and a mutation plan contains an exact before/after diff, object IDs,
-owner, approval record, idempotency key, blast-radius limit, verification
-window, audit destination, and rollback procedure. Missing budget or policy
-ceilings block the write. Pause or archive is preferred to deletion.
+账户写入保持禁用，除非平台能力已独立启用，且变更计划包含精确的变更前后差异、对象 ID、所有者、批准记录、幂等键、影响范围限制、验证窗口、审计目标和回滚流程。缺少预算或政策上限将阻止写入。优先暂停或归档，而不是删除。
 
-## Evidence boundary
+## 证据边界
 
-Current platform, API, policy, specification, regulation, and benchmark claims
-must point to dated entries in the source and claim ledgers. Stale, contested,
-practitioner, and single-source evidence must be labeled. Unknown and
-not-applicable are valid outputs and must not be converted into passes.
+当前平台、API、政策、规格、法规和基准声明必须指向来源及声明台账中注明日期的条目。过期、有争议、从业者以及单一来源的证据必须标注。未知和不适用是有效输出，不得转换为通过。

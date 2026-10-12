@@ -8,6 +8,18 @@ import sys
 
 import pytest
 
+from claude_ads_core.i18n import catalog, locale_scope
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _english_diagnostics():
+    """Keep legacy English assertions local; child processes inherit the locale."""
+    with pytest.MonkeyPatch.context() as environment:
+        environment.setenv("CLAUDE_ADS_LOCALE", "en")
+        with locale_scope("en"):
+            catalog("en")
+            yield
+
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/audit_dependencies.py"

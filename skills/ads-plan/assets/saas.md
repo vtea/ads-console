@@ -1,40 +1,40 @@
-# SaaS paid-media planning questions
+# SaaS 付费媒体规划问题
 
-> Status: qualitative, unscored planning aid.
+> 状态：定性、不计分的规划辅助资料。
 
-## Required gates
+## 必需门禁
 
-- Context gate: identify the product, market, self-serve or sales-assisted motion,
-  buyer roles, objective, approved conversion, contract context, and budget authority.
-- Evidence gate: use current product, pricing, CRM, revenue, account, experiment, and
-  current official source IDs; substantiate security, integration, comparison, and outcome claims.
-- Measurement gate: define how anonymous visits, leads, trials, opportunities, purchases,
-  expansion, churn, and reconciled revenue connect without collapsing funnel stages.
-- Privacy gate: document consent, business-contact use, account lists, matching, product
-  telemetry, retention, suppression, access, and regional requirements.
-- Regulatory gate: identify sector, employment, credit, health, AI, privacy, disclosure,
-  and comparative-claim risks and obtain qualified review where needed.
-- Capability gate: verify current platform, audience, format, measurement, and account
-  eligibility before making them part of a plan.
+- 背景门禁：明确产品、市场、自助或销售辅助模式、
+  买方角色、目标、已批准的转化、合同背景和预算权限。
+- 证据门禁：使用当前产品、定价、CRM、收入、账户、实验和
+  当前官方来源 ID；为安全、集成、比较和效果声明提供佐证。
+- 衡量门禁：定义匿名访问、潜在客户、试用、商机、购买、
+  扩展、流失和已对账收入之间如何连接，不得将漏斗阶段合并。
+- 隐私门禁：记录同意、业务联系人使用、客户企业名单、匹配、产品
+  遥测、保留、抑制、访问和区域要求。
+- 监管门禁：识别行业、就业、信贷、健康、AI、隐私、披露
+  和比较性声明风险，并在必要时获取具备资格的审查。
+- 能力门禁：在将平台、受众、格式、衡量和账户资格纳入计划之前，
+  验证其当前状态。
 
-## Planning questions
+## 规划问题
 
-- Which buyer problem and product capability are verified and meaningful?
-- Which conversion reflects the business motion rather than a convenient platform event?
-- How do buyer roles, sales follow-up, implementation, and outcome latency affect measurement?
-- Which product, customer, security, service, and comparison claims are approved?
-- Which intent, account, retargeting, or educational hypotheses have sufficient evidence?
-- How will existing customers, employees, competitors, and ineligible regions be handled lawfully?
-- Which product or sales changes could invalidate the media plan?
+- 哪些买方问题和产品能力已验证且具有意义？
+- 哪种转化反映业务模式，而不只是便利的平台事件？
+- 买方角色、销售跟进、实施和成果延迟如何影响衡量？
+- 哪些产品、客户、安全、服务和比较声明已经批准？
+- 哪些意图、客户企业、再营销或教育假设具备充分证据？
+- 如何合法处理现有客户、员工、竞争对手和不符合资格的区域？
+- 哪些产品或销售变化可能使媒体计划失效？
 
-## Candidate considerations
+## 候选考量
 
-- Consider intent capture, account education, product demonstration, proof, and remarketing
-  roles without assuming a fixed platform hierarchy.
-- Separate product-qualified, marketing-qualified, sales-qualified, and revenue outcomes.
+- 考虑意图捕获、客户企业教育、产品演示、证明和再营销
+  角色，但不假定固定的平台层级。
+- 区分产品合格、营销合格、销售合格和收入成果。
 
-## Output guardrails
+## 输出防护规则
 
-- Return qualitative options, evidence gaps, source IDs, owners, and measurement design.
-- Do not prescribe channel shares, bid strategies, attribution windows, quality scores,
-  pipeline ratios, or performance targets.
+- 返回定性选项、证据缺口、来源 ID、负责人和衡量设计。
+- 不得规定渠道份额、出价策略、归因窗口、质量分数、
+  销售管道比率或表现目标。

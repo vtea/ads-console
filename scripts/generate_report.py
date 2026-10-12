@@ -14,8 +14,14 @@ Dependencies:
     pip install reportlab matplotlib
 """
 
-import argparse
+from __future__ import annotations
+
+from contextlib import contextmanager
+from contextvars import ContextVar
+from functools import wraps
+import hashlib
 import html
+import io
 import json
 import logging
 import math
@@ -29,6 +35,14 @@ from datetime import datetime
 from pathlib import Path
 
 from url_utils import resolve_output_path, sanitize_error
+
+# Direct script execution also resolves the installed/source core package.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+from claude_ads_core.cli_support import LocaleArgumentParser, cli_locale
+from claude_ads_core.i18n import catalog, label, locale_scope, resolve_locale, t
+from claude_ads_core.reporting import PDFDependencyError, _load_system_font, _redact_text
 
 # Version stamp shown in PDF header/footer. Keep in sync with
 # .claude-plugin/plugin.json `version`.
@@ -46,9 +60,10 @@ try:
         SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
         HRFlowable, Image, KeepTogether
     )
+    HAS_REPORTLAB = True
 except ImportError:
-    print("Error: reportlab required. Install with: pip install reportlab")
-    sys.exit(1)
+    HAS_REPORTLAB = False
+    colors = None
 
 try:
     import matplotlib
@@ -64,43 +79,139 @@ logger = logging.getLogger("generate_report")
 # Colors
 # ---------------------------------------------------------------------------
 
-C_PRIMARY = colors.HexColor("#1a1a2e")
-C_ACCENT = colors.HexColor("#0f3460")
-C_PASS = colors.HexColor("#16a34a")
-C_WARN = colors.HexColor("#f59e0b")
-C_FAIL = colors.HexColor("#dc2626")
-C_LIGHT = colors.HexColor("#f8fafc")
-C_ROW_ALT = colors.HexColor("#f1f5f9")
-C_HEADER = colors.HexColor("#1e293b")
+C_PRIMARY = colors.HexColor("#1a1a2e") if HAS_REPORTLAB else None
+C_ACCENT = colors.HexColor("#0f3460") if HAS_REPORTLAB else None
+C_PASS = colors.HexColor("#16a34a") if HAS_REPORTLAB else None
+C_WARN = colors.HexColor("#f59e0b") if HAS_REPORTLAB else None
+C_FAIL = colors.HexColor("#dc2626") if HAS_REPORTLAB else None
+C_LIGHT = colors.HexColor("#f8fafc") if HAS_REPORTLAB else None
+C_ROW_ALT = colors.HexColor("#f1f5f9") if HAS_REPORTLAB else None
+C_HEADER = colors.HexColor("#1e293b") if HAS_REPORTLAB else None
 
 GRADE_COLORS = {
     "A": "#16a34a", "B": "#22c55e", "C": "#f59e0b",
     "D": "#f97316", "F": "#dc2626",
 }
 
-# Try to register Times New Roman; fall back to Times-Roman (built-in)
-BODY_FONT = "Times-Roman"
-BODY_BOLD = "Times-Bold"
-HEAD_FONT = "Helvetica-Bold"
-for path in [
-    "/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman.ttf",
-    "/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf",
-    "C:/Windows/Fonts/times.ttf",
-]:
-    if os.path.exists(path):
-        try:
-            pdfmetrics.registerFont(TTFont("TimesNewRoman", path))
-            BODY_FONT = "TimesNewRoman"
-            break
-        except Exception:
-            pass
+# English-only reports retain their legacy serif fallback. CJK reports must
+# pass coverage verification and use an explicit embedded font on every route.
+_english_body = "Times-Roman"
+if HAS_REPORTLAB:
+    for path in (
+        "/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf",
+        "C:/Windows/Fonts/times.ttf",
+    ):
+        if os.path.isfile(path):
+            try:
+                pdfmetrics.registerFont(TTFont("TimesNewRoman", path))
+                _english_body = "TimesNewRoman"
+                break
+            except Exception:
+                pass
+_FONT_NAMES = ContextVar("legacy_report_fonts", default=(_english_body, "Times-Bold", "Helvetica-Bold"))
+_CHART_FONT_PATH = ContextVar("legacy_chart_font", default=None)
 
+
+def _font(index: int) -> str:
+    return _FONT_NAMES.get()[index]
+
+
+def _font_text(data, brand_name: str) -> str:
+    texts = [brand_name, "•", _report_date(), __version__]
+    def visit(value):
+        if isinstance(value, dict):
+            for key, item in value.items():
+                texts.append(str(key))
+                visit(item)
+        elif isinstance(value, (list, tuple)):
+            for item in value:
+                visit(item)
+        elif value is not None:
+            texts.append(str(value))
+    visit(data)
+    texts.extend(value for key, value in catalog(resolve_locale()).items()
+                 if key.startswith("legacy_report.") or key.startswith("label.result."))
+    return _redact_text(" ".join(texts))
+
+
+@contextmanager
+def _font_scope(data, brand_name: str, font: str | Path | None):
+    font_bytes = _load_system_font(_font_text(data, brand_name), font=font, true_type_only=True)
+    if font_bytes is None:
+        yield
+        return
+    name = "ReportCJK-" + hashlib.sha256(font_bytes).hexdigest()[:16]
+    try:
+        pdfmetrics.registerFont(TTFont(name, io.BytesIO(font_bytes)))
+        pdfmetrics.registerFontFamily(name, normal=name, bold=name, italic=name, boldItalic=name)
+    except Exception as exc:
+        raise PDFDependencyError(t("report.font_dependency")) from exc
+    token = _FONT_NAMES.set((name, name, name))
+    try:
+        # Matplotlib receives the same checked standalone font. Its temporary
+        # path is created by us, never from report content, and is cleaned up.
+        with tempfile.TemporaryDirectory(prefix="claude-ads-font-") as directory:
+            path = Path(directory) / "report.ttf"
+            path.write_bytes(font_bytes)
+            chart_token = _CHART_FONT_PATH.set(str(path))
+            try:
+                yield
+            finally:
+                _CHART_FONT_PATH.reset(chart_token)
+    finally:
+        _FONT_NAMES.reset(token)
+
+
+def _localized(function):
+    @wraps(function)
+    def localized(*args, locale=None, **kwargs):
+        with locale_scope(locale):
+            return function(*args, **kwargs)
+    return localized
+
+
+def _localized_chart(function):
+    @wraps(function)
+    def localized(*args, locale=None, **kwargs):
+        with locale_scope(locale):
+            if not HAS_MATPLOTLIB:
+                return None
+            if _CHART_FONT_PATH.get():
+                return function(*args, **kwargs)
+            font_bytes = _load_system_font(_font_text(args, ""), true_type_only=True)
+            if font_bytes is None:
+                return function(*args, **kwargs)
+            with tempfile.TemporaryDirectory(prefix="claude-ads-chart-font-") as directory:
+                path = Path(directory) / "report.ttf"
+                path.write_bytes(font_bytes)
+                token = _CHART_FONT_PATH.set(str(path))
+                try:
+                    return function(*args, **kwargs)
+                finally:
+                    _CHART_FONT_PATH.reset(token)
+    return localized
+
+
+def _apply_chart_font(figure):
+    path = _CHART_FONT_PATH.get()
+    if path:
+        from matplotlib.font_manager import FontProperties
+        from matplotlib.text import Text
+        for text in figure.findobj(match=Text):
+            properties = FontProperties(fname=path, size=text.get_fontsize(), weight=text.get_fontweight())
+            text.set_fontproperties(properties)
+
+
+# Page geometry is unchanged; the fallback permits --help/--json without PDF deps.
+if not HAS_REPORTLAB:
+    inch = 72
 PAGE_WIDTH = 7.0 * inch  # letter minus margins
 MAX_IMG_W = 6.5 * inch
 MAX_IMG_H = 4.0 * inch
 
 # Sections already rendered in the header area (skip as body sections)
-SKIP_SECTIONS = {"executive summary", "critical issues", "quick wins"}
+SKIP_SECTIONS = {"executive summary", "critical issues", "quick wins", "执行摘要", "关键问题", "快速改进", "快速改进（本周执行）"}
 
 
 # ---------------------------------------------------------------------------
@@ -109,10 +220,11 @@ SKIP_SECTIONS = {"executive summary", "critical issues", "quick wins"}
 
 def _md_to_html(text: str) -> str:
     """Escape untrusted text, then add a constrained set of ReportLab tags."""
-    text = html.escape(str(text), quote=True)
+    text = html.escape(_redact_text(str(text)), quote=True)
     text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
     text = re.sub(r"\*(.+?)\*", r"<i>\1</i>", text)
-    text = re.sub(r"`(.+?)`", r"<font face='Courier' size='9'>\1</font>", text)
+    code_font = _font(0) if _CHART_FONT_PATH.get() else "Courier"
+    text = re.sub(r"`(.+?)`", lambda match: f"<font face='{code_font}' size='9'>{match.group(1)}</font>", text)
     return text
 
 
@@ -153,13 +265,15 @@ def parse_markdown(filepath: str) -> dict:
             data["title"] = line[2:].strip()
             continue
 
-        # Health score
-        m = re.search(r"(?:Ads\s+)?Health\s+Score[:\s]*(\d+)\s*/\s*100", line, re.I)
+        # Presentation may be Chinese or English; canonical output keys stay English.
+        score_line = re.sub(r"[*`\\]", "", line)
+        m = re.search(r"(?:(?:Ads\s+)?Health\s+Score|(?:广告)?健康评[分估])[:：\s]*(\d+(?:\.\d+)?)\s*/\s*100", score_line, re.I)
         if m:
-            data["health_score"] = int(m.group(1))
+            value = float(m.group(1))
+            data["health_score"] = int(value) if value.is_integer() else value
 
-        # Grade
-        m = re.search(r"Grade[:\s]*([A-F])\b", line)
+        # Grade letters are schema values, not translated labels.
+        m = re.search(r"(?:Grade|等级|评级)[:：\s]*([A-F])\b", score_line)
         if m:
             data["grade"] = m.group(1)
 
@@ -173,28 +287,31 @@ def parse_markdown(filepath: str) -> dict:
         if m:
             data["platform_scores"][m.group(1)] = int(m.group(2))
 
-        # Count Pass/Warning/Fail results from table rows
+        # Preserve legacy English matching and recognize localized status cells.
         if stripped.startswith("|"):
             lower = stripped.lower()
-            if "| pass" in lower or "| pass |" in lower:
+            cells = {re.sub(r"[*`\\]", "", cell).strip() for cell in stripped.split("|")[1:-1]}
+            if "| pass" in lower or "通过" in cells:
                 data["result_counts"]["Pass"] += 1
-            if "| warning" in lower or "| warning |" in lower:
+            if "| warning" in lower or "警告" in cells:
                 data["result_counts"]["Warning"] += 1
-            if "| fail" in lower or "| fail |" in lower:
+            if "| fail" in lower or cells & {"未通过", "失败"}:
                 data["result_counts"]["Fail"] += 1
 
         # Critical / High issues
         if stripped.startswith("- "):
             text = stripped.lstrip("- ").strip()
-            if "Critical" in line:
+            if "Critical" in line or "关键" in line:
                 data["critical_issues"].append(text)
-            elif "High" in line and section_title and "high" in section_title.lower():
+            elif section_title and (("High" in line and "high" in section_title.lower()) or
+                                    ("高" in line and "高" in section_title)):
                 data["high_issues"].append(text)
 
         # Quick wins
-        if re.match(r"^[\d]+\.\s", stripped) and section_title and "quick win" in (section_title or "").lower():
+        quick_section = section_title and ("quick win" in section_title.lower() or "快速改进" in section_title)
+        if re.match(r"^[\d]+\.\s", stripped) and quick_section:
             data["quick_wins"].append(re.sub(r"^\d+\.\s*", "", stripped))
-        elif stripped.startswith("- ") and section_title and "quick win" in (section_title or "").lower():
+        elif stripped.startswith("- ") and quick_section:
             data["quick_wins"].append(stripped.lstrip("- ").strip())
 
         # Table detection
@@ -245,19 +362,20 @@ def parse_markdown(filepath: str) -> dict:
 def _flush_section(data, title, items):
     """Add section only if it has meaningful content and is not a duplicate."""
     if title.lower().strip() in SKIP_SECTIONS:
-        logger.info(f"Skipped duplicate section: '{title}' (already rendered in header)")
+        logger.info(t("legacy_report.skipped_duplicate", title=_redact_text(title)))
         return
     meaningful = [i for i in items if i.get("text") or i.get("type") == "table"]
     if meaningful:
         data["sections"].append({"title": title, "items": items})
     else:
-        logger.warning(f"Skipped empty section: '{title}'")
+        logger.warning(t("legacy_report.skipped_empty", title=_redact_text(title)))
 
 
 # ---------------------------------------------------------------------------
 # Chart Generators (matplotlib)
 # ---------------------------------------------------------------------------
 
+@_localized_chart
 def build_gauge_chart(score: int, grade: str) -> str | None:
     """Build health score donut gauge chart, return temp PNG path."""
     if not HAS_MATPLOTLIB:
@@ -276,9 +394,10 @@ def build_gauge_chart(score: int, grade: str) -> str | None:
     ax.set_axis_off()
     ax.text(0, 0, f"{score}", ha="center", va="center", fontsize=28,
             fontweight="bold", color=color, transform=ax.transAxes)
-    ax.text(0, -0.15, f"Grade {grade}", ha="center", va="center",
+    ax.text(0, -0.15, t("legacy_report.grade", grade=_redact_text(str(grade))), ha="center", va="center",
             fontsize=12, color="#475569", transform=ax.transAxes)
 
+    _apply_chart_font(fig)
     fd, path = tempfile.mkstemp(suffix=".png")
     os.close(fd)
     fig.savefig(path, dpi=150, bbox_inches="tight", transparent=False)
@@ -286,12 +405,13 @@ def build_gauge_chart(score: int, grade: str) -> str | None:
     return path
 
 
+@_localized_chart
 def build_platform_chart(platform_scores: dict) -> str | None:
     """Build horizontal bar chart of platform scores, return temp PNG path."""
     if not HAS_MATPLOTLIB or not platform_scores:
         return None
 
-    platforms = list(platform_scores.keys())
+    platforms = [_redact_text(str(platform)) for platform in platform_scores]
     scores = list(platform_scores.values())
     bar_colors = []
     for s in scores:
@@ -308,7 +428,7 @@ def build_platform_chart(platform_scores: dict) -> str | None:
     fig.patch.set_facecolor("white")
     bars = ax.barh(platforms, scores, color=bar_colors, height=0.5, edgecolor="white")
     ax.set_xlim(0, 100)
-    ax.set_xlabel("Health Score", fontsize=9, color="#475569")
+    ax.set_xlabel(t("legacy_report.health_score"), fontsize=9, color="#475569")
     ax.tick_params(axis="y", labelsize=9)
     ax.tick_params(axis="x", labelsize=8)
     ax.spines["top"].set_visible(False)
@@ -318,6 +438,7 @@ def build_platform_chart(platform_scores: dict) -> str | None:
         ax.text(bar.get_width() + 1.5, bar.get_y() + bar.get_height() / 2,
                 f"{s}", va="center", fontsize=9, fontweight="bold", color="#334155")
 
+    _apply_chart_font(fig)
     fd, path = tempfile.mkstemp(suffix=".png")
     os.close(fd)
     fig.savefig(path, dpi=150, bbox_inches="tight")
@@ -325,6 +446,7 @@ def build_platform_chart(platform_scores: dict) -> str | None:
     return path
 
 
+@_localized_chart
 def build_result_distribution_chart(result_counts: dict) -> str | None:
     """Build pass/warning/fail donut chart from audit results."""
     if not HAS_MATPLOTLIB:
@@ -338,12 +460,12 @@ def build_result_distribution_chart(result_counts: dict) -> str | None:
     chart_colors = []
     color_map = {"Pass": "#16a34a", "Warning": "#f59e0b", "Fail": "#dc2626"}
 
-    for label in ["Pass", "Warning", "Fail"]:
-        count = result_counts.get(label, 0)
+    for result in ["Pass", "Warning", "Fail"]:
+        count = result_counts.get(result, 0)
         if count > 0:
-            labels.append(f"{label} ({count})")
+            labels.append(f"{label('result', result)} ({count})")
             sizes.append(count)
-            chart_colors.append(color_map[label])
+            chart_colors.append(color_map[result])
 
     fig, ax = plt.subplots(figsize=(3.5, 3))
     fig.patch.set_facecolor("white")
@@ -356,9 +478,10 @@ def build_result_distribution_chart(result_counts: dict) -> str | None:
         at.set_fontsize(8)
         at.set_fontweight("bold")
         at.set_color("white")
-    ax.set_title("Check Results Distribution", fontsize=10, fontweight="bold",
+    ax.set_title(t("legacy_report.distribution_title"), fontsize=10, fontweight="bold",
                  color="#1e293b", pad=10)
 
+    _apply_chart_font(fig)
     fd, path = tempfile.mkstemp(suffix=".png")
     os.close(fd)
     fig.savefig(path, dpi=150, bbox_inches="tight")
@@ -395,26 +518,29 @@ def _make_styles():
     """Create professional styles with proper spacing to prevent overlap."""
     styles = getSampleStyleSheet()
 
-    styles.add(ParagraphStyle("RTitle", fontName=HEAD_FONT, fontSize=22,
+    styles.add(ParagraphStyle("RTitle", fontName=_font(2), fontSize=22,
                               textColor=C_PRIMARY, spaceAfter=2, alignment=TA_LEFT))
-    styles.add(ParagraphStyle("RSubtitle", fontName=BODY_FONT, fontSize=10,
+    styles.add(ParagraphStyle("RSubtitle", fontName=_font(0), fontSize=10,
                               textColor=colors.HexColor("#64748b"),
                               spaceBefore=2, spaceAfter=10))
-    styles.add(ParagraphStyle("RSectionHead", fontName=HEAD_FONT, fontSize=14,
+    styles.add(ParagraphStyle("RSectionHead", fontName=_font(2), fontSize=14,
                               textColor=C_ACCENT, spaceBefore=14, spaceAfter=6))
-    styles.add(ParagraphStyle("RSubHead", fontName=HEAD_FONT, fontSize=11,
+    styles.add(ParagraphStyle("RSubHead", fontName=_font(2), fontSize=11,
                               textColor=C_PRIMARY, spaceBefore=8, spaceAfter=3))
-    styles.add(ParagraphStyle("RBody", fontName=BODY_FONT, fontSize=10,
+    styles.add(ParagraphStyle("RBody", fontName=_font(0), fontSize=10,
                               leading=14, spaceAfter=4))
-    styles.add(ParagraphStyle("RBullet", fontName=BODY_FONT, fontSize=10,
+    styles.add(ParagraphStyle("RBullet", fontName=_font(0), fontSize=10,
                               leading=14, leftIndent=18, bulletIndent=8,
                               spaceAfter=3))
-    styles.add(ParagraphStyle("RCaption", fontName=BODY_FONT, fontSize=8,
+    styles.add(ParagraphStyle("RCaption", fontName=_font(0), fontSize=8,
                               textColor=colors.HexColor("#64748b"),
                               alignment=TA_CENTER, spaceBefore=2, spaceAfter=10))
-    styles.add(ParagraphStyle("RFooter", fontName=BODY_FONT, fontSize=7,
+    styles.add(ParagraphStyle("RFooter", fontName=_font(0), fontSize=7,
                               textColor=colors.HexColor("#94a3b8"),
                               alignment=TA_CENTER))
+    if _CHART_FONT_PATH.get():
+        for name in ("RTitle", "RSubtitle", "RSectionHead", "RSubHead", "RBody", "RBullet", "RCaption", "RFooter"):
+            styles[name].wordWrap = "CJK"
     return styles
 
 
@@ -425,7 +551,7 @@ def _health_caption(score, grade) -> str:
     caller of ``build_pdf`` controls, so both go through ``_md_to_html`` before
     they reach a ReportLab Paragraph.
     """
-    return f"Fig 1: Health Score {_md_to_html(score)}/100 (Grade {_md_to_html(grade)})"
+    return t("legacy_report.health_caption", score=_md_to_html(score), grade=_md_to_html(grade))
 
 
 def _wrap_cell(text, style):
@@ -440,9 +566,9 @@ def _wrap_cell(text, style):
 
 def _build_table(headers: list, rows: list, col_widths=None) -> Table:
     """Build a formatted Table with word-wrapped cells and alternating rows."""
-    wrap_style = ParagraphStyle("CellWrap", fontName=BODY_FONT, fontSize=8,
+    wrap_style = ParagraphStyle("CellWrap", fontName=_font(0), fontSize=8,
                                 leading=10, wordWrap="CJK")
-    header_wrap = ParagraphStyle("HeaderWrap", fontName=HEAD_FONT, fontSize=8,
+    header_wrap = ParagraphStyle("HeaderWrap", fontName=_font(2), fontSize=8,
                                  leading=10, textColor=colors.white, wordWrap="CJK")
 
     wrapped_headers = [_wrap_cell(h, header_wrap) for h in headers]
@@ -468,9 +594,9 @@ def _build_table(headers: list, rows: list, col_widths=None) -> Table:
     style_cmds = [
         ("BACKGROUND", (0, 0), (-1, 0), C_HEADER),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("FONTNAME", (0, 0), (-1, 0), HEAD_FONT),
+        ("FONTNAME", (0, 0), (-1, 0), _font(2)),
         ("FONTSIZE", (0, 0), (-1, 0), 8),
-        ("FONTNAME", (0, 1), (-1, -1), BODY_FONT),
+        ("FONTNAME", (0, 1), (-1, -1), _font(0)),
         ("FONTSIZE", (0, 1), (-1, -1), 8),
         ("ALIGN", (0, 0), (-1, -1), "LEFT"),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
@@ -488,20 +614,32 @@ def _build_table(headers: list, rows: list, col_widths=None) -> Table:
     return tbl
 
 
+def _report_date() -> str:
+    return datetime.now().strftime("%Y年%m月%d日" if resolve_locale() == "zh-CN" else "%B %d, %Y")
+
+
 def _add_page_footer(canvas, doc):
     """Add footer with page number and branding on every page."""
     canvas.saveState()
-    canvas.setFont(BODY_FONT, 7)
+    canvas.setFont(_font(0), 7)
     canvas.setFillColor(colors.HexColor("#94a3b8"))
     canvas.drawCentredString(
         letter[0] / 2, 0.4 * inch,
-        f"claude-ads v{__version__}  |  Page {doc.page}  |  {datetime.now().strftime('%B %d, %Y')}"
+        t("legacy_report.page_footer", version=__version__, page=doc.page, date=_report_date())
     )
     canvas.restoreState()
 
 
-def build_pdf(data: dict, output_path: str, brand_name: str = ""):
-    """Build the complete professional PDF report."""
+def build_pdf(data: dict, output_path: str, brand_name: str = "", *, locale=None, font=None):
+    """Build the complete PDF with an explicit locale and checked local font."""
+    with locale_scope(locale):
+        if not HAS_REPORTLAB:
+            raise PDFDependencyError(t("legacy_report.dependency"))
+        with _font_scope(data, brand_name, font):
+            return _build_pdf(data, output_path, brand_name)
+
+
+def _build_pdf(data: dict, output_path: str, brand_name: str = ""):
     output_path = str(resolve_output_path(output_path, create_parent=True))
     doc = SimpleDocTemplate(
         output_path, pagesize=letter,
@@ -513,11 +651,11 @@ def build_pdf(data: dict, output_path: str, brand_name: str = ""):
     temp_files = []
 
     # --- Title Page Header ---
-    title = brand_name or data.get("title", "Ad Account Audit Report")
+    title = brand_name or data.get("title") or t("legacy_report.title")
     elements.append(Paragraph(_md_to_html(title), styles["RTitle"]))
     elements.append(Spacer(1, 4))
     elements.append(Paragraph(
-        f"Generated {datetime.now().strftime('%B %d, %Y')}  |  Powered by claude-ads v{__version__}",
+        t("legacy_report.generated", date=_report_date(), version=__version__),
         styles["RSubtitle"],
     ))
     elements.append(HRFlowable(width="100%", thickness=2, color=C_ACCENT))
@@ -545,7 +683,7 @@ def build_pdf(data: dict, output_path: str, brand_name: str = ""):
         ]))
         elements.append(chart_table)
         elements.append(Paragraph(
-            f"{_health_caption(score, grade)}  |  Fig 2: Platform Score Comparison",
+            f"{_health_caption(score, grade)}  |  {t('legacy_report.platform_caption')}",
             styles["RCaption"],
         ))
     elif gauge_path:
@@ -558,13 +696,13 @@ def build_pdf(data: dict, output_path: str, brand_name: str = ""):
         # parsing). Escape via _md_to_html before converting any of these
         # cells to a Paragraph.
         score_tbl = Table(
-            [["Ads Health Score", f"{score}/100", f"Grade: {grade}"]],
+            [[t("legacy_report.ads_health_score"), f"{_redact_text(str(score))}/100", t("legacy_report.grade_cell", grade=_redact_text(str(grade)))]],
             colWidths=[3 * inch, 2 * inch, 2 * inch],
         )
         score_tbl.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, -1), C_LIGHT),
             ("TEXTCOLOR", (1, 0), (2, 0), grade_color),
-            ("FONTNAME", (0, 0), (-1, -1), HEAD_FONT),
+            ("FONTNAME", (0, 0), (-1, -1), _font(2)),
             ("FONTSIZE", (0, 0), (-1, -1), 14),
             ("ALIGN", (0, 0), (-1, -1), "CENTER"),
             ("BOX", (0, 0), (-1, -1), 1, C_ACCENT),
@@ -580,12 +718,12 @@ def build_pdf(data: dict, output_path: str, brand_name: str = ""):
         temp_files.append(dist_path)
         elements.append(Spacer(1, 4))
         elements.append(Image(dist_path, width=3.0 * inch, height=2.5 * inch))
-        elements.append(Paragraph("Fig 3: Audit Check Results Distribution", styles["RCaption"]))
+        elements.append(Paragraph(t("legacy_report.distribution_caption"), styles["RCaption"]))
 
     # --- Critical Issues ---
     if data.get("critical_issues"):
         elements.append(Spacer(1, 4))
-        elements.append(Paragraph("Critical Issues", styles["RSectionHead"]))
+        elements.append(Paragraph(t("legacy_report.critical_issues"), styles["RSectionHead"]))
         for issue in data["critical_issues"][:10]:
             elements.append(Paragraph(
                 f"\u2022 {_md_to_html(issue)}", styles["RBullet"]))
@@ -593,7 +731,7 @@ def build_pdf(data: dict, output_path: str, brand_name: str = ""):
     # --- Quick Wins ---
     if data.get("quick_wins"):
         elements.append(Spacer(1, 4))
-        elements.append(Paragraph("Quick Wins (Do This Week)", styles["RSectionHead"]))
+        elements.append(Paragraph(t("legacy_report.quick_wins"), styles["RSectionHead"]))
         for i, win in enumerate(data["quick_wins"][:7], 1):
             elements.append(Paragraph(
                 f"{i}. {_md_to_html(win)}", styles["RBullet"]))
@@ -637,8 +775,7 @@ def build_pdf(data: dict, output_path: str, brand_name: str = ""):
     elements.append(HRFlowable(width="100%", thickness=1, color=C_ACCENT))
     elements.append(Spacer(1, 6))
     elements.append(Paragraph(
-        f"Report generated by claude-ads v{__version__}  |  "
-        "https://github.com/AgriciDaniel/claude-ads",
+        t("legacy_report.footer", version=__version__),
         styles["RFooter"],
     ))
 
@@ -657,19 +794,20 @@ def build_pdf(data: dict, output_path: str, brand_name: str = ""):
 # Content Quality Checker (guardrail)
 # ---------------------------------------------------------------------------
 
+@_localized
 def check_content(data: dict) -> list:
     """Validate report content quality, layout safety, and formatting."""
     warnings = []
 
     # Content completeness
     if data["health_score"] is None:
-        warnings.append("LAYOUT: No health score found (gauge chart will be missing)")
+        warnings.append(t("legacy_report.missing_score"))
     if not data["grade"]:
-        warnings.append("LAYOUT: No grade found (gauge chart label missing)")
+        warnings.append(t("legacy_report.missing_grade"))
     if not data.get("platform_scores"):
-        warnings.append("LAYOUT: No platform scores found (bar chart will be missing)")
+        warnings.append(t("legacy_report.missing_platforms"))
     if not data["critical_issues"] and not data["sections"]:
-        warnings.append("CONTENT: No critical issues or sections found. Report may be empty")
+        warnings.append(t("legacy_report.empty_content"))
 
     # Section quality
     for section in data["sections"]:
@@ -677,19 +815,18 @@ def check_content(data: dict) -> list:
         meaningful = [it for it in items if it.get("text") or it.get("type") == "table"]
         if len(meaningful) < 2:
             warnings.append(
-                f"CONTENT: Section '{section['title']}' has <2 items (may look sparse)")
+                t("legacy_report.sparse_section", title=_redact_text(section["title"])))
 
     # Empty tables
-    empty_tables = sum(1 for t in data["tables"] if not t["rows"])
+    empty_tables = sum(1 for table in data["tables"] if not table["rows"])
     if empty_tables:
-        warnings.append(f"LAYOUT: {empty_tables} empty table(s) (headers only, no data)")
+        warnings.append(t("legacy_report.empty_tables", count=empty_tables))
 
     # Overflow risk: tables with too many columns
-    for t in data["tables"]:
-        ncols = len(t.get("headers", []))
+    for table in data["tables"]:
+        ncols = len(table.get("headers", []))
         if ncols > 6:
-            warnings.append(
-                f"LAYOUT: Table with {ncols} columns may overflow. Consider splitting")
+            warnings.append(t("legacy_report.wide_table", count=ncols))
 
     # Raw markdown syntax check (would render as literal ** in PDF)
     for section in data["sections"]:
@@ -702,7 +839,7 @@ def check_content(data: dict) -> list:
     # Result distribution check
     total = sum(data.get("result_counts", {}).values())
     if total == 0:
-        warnings.append("CHART: No Pass/Warning/Fail results detected (distribution chart will be empty)")
+        warnings.append(t("legacy_report.missing_results"))
 
     return warnings
 
@@ -711,28 +848,27 @@ def check_content(data: dict) -> list:
 # CLI
 # ---------------------------------------------------------------------------
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Generate professional PDF audit report from markdown results"
-    )
-    parser.add_argument("input", help="Path to audit results markdown file")
-    parser.add_argument("--output", "-o", default=None,
-                        help="Output PDF path (default: <input>-report.pdf)")
-    parser.add_argument("--brand", "-b", default="",
-                        help="Brand/client name for report header")
-    parser.add_argument("--json", action="store_true",
-                        help="Output parsed data as JSON instead of PDF")
-    parser.add_argument("--check", action="store_true",
-                        help="Run content quality checker and print warnings")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                        help="Verbose logging")
-    args = parser.parse_args()
+def main(argv=None):
+    with locale_scope(cli_locale(argv)):
+        return _main(argv)
+
+
+def _main(argv):
+    parser = LocaleArgumentParser(description=t("legacy_report.cli_description"))
+    parser.add_argument("input", help=t("legacy_report.cli_input"))
+    parser.add_argument("--output", "-o", default=None, help=t("legacy_report.cli_output"))
+    parser.add_argument("--brand", "-b", default="", help=t("legacy_report.cli_brand"))
+    parser.add_argument("--json", action="store_true", help=t("legacy_report.cli_json"))
+    parser.add_argument("--check", action="store_true", help=t("legacy_report.cli_check"))
+    parser.add_argument("--verbose", "-v", action="store_true", help=t("legacy_report.cli_verbose"))
+    parser.add_argument("--font", default=None, help=t("legacy_report.cli_font"))
+    args = parser.parse_args(argv)
 
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
     if not os.path.exists(args.input):
-        print(f"Error: file not found: {args.input}", file=sys.stderr)
+        print(t("legacy_report.file_missing", path=sanitize_error(args.input)), file=sys.stderr)
         sys.exit(1)
 
     data = parse_markdown(args.input)
@@ -740,31 +876,31 @@ def main():
     if args.check:
         warnings = check_content(data)
         if warnings:
-            for w in warnings:
-                print(f"WARNING: {w}")
-            print(f"\n{len(warnings)} warning(s) found.")
+            for warning in warnings:
+                print(t("legacy_report.warning", warning=warning))
+            print("\n" + t("legacy_report.warning_count", count=len(warnings)))
         else:
-            print("Content check PASSED: no issues found.")
+            print(t("legacy_report.check_passed"))
         return
 
     if args.json:
-        print(json.dumps(data, indent=2, default=str))
+        print(json.dumps(data, ensure_ascii=False, indent=2, default=str))
         return
 
     output_path = args.output or f"{Path(args.input).stem}-report.pdf"
     try:
-        output_path = build_pdf(data, output_path, args.brand)
+        output_path = build_pdf(data, output_path, args.brand, font=args.font)
     except ValueError as exc:
-        print(f"Error: {sanitize_error(exc)}", file=sys.stderr)
+        print(t("legacy_report.error", error=sanitize_error(exc)), file=sys.stderr)
         sys.exit(1)
-    print(f"PDF report generated: {output_path}")
+    print(t("legacy_report.generated_path", path=output_path))
 
     # Auto-run content check post-build
     warnings = check_content(data)
     if warnings:
-        print(f"\nContent warnings ({len(warnings)}):")
-        for w in warnings:
-            print(f"  - {w}")
+        print("\n" + t("legacy_report.content_warnings", count=len(warnings)))
+        for warning in warnings:
+            print(f"  - {warning}")
 
 
 if __name__ == "__main__":

@@ -1,21 +1,23 @@
 ---
 name: ads-budget
-description: "Plan and review paid-media budgets, bidding, pacing, marginal return, forecasts, CPA, ROAS, MER, LTV:CAC, constraints, and allocation across supported platforms. Use for ad budget allocation, media budget, bidding strategy, scaling, spend pacing, budget forecast, ROAS target, or investment tradeoffs."
+description: "规划和检查各受支持平台的付费媒体预算、出价、投放节奏、边际回报、预测、CPA、ROAS、MER、LTV:CAC、约束和分配。适用于广告预算分配、媒体预算、出价策略、扩量、花费节奏、预算预测、ROAS 目标或投资权衡。"
 ---
 
-# Budget and Bidding
+# 预算与出价
 
-1. Establish objective, conversion value, gross margin, cash constraints, sales
-   capacity, attribution uncertainty, seasonality, and platform minimum evidence.
-2. Normalize spend and outcomes to comparable windows and definitions.
-3. Calculate break-even boundaries and show formulas, inputs, uncertainty, and
-   sensitivity cases.
-4. Distinguish committed baseline, controlled experiments, and reserve capacity.
-5. Compare hold, reallocate, scale, reduce, or experiment options using marginal
-   evidence rather than blended averages alone.
-6. Return a decision-complete plan with platform/campaign amount, timing, owner,
-   guardrails, success measure, and rollback trigger.
+操作语言默认使用简体中文：首次回复、工具前说明、过程进度、AskUserQuestion 的问题、选项和说明，以及最终报告均使用中文；用户明确指定其他操作语言时遵从。广告投放语言独立于操作语言。JSON keys/enums 和原始证据不翻译。委派任务时必须传递操作语言要求。
 
-Rules such as 70/20/10, fixed CPA multiples, fixed budget-to-CPA ratios, and fixed
-percentage scaling are optional heuristics, never universal authorization.
+1. 明确目标、转化价值、毛利率、现金约束、销售
+   承接能力、归因不确定性、季节性和平台最低证据要求。
+2. 将花费和成果规范化为可比的窗口和定义。
+3. 计算盈亏平衡边界，并展示公式、输入、不确定性和
+   敏感性情景。
+4. 区分已承诺的基线投入、受控实验和储备额度。
+5. 运用边际证据比较维持、重新分配、扩量、缩减或实验等选项，
+   而不只是依赖混合平均值。
+6. 返回具备完整决策要素的计划，包含平台/广告系列金额、时间、负责人、
+   防护规则、成功衡量标准和回滚触发条件。
+
+70/20/10、固定 CPA 倍数、固定预算与 CPA 比率，以及固定
+百分比扩量等规则都是可选的启发式方法，绝不构成普遍授权。
 

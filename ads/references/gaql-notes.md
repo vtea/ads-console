@@ -1,57 +1,40 @@
-# GAQL compatibility and accuracy notes
+# GAQL 兼容性与准确性说明
 
-GAQL fields, compatibility rules, date constants, and API versions change. Treat
-this file as query-design guidance, not a current field catalog. Before executing
-a query, record the customer ID, API version, query resource, selected fields,
-date window, and the current Google Ads API field/reference source ID. A runtime
-`INVALID_ARGUMENT` or `UNRECOGNIZED_FIELD` is `needs_input` for query repair; it
-must not be silently converted into an empty dataset.
+GAQL 字段、兼容性规则、日期常量和 API 版本会变化。将本文件视为查询设计指导，而非当前字段目录。执行查询前，记录客户 ID、API 版本、查询资源、所选字段、日期窗口和当前 Google Ads API 字段/参考来源 ID。运行时出现 `INVALID_ARGUMENT` 或 `UNRECOGNIZED_FIELD` 时，应返回用于查询修复的 `needs_input`；绝不能静默转化为空数据集。
 
-## Compatibility discovery
+## 兼容性发现
 
-Use the current official Google Ads API documentation and field metadata for the
-selected version to validate:
+使用所选版本的当前官方 Google Ads API 文档和字段元数据验证：
 
-- whether each selected and filtered field is selectable with the primary resource;
-- whether segments change row grain or conflict with metrics;
-- whether the chosen date constant exists, otherwise use explicit dates;
-- whether resource status is available in-query or must be joined or filtered
-  after retrieval;
-- pagination, partial-failure, quota, currency-unit, timezone, and manager-account
-  behavior.
+- 每个选定和筛选字段能否与主资源一起选择；
+- 细分是否改变行粒度或与指标冲突；
+- 所选日期常量是否存在，否则使用明确日期；
+- 资源状态是否可在查询中获取，还是必须在检索后联接或筛选；
+- 分页、部分失败、配额、货币单位、时区和经理账户行为。
 
-Do not carry a query forward solely because it worked with a prior API version.
+不要仅因查询曾在旧 API 版本中有效，就继续沿用。
 
-## Keyword Deduplication
+## 关键词去重
 
-**Problem:** `keyword_view + segments.date DURING LAST_30_DAYS` returns one row per keyword per day. A keyword active 5 days = 5 rows. Same keyword with BROAD + PHRASE = 2 rows per day = 10 total.
+**问题：** `keyword_view + segments.date DURING LAST_30_DAYS` 为每个关键词每天返回一行。某关键词活跃 5 天 = 5 行。同一关键词具有 BROAD + PHRASE = 每天 2 行 = 总计 10 行。
 
-**Fix:** Deduplicate by `(ad_group_id + keyword_text + match_type)` at fetch time. Aggregate metrics (impressions, clicks, cost, conversions) across duplicate rows.
+**修复：** 在提取时按 `(ad_group_id + keyword_text + match_type)` 去重。聚合重复行的指标（展示、点击、成本、转化）。
 
-**Alternative:** Remove `segments.date` from GAQL queries entirely to eliminate date-level duplication at source.
+**替代方案：** 从 GAQL 查询中完全移除 `segments.date`，从源头消除日期层面的重复。
 
-Record the resulting row grain in the run manifest. Downstream checks may consume
-the normalized keyword grain only after fixture or account-level reconciliation.
+将得到的行粒度记录在运行清单中。下游检查只有在完成夹具或账户层级核对后，才能使用标准化的关键词粒度。
 
-## Filter Scope Best Practices
+## 筛选范围最佳实践
 
-Scope status to the question being answered. A current-serving health view normally
-separates enabled, paused, and removed entities. A historical change, overlap, or
-rollback investigation may require paused entities. Never describe the account as
-complete when the query intentionally excludes a status, and never assume a fixed
-lookback is suitable for every conversion lag or business cycle.
+按待回答问题界定状态范围。当前投放健康视图通常区分启用、暂停和已移除实体。历史变更、重叠或回滚调查可能需要暂停的实体。查询有意排除某状态时，绝不要将账户描述为完整；也绝不要假定固定回溯期适合每一种转化延迟或业务周期。
 
-## Error Handling
+## 错误处理
 
-Track which data fetches failed and why. Report as a G-SYS1 diagnostic:
-- List all failed data sources with error messages
-- Provide per-check context on which checks were skipped due to missing data
-- Never silently skip checks; always explain why data is unavailable
+跟踪哪些数据提取失败及其原因。作为 G-SYS1 诊断报告：
+- 列出所有失败数据来源及错误信息
+- 为因缺少数据而跳过的检查提供逐项背景
+- 绝不静默跳过检查；始终解释数据为何不可用
 
-## Historical match-type interpretation
+## 历史匹配类型解读
 
-Do not infer legacy Broad Match Modified behavior or advertiser intent from the
-current `BROAD` enum, bidding strategy, or absence of a `+` prefix. Inspect dated
-change history, search terms, current matching behavior, campaign controls, and
-owner intent. If that evidence is unavailable, report the historical classification
-as `unknown`; do not turn it into a failure or an automated negative-keyword action.
+不要从当前 `BROAD` 枚举、出价策略或没有 `+` 前缀来推断旧版 Broad Match Modified 行为或广告主意图。检查注明日期的变更历史、搜索词、当前匹配行为、广告系列控制和负责人意图。若这些证据不可用，将历史分类报告为 `unknown`；不得将其转化为失败或自动否定关键词操作。

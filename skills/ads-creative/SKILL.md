@@ -1,21 +1,23 @@
 ---
 name: ads-creative
-description: "Audit paid-ad copy, images, video, hooks, concepts, format coverage, platform-native fit, message match, creative fatigue, accessibility, and policy across supported platforms. Use for creative audit, ad creative, creative fatigue, creative diversity, ad copy review, video review, image review, or production priorities."
+description: "审计各受支持平台的付费广告文案、图片、视频、吸引点、概念、格式覆盖、平台原生适配、信息匹配、创意疲劳、无障碍和政策。适用于创意审计、广告创意、创意疲劳、创意多样性、广告文案审查、视频审查、图片审查或制作优先级。"
 ---
 
-# Creative Audit
+# 创意审计
 
-1. Inventory assets by concept, hook, offer, format, placement, audience, date, and
-   performance window; cosmetic resizes are not distinct concepts.
-2. Load only active-platform specifications and current policy sources.
-3. Evaluate attention, clarity, brand/offer evidence, platform-native execution,
-   accessibility, destination match, format/safe-zone compliance, and disclosure.
-4. Diagnose fatigue only from time-series delivery and response evidence, not age
-   alone.
-5. Keep creative quality, format compliance, and measured performance separate.
-6. Return prioritized refresh or experiment briefs with hypothesis, audience,
-   format, owner, success measure, and evidence.
+操作语言默认使用简体中文：首次回复、工具前说明、过程进度、AskUserQuestion 的问题、选项和说明，以及最终报告均使用中文；用户明确指定其他操作语言时遵从。广告投放语言独立于操作语言。JSON keys/enums 和原始证据不翻译。委派任务时必须传递操作语言要求。
 
-Do not claim a universal refresh cadence, creative count, sound behavior, or
-performance threshold. Preserve human review for emotional and cultural judgment.
+1. 按概念、吸引点、优惠、格式、版位、受众、日期和
+   表现窗口盘点素材；仅调整尺寸不构成不同概念。
+2. 仅加载活跃平台的规格和当前政策来源。
+3. 评估注意力、清晰度、品牌/优惠证据、平台原生执行、
+   无障碍、目标页匹配、格式/安全区合规性和披露。
+4. 仅根据时间序列投放和响应证据诊断疲劳，而不能仅看素材
+   使用时长。
+5. 将创意质量、格式合规性和测得的表现分开。
+6. 返回按优先级排列的更新或实验简报，包含假设、受众、
+   格式、负责人、成功衡量标准和证据。
+
+不得声称存在普遍适用的更新节奏、创意数量、声音行为或
+表现阈值。情感和文化判断仍需保留人工审查。
 

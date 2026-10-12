@@ -1,24 +1,24 @@
-## Summary
+## 摘要
 
-Briefly describe what this PR does and why.
+简要说明此 PR 做了什么，以及原因。
 
-## Type of Change
+## 变更类型
 
-- [ ] Bug fix
-- [ ] New sub-skill or feature
-- [ ] Reference file update (benchmarks, specs, audit checks)
-- [ ] Documentation
-- [ ] Other (describe):
+- [ ] 缺陷修复
+- [ ] 新子技能或功能
+- [ ] 参考文件更新（基准、规格、审计检查）
+- [ ] 文档
+- [ ] 其他（请说明）：
 
-## Checklist
+## 检查清单
 
-- [ ] Tested against a sample ad account (if applicable)
-- [ ] SKILL.md files are under 500 lines
-- [ ] Reference files are under 200 lines
-- [ ] Python scripts output valid JSON
-- [ ] Shell scripts use `set -euo pipefail`
-- [ ] No credentials or API keys in the diff
+- [ ] 已针对示例广告账户测试（如适用）
+- [ ] SKILL.md 文件少于 500 行
+- [ ] 参考文件少于 200 行
+- [ ] Python 脚本输出有效 JSON
+- [ ] Shell 脚本使用 `set -euo pipefail`
+- [ ] 差异中不含凭据或 API 密钥
 
-## Related Issues
+## 相关 issue
 
 Closes #

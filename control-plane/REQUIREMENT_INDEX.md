@@ -1,31 +1,29 @@
-# Ecosystem Requirement Index
+# 生态需求索引
 
-The ecosystem disposition ledger maps user reports and proposed changes to
-these stable requirements. A disposition records intent; implementation still
-requires executable verification.
+生态处置台账将用户报告和变更提案映射到下列稳定需求。处置记录表达意图；实现仍需经过可执行验证。
 
-| ID | Requirement |
+| ID | 需求 |
 |---|---|
-| `REQ-INS-001` | Installation resolves the correct authorized public or private source without embedded private URLs in public instructions. |
-| `REQ-PKG-001` | Release archives use portable paths and pass upload, extraction, manifest, and checksum tests. |
-| `REQ-PLT-001` | Meta intake detects account, pixel, and conversion cold starts and adapts recommendations. |
-| `REQ-PLT-002` | Recommendations are limited to actions supported by the current platform surface. |
-| `REQ-INT-001` | Connectors declare and discover current API versions and capabilities; broken or sunset integrations stay disabled. |
-| `REQ-SEC-001` | Network and browser access resist SSRF, redirects, rebinding, parser differentials, and hostile subresources. |
-| `REQ-SEC-002` | Secret and sensitive-artifact ignores and scans cover common logs, databases, credentials, and local configuration. |
-| `REQ-SEC-003` | Install and release flows avoid unverified remote execution and silent global environment mutation. |
-| `REQ-SEC-004` | Every output and archive path is contained, normalized, symlink-safe, and traversal-safe. |
-| `REQ-SUP-001` | Security reporting has a working private contact/advisory path. |
-| `REQ-MKT-001` | Marketplace names and install identifiers are normalized and tested across supported filesystems. |
-| `REQ-PLT-003` | Meta automation guidance is current, source-grounded, and does not freeze transient product behavior into timeless rules. |
-| `REQ-PLT-004` | Apple Ads has a first-class platform contract. |
-| `REQ-PLT-005` | Google audit and planning cover negative-keyword research with evidence and applicability rules. |
-| `REQ-PLT-006` | Google audit distinguishes same-campaign Search plus DSA overlap and cross-campaign keyword duplication from Search plus PMax overlap, with evidence and applicability rules. |
-| `REQ-EVL-001` | Skills contain observable validation checkpoints and pass failure-derived evaluations. |
-| `REQ-CI-001` | CI produces security analysis, dependency evidence, an SBOM, and release attestations where supported. |
-| `REQ-WIN-001` | Advertised Windows install/uninstall paths pass the supported PowerShell matrix. |
-| `REQ-CRT-001` | Competitor and creative research may use lawful X organic signals with source and confidence labels. |
-| `REQ-FIN-001` | Performance recommendations connect spend, margin, LTV, CAC, incrementality, and confidence without unsupported certainty. |
-| `REQ-DOC-001` | Counts and capability documentation are generated from current manifests rather than maintained by hand. |
-| `REQ-SCP-001` | Product scope excludes unrelated web apps, customer campaigns, white-label assets, and client data. |
-| `REQ-DEP-001` | Dependency changes are reviewed after the v2 dependency model is fixed and must pass the full matrix. |
+| `REQ-INS-001` | 安装应解析到正确且获授权的公开或私有来源，不在公开说明中嵌入私有 URL。 |
+| `REQ-PKG-001` | 发行归档使用可移植路径，并通过上传、解压、清单和校验和测试。 |
+| `REQ-PLT-001` | Meta 信息采集检测账户、像素和转化冷启动，并据此调整建议。 |
+| `REQ-PLT-002` | 建议仅限于当前平台范围支持的操作。 |
+| `REQ-INT-001` | 连接器声明并发现当前 API 版本和能力；损坏或已终止的集成保持禁用。 |
+| `REQ-SEC-001` | 网络和浏览器访问可抵御 SSRF、重定向、重绑定、解析器差异和恶意子资源。 |
+| `REQ-SEC-002` | 秘密及敏感产物的忽略规则和扫描覆盖常见日志、数据库、凭据及本地配置。 |
+| `REQ-SEC-003` | 安装和发布流程避免未经验证的远程执行，以及静默修改全局环境。 |
+| `REQ-SEC-004` | 所有输出和归档路径均受范围约束、经过标准化，并且对符号链接和目录穿越安全。 |
+| `REQ-SUP-001` | 安全报告具有可用的私密联系/安全公告渠道。 |
+| `REQ-MKT-001` | 市场名称和安装标识符经过规范化，并在支持的文件系统上测试。 |
+| `REQ-PLT-003` | Meta 自动化指引保持当前有效、有来源依据，不将暂时的产品行为固化为永恒规则。 |
+| `REQ-PLT-004` | Apple Ads 具有一等平台契约。 |
+| `REQ-PLT-005` | Google 审计和规划涵盖带有证据及适用性规则的否定关键词研究。 |
+| `REQ-PLT-006` | Google 审计使用证据和适用性规则，区分同一广告系列内 Search 与 DSA 重叠、跨广告系列关键词重复，以及 Search 与 PMax 重叠。 |
+| `REQ-EVL-001` | 技能包含可观察的验证检查点，并通过源自失败案例的评估。 |
+| `REQ-CI-001` | CI 在支持时生成安全分析、依赖证据、SBOM 和发行证明。 |
+| `REQ-WIN-001` | 对外宣称的 Windows 安装/卸载路径通过支持的 PowerShell 矩阵。 |
+| `REQ-CRT-001` | 竞争对手和创意研究可使用合法的 X 自然内容信号，并标注来源和置信度。 |
+| `REQ-FIN-001` | 表现建议将花费、利润率、LTV、CAC、增量效果和置信度关联起来，不作无依据的确定性判断。 |
+| `REQ-DOC-001` | 数量和能力文档由当前清单生成，而不是手工维护。 |
+| `REQ-SCP-001` | 产品范围排除无关 Web 应用、客户广告系列、白标资产和客户数据。 |
+| `REQ-DEP-001` | 在 v2 依赖模型确定后再审查依赖变更，并且必须通过完整矩阵。 |

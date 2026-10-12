@@ -1,0 +1,7 @@
+{
+  "metadata.plugin_description": "以 Claude 为核心、默认中文的跨平台付费广告运营工具。支持 Google、Meta、YouTube、LinkedIn、TikTok、Microsoft、Apple、Amazon、Reddit、Pinterest、Snapchat 和 X 的循证审计、规划、创意、监控、实验、版本化 JSON 报告及确定性评分；账户变更须通过能力与授权检查。",
+  "metadata.marketplace_description": "以 Claude 为核心，覆盖 12 个广告平台的便携式付费广告运营工具，默认使用简体中文。",
+  "metadata.marketplace_plugin_description": "跨 12 个广告平台的中文付费广告运营工具：循证审计、确定性评分、全流程工作流、版本化 JSON 报告和受能力门禁约束的账户变更。",
+  "metadata.short_description": "循证付费广告运营（默认中文）",
+  "metadata.default_prompt": "使用 $ads 审计我的付费广告账户，并用简体中文生成有证据支撑的行动计划。"
+}

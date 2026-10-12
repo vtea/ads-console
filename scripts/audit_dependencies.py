@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import argparse
 import ast
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -16,7 +15,13 @@ import subprocess
 import sys
 from typing import Any
 
-from packaging.version import InvalidVersion, Version
+# Source checkouts and installed skills both keep core beside scripts/.
+_CORE_PARENT = str(Path(__file__).resolve().parents[1])
+if _CORE_PARENT not in sys.path:
+    sys.path.insert(0, _CORE_PARENT)
+from claude_ads_core.cli_support import LocaleArgumentParser, cli_locale
+from claude_ads_core.i18n import locale_scope, t
+
 
 
 class DependencyAuditError(RuntimeError):
@@ -52,7 +57,7 @@ def _parse_date(value: Any, label: str) -> date:
     try:
         return date.fromisoformat(str(value))
     except ValueError as exc:
-        raise DependencyAuditError(f"invalid {label} date") from exc
+        raise DependencyAuditError(t('maintenance.audit_dependencies.invalid_date', v0=label)) from exc
 
 
 def _lock_versions(path: Path) -> dict[str, str]:
@@ -64,10 +69,10 @@ def _lock_versions(path: Path) -> dict[str, str]:
             continue
         match = re.match(r"([A-Za-z0-9_.-]+)==([^\s\\]+)", value)
         if not match:
-            raise DependencyAuditError(f"lock entry is not exact: {path.name}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.lock_entry_is_not_exact', v0=path.name))
         name = re.sub(r"[-_.]+", "-", match.group(1)).casefold()
         if name in versions:
-            raise DependencyAuditError(f"duplicate lock component: {path.name}/{name}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.duplicate_lock_component', v0=path.name, v1=name))
         versions[name] = match.group(2)
     return versions
 
@@ -80,19 +85,19 @@ def _repository_file(root: Path, relative: Any, label: str) -> Path:
         or relative.startswith("/")
         or any(part in {"", ".", ".."} for part in relative.split("/"))
     ):
-        raise DependencyAuditError(f"unsafe {label} path: {relative!r}")
+        raise DependencyAuditError(t('maintenance.audit_dependencies.unsafe_path', v0=label, v1=relative))
     candidate = root
     for part in relative.split("/"):
         candidate = candidate / part
         if candidate.is_symlink():
-            raise DependencyAuditError(f"symlinked {label} path: {relative}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.symlinked_path', v0=label, v1=relative))
     try:
         resolved = candidate.resolve(strict=True)
         resolved.relative_to(root.resolve(strict=True))
     except (FileNotFoundError, ValueError) as exc:
-        raise DependencyAuditError(f"missing or escaping {label} path: {relative}") from exc
+        raise DependencyAuditError(t('maintenance.audit_dependencies.missing_or_escaping_path', v0=label, v1=relative)) from exc
     if not resolved.is_file():
-        raise DependencyAuditError(f"{label} path is not a file: {relative}")
+        raise DependencyAuditError(t('maintenance.audit_dependencies.path_is_not_a_file', v0=label, v1=relative))
     return resolved
 
 
@@ -132,8 +137,7 @@ class _ImportGuard:
     def _fail(self, node: ast.AST, reason: str) -> DependencyAuditError:
         line = getattr(node, "lineno", "?")
         return DependencyAuditError(
-            f"unresolvable dynamic import bypasses vulnerability import guard "
-            f"({reason}): {self.path}:{line}"
+            t('maintenance.audit_dependencies.unresolvable_dynamic_import_bypasses_vulnerability_import_guard', v0=reason, v1=self.path, v2=line)
         )
 
     def _module_of(self, node: ast.expr) -> str | None:
@@ -173,7 +177,7 @@ class _ImportGuard:
         module, attribute = target
         name = _string_constant(attribute)
         if name is None:
-            raise self._fail(node, f"computed attribute of {module}")
+            raise self._fail(node, t('maintenance.audit_dependencies.computed_attribute_of', v0=module))
         return name in IMPORTER_ATTRIBUTES[module]
 
     def _bind(self) -> None:
@@ -242,13 +246,13 @@ class _ImportGuard:
                 call_targets.add(id(node.func))
                 name = self._literal_module_name(node)
                 if name is None:
-                    raise self._fail(node, "module name is not a string literal")
+                    raise self._fail(node, t('maintenance.audit_dependencies.module_name_is_not_a_string_literal'))
                 names.add(name)
         for node in ast.walk(self.tree):
             if id(node) in call_targets or id(node) in self.alias_values:
                 continue
             if isinstance(node, ast.expr) and self._is_importer(node):
-                raise self._fail(node, "importer referenced outside a literal call")
+                raise self._fail(node, t('maintenance.audit_dependencies.importer_referenced_outside_a_literal_call'))
         return names
 
 
@@ -326,7 +330,7 @@ def _import_names(path: Path) -> set[str]:
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     except (OSError, SyntaxError) as exc:
-        raise DependencyAuditError(f"cannot inspect Python imports: {path}") from exc
+        raise DependencyAuditError(t('maintenance.audit_dependencies.cannot_inspect_python_imports', v0=path)) from exc
     names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -347,26 +351,30 @@ def _matches_prefix(import_name: str, prefix: str) -> bool:
 
 
 def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord], list[str]]:
+    try:
+        from packaging.version import InvalidVersion, Version
+    except ImportError as exc:
+        raise DependencyAuditError(t("maintenance.audit_dependencies.packaging_required")) from exc
     path = root / "control-plane/manifests/vulnerability-exceptions.json"
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise DependencyAuditError(f"cannot load vulnerability exceptions: {exc}") from exc
+        raise DependencyAuditError(t('maintenance.audit_dependencies.cannot_load_vulnerability_exceptions', v0=exc)) from exc
     if set(document) != {
         "schema_version", "generated_at", "expires_at", "policy", "code_scope", "exceptions"
     } or document["schema_version"] != "1.0.0":
-        raise DependencyAuditError("vulnerability exception document fields mismatch")
+        raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_document_fields_mismatch'))
     if document["policy"] != EXPECTED_POLICY:
-        raise DependencyAuditError("vulnerability exception policy mismatch")
-    generated = _parse_date(document["generated_at"], "document generated_at")
-    expires = _parse_date(document["expires_at"], "document expires_at")
+        raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_policy_mismatch'))
+    generated = _parse_date(document["generated_at"], t("maintenance.audit_dependencies.document_generated_at"))
+    expires = _parse_date(document["expires_at"], t("maintenance.audit_dependencies.document_expires_at"))
     if (
         generated > as_of
         or expires < as_of
         or expires < generated
         or expires - generated > MAX_EXCEPTION_AGE
     ):
-        raise DependencyAuditError("vulnerability exception document is stale or future-dated")
+        raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_document_is_stale_or_future_dated'))
 
     runtime = _lock_versions(root / "requirements.lock")
     development = _lock_versions(root / "requirements-dev.lock")
@@ -377,7 +385,7 @@ def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord]
     )
     if inconsistent:
         raise DependencyAuditError(
-            "runtime and development lock versions disagree: " + ", ".join(inconsistent)
+            t('maintenance.audit_dependencies.runtime_and_development_lock_versions_disagree', v0=', '.join(inconsistent))
         )
     locked = {**runtime, **development}
     records: dict[str, ExceptionRecord] = {}
@@ -391,10 +399,10 @@ def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord]
     }
     exceptions = document["exceptions"]
     if not isinstance(exceptions, list) or not exceptions:
-        raise DependencyAuditError("vulnerability exception document is empty")
+        raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_document_is_empty'))
     for raw in exceptions:
         if not isinstance(raw, dict) or set(raw) - {"forbidden_call_keywords"} != required_fields:
-            raise DependencyAuditError("vulnerability exception fields mismatch")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_fields_mismatch'))
         advisory_id = raw["advisory_id"]
         package = re.sub(r"[-_.]+", "-", str(raw["package"])).casefold()
         if (
@@ -403,9 +411,9 @@ def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord]
             or advisory_id in records
             or package not in EXCEPTION_PACKAGES
         ):
-            raise DependencyAuditError("duplicate or invalid vulnerability exception ID")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.duplicate_or_invalid_vulnerability_exception_id'))
         if raw["status"] != "not_affected" or raw["justification"] != "vulnerable_code_not_in_execute_path":
-            raise DependencyAuditError(f"unsupported vulnerability disposition: {advisory_id}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.unsupported_vulnerability_disposition', v0=advisory_id))
         verified = _parse_date(raw["verified_at"], f"{advisory_id} verified_at")
         record_expires = _parse_date(raw["expires_at"], f"{advisory_id} expires_at")
         if (
@@ -415,9 +423,9 @@ def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord]
             or record_expires > expires
             or record_expires - verified > MAX_EXCEPTION_AGE
         ):
-            raise DependencyAuditError(f"vulnerability exception is stale or future-dated: {advisory_id}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_is_stale_or_future_dated', v0=advisory_id))
         if locked.get(package) != raw["affected_version"]:
-            raise DependencyAuditError(f"vulnerability exception version drift: {advisory_id}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_version_drift', v0=advisory_id))
         evidence_paths = raw["evidence_paths"]
         if (
             not isinstance(evidence_paths, list)
@@ -425,9 +433,9 @@ def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord]
             or not all(isinstance(item, str) for item in evidence_paths)
             or len(evidence_paths) != len(set(evidence_paths))
         ):
-            raise DependencyAuditError(f"vulnerability exception lacks evidence: {advisory_id}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_lacks_evidence', v0=advisory_id))
         for relative in evidence_paths:
-            _repository_file(root, relative, f"vulnerability evidence for {advisory_id}")
+            _repository_file(root, relative, t('maintenance.audit_dependencies.vulnerability_evidence_for', v0=advisory_id))
         prefixes = raw["forbidden_import_prefixes"]
         call_keywords = raw.get("forbidden_call_keywords", [])
         if (
@@ -441,7 +449,7 @@ def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord]
             or not all(CALL_KEYWORD_PATTERN.fullmatch(item) for item in call_keywords)
             or not (prefixes or call_keywords)
         ):
-            raise DependencyAuditError(f"vulnerability exception lacks import guards: {advisory_id}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_lacks_import_guards', v0=advisory_id))
         forbidden.update(prefixes)
         forbidden_calls.update(call_keywords)
         records[advisory_id] = ExceptionRecord(
@@ -465,7 +473,7 @@ def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord]
             fixes = [Version(item) for item in fixed_versions]
         except (InvalidVersion, TypeError) as exc:
             raise DependencyAuditError(
-                f"vulnerability exception version is invalid: {advisory_id}"
+                t('maintenance.audit_dependencies.vulnerability_exception_version_is_invalid', v0=advisory_id)
             ) from exc
         if (
             not isinstance(aliases, list)
@@ -489,25 +497,25 @@ def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord]
             or raw["owner"] != "security-owner"
             or record_expires < verified
         ):
-            raise DependencyAuditError(f"vulnerability exception evidence is invalid: {advisory_id}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_evidence_is_invalid', v0=advisory_id))
         seen_aliases.update(aliases)
 
     scope = document["code_scope"]
     if scope != EXPECTED_CODE_SCOPE:
-        raise DependencyAuditError("vulnerability exception code scope mismatch")
+        raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exception_code_scope_mismatch'))
     imports: dict[str, set[str]] = {}
     calls: dict[str, set[str]] = {}
     for relative in scope:
         target = root / relative
         if not isinstance(relative, str) or not target.exists():
-            raise DependencyAuditError(f"vulnerability code scope is missing: {relative}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_code_scope_is_missing', v0=relative))
         candidates = [target] if target.is_file() else sorted(target.rglob("*.py"))
         for candidate in candidates:
             key = candidate.relative_to(root).as_posix()
             imports[key] = _import_names(candidate)
             calls[key] = _call_keywords(candidate)
     violations = sorted(
-        f"{relative}: {import_name} matches prohibited {prefix}"
+        t('maintenance.audit_dependencies.matches_prohibited', v0=relative, v1=import_name, v2=prefix)
         for relative, imported in imports.items()
         for import_name in imported
         for prefix in forbidden
@@ -515,7 +523,7 @@ def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord]
     )
     violations.extend(
         sorted(
-            f"{relative}: {call} matches prohibited {pattern}"
+            t('maintenance.audit_dependencies.matches_prohibited', v0=relative, v1=call, v2=pattern)
             for relative, observed_calls in calls.items()
             for call in observed_calls
             for pattern in forbidden_calls
@@ -523,7 +531,7 @@ def load_exceptions(root: Path, as_of: date) -> tuple[dict[str, ExceptionRecord]
         )
     )
     if violations:
-        raise DependencyAuditError("vulnerability execution-path guard failed: " + "; ".join(violations))
+        raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_execution_path_guard_failed', v0='; '.join(violations)))
     return records, sorted(scope)
 
 
@@ -536,7 +544,7 @@ def evaluate_reports(
     for profile, report in reports.items():
         dependencies = report.get("dependencies")
         if not isinstance(dependencies, list):
-            raise DependencyAuditError(f"pip-audit report is invalid: {profile}")
+            raise DependencyAuditError(t('maintenance.audit_dependencies.pip_audit_report_is_invalid', v0=profile))
         for dependency in dependencies:
             package = re.sub(r"[-_.]+", "-", str(dependency.get("name", ""))).casefold()
             version = str(dependency.get("version", ""))
@@ -550,9 +558,9 @@ def evaluate_reports(
                     unhandled.append(f"{profile}:{package}@{version}:{advisory_id}")
     stale = sorted(set(records) - observed)
     if unhandled:
-        raise DependencyAuditError("unhandled dependency vulnerabilities: " + ", ".join(sorted(unhandled)))
+        raise DependencyAuditError(t('maintenance.audit_dependencies.unhandled_dependency_vulnerabilities', v0=', '.join(sorted(unhandled))))
     if stale:
-        raise DependencyAuditError("vulnerability exceptions no longer match audit output: " + ", ".join(stale))
+        raise DependencyAuditError(t('maintenance.audit_dependencies.vulnerability_exceptions_no_longer_match_audit_output', v0=', '.join(stale)))
     return {
         "status": "pass",
         "profiles": sorted(reports),
@@ -566,10 +574,10 @@ def _run_pip_audit(root: Path, lock_name: str) -> dict[str, Any]:
     try:
         installed_version = distribution_version("pip-audit")
     except PackageNotFoundError as exc:
-        raise DependencyAuditError("pip-audit is not installed") from exc
+        raise DependencyAuditError(t('maintenance.audit_dependencies.pip_audit_is_not_installed')) from exc
     if installed_version != PIP_AUDIT_VERSION:
         raise DependencyAuditError(
-            f"pip-audit version mismatch: expected {PIP_AUDIT_VERSION}, got {installed_version}"
+            t('maintenance.audit_dependencies.pip_audit_version_mismatch_expected_got', v0=PIP_AUDIT_VERSION, v1=installed_version)
         )
     command = [
         sys.executable, "-m", "pip_audit", "--no-deps", "--disable-pip",
@@ -579,18 +587,23 @@ def _run_pip_audit(root: Path, lock_name: str) -> dict[str, Any]:
     try:
         report = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
-        detail = result.stderr.strip().splitlines()[-1:] or ["no diagnostic"]
-        raise DependencyAuditError(f"pip-audit did not return JSON for {lock_name}: {detail[0]}") from exc
+        detail = result.stderr.strip().splitlines()[-1:] or [t("maintenance.audit_dependencies.no_diagnostic")]
+        raise DependencyAuditError(t('maintenance.audit_dependencies.pip_audit_did_not_return_json_for', v0=lock_name, v1=detail[0])) from exc
     if result.returncode not in {0, 1}:
-        raise DependencyAuditError(f"pip-audit failed for {lock_name} with exit {result.returncode}")
+        raise DependencyAuditError(t('maintenance.audit_dependencies.pip_audit_failed_for_with_exit', v0=lock_name, v1=result.returncode))
     return report
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument("--as-of", type=date.fromisoformat, default=date.today())
-    args = parser.parse_args()
+def main(argv: list[str] | None = None) -> int:
+    with locale_scope(cli_locale(argv)):
+        return _main(argv)
+
+
+def _main(argv: list[str] | None = None) -> int:
+    parser = LocaleArgumentParser(description=t('maintenance.audit_dependencies.run_pip_audit_with_expiring_code_path_bound_not_affected_evidence'))
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1], help=t("maintenance.common.root_help"))
+    parser.add_argument("--as-of", type=date.fromisoformat, default=date.today(), help=t("maintenance.audit_dependencies.as_of_help"))
+    args = parser.parse_args(argv)
     root = args.root.resolve()
     try:
         records, scope = load_exceptions(root, args.as_of)
@@ -603,10 +616,10 @@ def main() -> int:
         }
         summary = evaluate_reports(reports, records)
         summary["guarded_code_scope"] = scope
-        print(json.dumps(summary, sort_keys=True))
+        print(json.dumps(summary, sort_keys=True, ensure_ascii=False))
         return 0
     except DependencyAuditError as exc:
-        print(f"dependency audit failed: {exc}", file=sys.stderr)
+        print(t('maintenance.audit_dependencies.dependency_audit_failed', v0=exc), file=sys.stderr)
         return 1
 
 

@@ -1,38 +1,21 @@
-# TikTok Ads creative generation contract
+# TikTok Ads 创意生成契约
 
-TikTok is not universally vertical-only, and upload acceptance, aspect ratios,
-audio, duration, copy fields, safe zones, and automation vary by ad format,
-placement, market, device, and account. Resolve the exact requirements from current
-official evidence and the selected account before generation.
+TikTok 并非在所有情况下只支持竖屏；上传接受条件、宽高比、音频、时长、文案字段、安全区域和自动化，因广告格式、版位、市场、设备和账户而异。生成前，根据当前官方证据和所选账户确定精确要求。
 
-## Specification gate
+## 规格关卡
 
-For each intended In-Feed, Spark, TopView, image, carousel, search, shopping, app,
-or other eligible surface, record the official source ID and date, objective,
-placement, identity/post ownership, ratio, dimensions, file type, codec, duration,
-audio requirements, copy fields, safe area, and account eligibility.
+对于每个计划使用的 In-Feed、Spark、TopView、图像、轮播、搜索、购物、应用或其他符合资格的广告载体，记录官方来源 ID 和日期、目标、版位、身份/帖子所有权、比例、尺寸、文件类型、编解码器、时长、音频要求、文案字段、安全区域和账户资格。
 
-Return `needs_input` when the surface or specification cannot be verified. Do not
-reject horizontal, square, static, or silent assets by universal rule; determine
-their applicability for the selected format. Do not infer that an accepted asset
-will perform well.
+无法验证广告载体或规格时，返回 `needs_input`。不要依据通用规则拒绝横屏、方形、静态或无声素材；应确定其对所选格式的适用性。不要推断被接受的素材就会表现良好。
 
-## TikTok-specific review
+## TikTok 专属审查
 
-- Preview UI overlays on the current placement and device. Use official templates
-  or preview tools rather than fixed pixel coordinates copied from an old guide.
-- Verify Spark authorization and post state before treating organic content as an
-  ad asset.
-- Treat sound as a creative and accessibility decision subject to format rules,
-  licensing, captions, brand context, and the user's likely sound-off behavior.
-- Keep concepts native to the audience and offer without fabricating UGC,
-  testimonials, identities, or performance proof.
-- Treat Smart+, Symphony, and other automated creative surfaces as discoverable
-  account capabilities; verify access, settings, asset use, and owner intent.
+- 在当前版位和设备上预览 UI 叠加层。使用官方模板或预览工具，而非从旧指南复制固定像素坐标。
+- 将自然内容视为广告素材前，核实 Spark 授权和帖子状态。
+- 将声音视为创意和可访问性决策，受格式规则、许可、字幕、品牌背景和用户可能的静音行为约束。
+- 使概念原生适配受众和优惠，不编造 UGC、证言、身份或表现证明。
+- 将 Smart+、Symphony 和其他自动创意载体视为可发现的账户能力；核实访问权限、设置、素材使用和负责人意图。
 
-## Output contract
+## 输出契约
 
-Record concept ID, placement, source IDs, ratio, dimensions, format, codec/duration/
-audio where relevant, identity authorization, copy, checksum, provenance, rights,
-safety review, and preview results. Generation remains draft-only and does not
-imply upload, post authorization, or live TikTok mutation support.
+记录概念 ID、版位、来源 ID、比例、尺寸、格式、相关时的编解码器/时长/音频、身份授权、文案、校验和、溯源、权利、安全审查和预览结果。生成始终仅为草稿，不意味着上传、帖子授权或实时 TikTok 变更支持。

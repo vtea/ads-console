@@ -1,61 +1,40 @@
-# Adjacent advertising channels
+# 相邻广告渠道
 
-Reddit, Pinterest, Snapchat, and X are first-class Claude Ads platforms. This
-reference covers channels outside the twelve-platform product contract. It is a
-discovery aid, not an assertion that an integration, placement, price, audience,
-or measurement feature is currently available.
+Reddit、Pinterest、Snapchat 和 X 是 Claude Ads 的一等支持平台。本参考文档涵盖十二平台产品契约之外的渠道。它用于辅助发现机会，并不声称任何集成、版位、价格、受众或衡量功能当前可用。
 
-## Applicability gate
+## 适用性关卡
 
-Before recommending an adjacent channel, record:
+在推荐相邻渠道之前，记录：
 
-- the business objective, geography, audience, budget ceiling, and test horizon;
-- current inventory and account eligibility from an official dated source;
-- the buying route, fee model, minimum commitment, and cancellation terms;
-- the measurement path, attribution limitations, consent requirements, and a
-  channel-independent success measure;
-- the creative formats actually accepted by the selected publisher or exchange;
-- whether Claude Ads has an executable adapter, export contract, or only advisory
-  guidance for the channel.
+- 业务目标、地理区域、受众、预算上限和测试周期；
+- 来自注明日期的官方来源的当前广告资源与账户资格；
+- 购买途径、收费模式、最低承诺和取消条款；
+- 衡量路径、归因限制、同意要求，以及独立于渠道的成功指标；
+- 所选发布商或广告交易平台实际接受的创意格式；
+- Claude Ads 对该渠道具备可执行适配器、导出契约，还是仅有咨询指导。
 
-Without this evidence, return a research lead rather than a budget allocation.
-Do not borrow CPM, CPC, CPL, reach, demographic, or conversion assumptions from a
-different market or inventory type.
+没有这些证据时，应返回研究线索，而非预算分配。不得借用不同市场或广告资源类型的 CPM、CPC、CPL、覆盖人数、人口统计或转化假设。
 
-## CTV and OTT
+## CTV 和 OTT
 
-Potential buying routes include publisher-direct, platform-managed, and
-programmatic inventory. Treat each as a different product. Verify publishers,
-device coverage, geography, skippability, frequency controls, brand-safety tools,
-household identity, reporting latency, and lift-study eligibility before planning.
+潜在购买途径包括发布商直购、平台管理和程序化广告资源。将每一种都视为不同产品。规划前应核实发布商、设备覆盖、地理区域、可跳过性、频次控制、品牌安全工具、家庭身份识别、报告延迟以及提升研究资格。
 
-CTV may fit an upper-funnel or incremental-reach hypothesis when the advertiser
-has appropriate video, a defensible reach or lift measure, and sufficient test
-control. It is not inherently unsuitable for response objectives, and a fixed
-monthly-spend threshold is not evidence of fit.
+当广告主拥有合适的视频、可辩护的覆盖或提升衡量指标，以及充分的测试控制时，CTV 可能适合漏斗上层或增量覆盖假设。它并非天然不适合直接响应目标，固定的月度支出阈值也不能证明适配性。
 
-## Software directories and review platforms
+## 软件目录和评价平台
 
-Potential surfaces include software category directories, comparison sites, and
-review platforms. Verify whether the product is sold as media, sponsorship,
-lead-generation, or another commercial arrangement; definitions of a qualified
-lead and duplicate/refund rules often matter more than the headline price.
+潜在广告载体包括软件类别目录、比较网站和评价平台。核实产品是以媒体、赞助、线索获取，还是其他商业安排的形式出售；合格线索的定义以及重复线索/退款规则，往往比标价更重要。
 
-Consider a test only when category intent, review quality, deal economics, routing,
-consent, deduplication, and downstream revenue measurement are clear. Never infer
-minimum review counts, lead prices, or deal-value thresholds without current
-platform terms and the advertiser's own close-rate economics.
+仅当类别意图、评价质量、交易经济性、线索路由、同意、去重以及下游收入衡量均明确时，才考虑测试。没有当前平台条款和广告主自身的成交率经济数据，不得推断最低评价数量、线索价格或交易价值阈值。
 
-## Other publisher or retail-media opportunities
+## 其他发布商或零售媒体机会
 
-For any publisher, marketplace, retailer, creator network, or emerging ad surface:
+对于任何发布商、市场平台、零售商、创作者网络或新兴广告载体：
 
-1. register the official product, policy, specification, and measurement sources;
-2. classify availability by account, market, objective, placement, and buying route;
-3. map export or API fields before comparing performance with another platform;
-4. run a bounded experiment with owner-approved spend and stop conditions;
-5. keep announced, beta, premium, managed-service, and wait-listed capabilities
-   unscored until account evidence confirms access.
+1. 登记官方产品、政策、规格和衡量来源；
+2. 按账户、市场、目标、版位和购买途径分类可用性；
+3. 在与其他平台比较表现前，映射导出或 API 字段；
+4. 在负责人批准的支出和停止条件下开展有明确边界的实验；
+5. 对已宣布、测试版、高级、托管服务和候补名单中的能力保持不评分，直到有账户证据确认访问权限。
 
-Claude Ads remains read-only by default. An adjacent-channel recommendation never
-creates mutation authority or implies a live connector.
+Claude Ads 默认保持只读。相邻渠道建议绝不会产生变更权限，也不意味着存在实时连接器。

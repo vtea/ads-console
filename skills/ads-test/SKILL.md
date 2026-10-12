@@ -1,21 +1,23 @@
 ---
 name: ads-test
-description: "Design and evaluate paid-ad experiments with hypotheses, randomization units, sample-size and duration assumptions, guardrails, platform experiment tools, analysis, and decision rules. Use for A/B test, split test, experiment design, hypothesis, statistical significance, sample size, test duration, or experiment readout."
+description: "设计和评估付费广告实验，涵盖假设、随机化单位、样本量和持续时间假设、防护规则、平台实验工具、分析和决策规则。适用于 A/B 测试、拆分测试、实验设计、假设、统计显著性、样本量、测试持续时间或实验解读。"
 ---
 
-# Paid Media Experiment
+# 付费媒体实验
 
-1. State the decision, causal hypothesis, treatment, control, randomization unit,
-   population, primary metric, guardrails, minimum effect, and stopping rule.
-2. Check platform constraints, overlapping experiments, conversion lag, seasonality,
-   interference, and measurement quality.
-3. Calculate sample and duration from declared assumptions; disclose approximations.
-4. Change one decision surface unless the design explicitly estimates interactions.
-5. Pre-register exclusions, quality checks, analysis, and decision thresholds.
-6. For readout, verify assignment integrity and data completeness before estimating
-   effect and uncertainty.
-7. Return setup or readout in versioned JSON with a plain-language decision.
+操作语言默认使用简体中文：首次回复、工具前说明、过程进度、AskUserQuestion 的问题、选项和说明，以及最终报告均使用中文；用户明确指定其他操作语言时遵从。广告投放语言独立于操作语言。JSON keys/enums 和原始证据不翻译。委派任务时必须传递操作语言要求。
 
-Do not repeatedly peek and stop on a favorable result, call underpowered noise a
-winner, or generalize beyond the tested population.
+1. 说明决策、因果假设、处理组、对照组、随机化单位、
+   总体、主要指标、防护规则、最小效应和停止规则。
+2. 检查平台约束、重叠实验、转化延迟、季节性、
+   干扰和衡量质量。
+3. 根据已声明的假设计算样本量和持续时间；披露近似处理。
+4. 每次只改变一个决策维度，除非实验设计明确估计交互作用。
+5. 预先登记排除项、质量检查、分析和决策阈值。
+6. 解读结果时，在估计效果和不确定性之前，验证分组分配完整性和
+   数据完整性。
+7. 以带版本的 JSON 返回实验设置或解读，并附上通俗易懂的决策说明。
+
+不得反复窥视结果并在出现有利结果时停止，不得将检验效能不足的噪声称为
+胜出结果，也不得推广到受测总体之外。
 

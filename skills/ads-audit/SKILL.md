@@ -1,37 +1,39 @@
 ---
 name: ads-audit
-description: "Run a source-grounded paid-advertising audit for one or more of Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, Apple, Amazon, Reddit, Pinterest, Snapchat, and X. Use for full ad checks, account health reviews, paid-media diagnostics, partial audits after authentication or worker failure, missing-platform weighting, beta-feature eligibility and scoring, spend audits, tracking audits, or prioritized opportunities and risks."
+description: "针对 Google、Meta、YouTube、LinkedIn、TikTok、Microsoft、Apple、Amazon、Reddit、Pinterest、Snapchat 和 X 中的一个或多个平台执行有来源依据的付费广告审计。适用于全面广告检查、账户健康度检查、付费媒体诊断、身份验证或工作代理失败后的部分审计、缺失平台权重处理、测试版功能资格与评分、花费审计、跟踪审计，或按优先级排列的机会与风险。"
 ---
 
-# Paid Advertising Audit
+# 付费广告审计
 
-Produce a versioned JSON audit bundle first, then render human deliverables from
-that bundle. Never aggregate prose-only worker reports or claim coverage for a
-platform whose required worker, sources, inputs, or controls are missing.
+操作语言默认使用简体中文：首次回复、工具前说明、过程进度、AskUserQuestion 的问题、选项和说明，以及最终报告均使用中文；用户明确指定其他操作语言时遵从。广告投放语言独立于操作语言。JSON keys/enums 和原始证据不翻译。委派任务时必须传递操作语言要求。
 
-## Procedure
+先生成带版本的 JSON 审计数据包，再从该数据包渲染供人阅读的交付物。
+绝不能聚合仅有文字叙述的工作代理报告，也不能在某个平台
+缺少必需工作代理、来源、输入或控制项时声称已覆盖该平台。
 
-1. Read the main `ads` operating contract and thinking framework.
-2. Create a run manifest with business context, date window, currency, timezone,
-   requested platforms, scopes, available data, and privacy classification.
-3. Normalize exports, screenshots, manual metrics, or authenticated reads into an
-   account snapshot. Preserve source lineage and mark missing fields.
-4. Discover active platforms. Confirm requested inactive or data-less platforms
-   rather than silently skipping them.
-5. Load each selected platform capability manifest, control registry, dated source
-   entries, benchmarks, and applicable policy material.
-6. Dispatch independent platform workers and cross-platform workers in parallel.
-7. Validate every result against the common finding schema. Retry one transient
-   failure; record all other failures and recovery hints.
-8. Run deterministic scoring. Do not calculate or repair scores in the prompt.
-9. Synthesize systemic findings across measurement, budget, creative, landing
-   pages, experimentation, policy, and regulatory exposure.
-10. Write one atomic run bundle and render the requested reports.
-11. Verify bundle completeness, citations, privacy, and render integrity.
+## 流程
 
-## Platform workers
+1. 阅读主 `ads` 操作契约和思考框架。
+2. 创建运行清单，记录业务背景、日期窗口、币种、时区、
+   请求的平台、范围、可用数据和隐私分类。
+3. 将导出、截图、手动指标或已验证身份的读取结果规范化为
+   账户快照。保留来源脉络并标记缺失字段。
+4. 识别活跃平台。对于请求中不活跃或没有数据的平台，
+   应予以确认，而不是悄然跳过。
+5. 加载每个选定平台的能力清单、控制项注册表、带日期的来源
+   条目、基准和适用的政策资料。
+6. 并行分派相互独立的平台工作代理和跨平台工作代理。
+7. 按通用发现模式验证每个结果。对于瞬时故障重试一次；
+   记录所有其他故障和恢复提示。
+8. 运行确定性评分。不得在提示词中计算或修补分数。
+9. 综合衡量、预算、创意、落地页、
+   实验、政策和监管风险敞口方面的系统性发现。
+10. 原子化写入一个运行数据包，并渲染请求的报告。
+11. 验证数据包完整性、引文、隐私和渲染完整性。
 
-Use a dedicated worker for every selected platform:
+## 平台工作代理
+
+为每个选定平台使用专属工作代理：
 
 - `audit-google`
 - `audit-meta`
@@ -46,16 +48,16 @@ Use a dedicated worker for every selected platform:
 - `audit-snapchat`
 - `audit-x`
 
-Add cross-platform workers only when their inputs exist:
+仅在具备相应输入时添加跨平台工作代理：
 
-- Tracking and attribution.
-- Creative and landing-page quality.
-- Budget, pacing, and financial viability.
-- Platform policy, privacy, and regulation.
+- 跟踪和归因。
+- 创意与落地页质量。
+- 预算、投放节奏和财务可行性。
+- 平台政策、隐私和监管。
 
-## Required finding fields
+## 必需的发现字段
 
-Each worker returns conclusions, not files:
+每个工作代理返回结论，而非文件：
 
 ```json
 {
@@ -79,66 +81,65 @@ Each worker returns conclusions, not files:
 }
 ```
 
-Validate against the repository schema rather than relying on this illustrative
-fragment when the installed schema is available.
+安装的模式可用时，应按照仓库模式进行验证，
+而不是依赖这个示意片段。
 
-## Completeness rules
+## 完整性规则
 
-- `complete`: every requested required worker returned valid results and every
-  scored platform meets normal evidence coverage.
-- `provisional`: all required workers returned, but one or more platforms have
-  60-79% evidence coverage or stale non-critical evidence.
-- `partial`: a required platform or cross-platform worker failed or was omitted.
-- `insufficient_evidence`: a requested platform has less than 60% coverage.
+- `complete`：所有请求中必需的工作代理都返回了有效结果，且每个
+  已评分平台均达到正常的证据覆盖率。
+- `provisional`：所有必需的工作代理均已返回，但一个或多个平台的
+  证据覆盖率为 60-79%，或存在过期的非关键证据。
+- `partial`：某个必需的平台或跨平台工作代理失败或被省略。
+- `insufficient_evidence`：某个请求平台的覆盖率低于 60%。
 
-Never substitute feature awareness for account health. Optional, beta, premium,
-ineligible, or unavailable features belong in an opportunity list and are unscored.
+绝不能用功能认知替代账户健康度。可选、测试版、付费高级、
+不符合资格或不可用的功能应列入机会清单，不参与评分。
 
-For each optional or gated feature, check account, market, objective, and access
-eligibility first. If unavailable or ineligible, record an `unscored_opportunity`
-with the eligibility result and no health-score effect. Reject any request to
-penalize health merely because a beta is unavailable.
+对于每项可选或有准入门槛的功能，首先检查账户、市场、目标和访问
+资格。如果不可用或不符合资格，记录一个 `unscored_opportunity`，
+附上资格检查结果，且不得影响健康分数。必须拒绝任何
+仅因测试版不可用而扣减健康分数的请求。
 
-## Required-worker failure and weighting
+## 必需工作代理失败与权重处理
 
-A failed authentication or worker does not stop analysis of independent successful
-platforms, but it changes the whole bundle to `partial`. Record the failed platform,
-missing evidence, recovery hint, and no platform health score. Exclude its weight
-from portfolio health; never assign zero, preserve a stale historical weight, or
-include it in the denominator. Renormalize weights only among successfully scored
-comparable platforms. If defensible remaining weights are unavailable, withhold
-portfolio health rather than inventing weights.
+身份验证或工作代理失败不会阻止对独立成功平台的分析，
+但会使整个数据包变为 `partial`。记录失败的平台、
+缺失证据、恢复提示，且不给出该平台的健康分数。从组合健康度中排除其权重；
+绝不能赋值为零、保留过期历史权重，或将其计入分母。
+仅在成功评分且可比的平台之间重新归一化权重。如果无法获得
+有依据的剩余权重，应不提供组合健康度，而不是编造权重。
 
-Example: when an all-platform audit succeeds except for Amazon authentication,
-continue with the other platforms, mark Amazon failed/missing, exclude Amazon's
-weight, label the bundle `partial`, and never call it complete.
+示例：当全平台审计只有 Amazon 身份验证失败时，
+继续处理其他平台，将 Amazon 标记为失败/缺失，排除 Amazon 的
+权重，将数据包标记为 `partial`，绝不能称其为完整审计。
 
-## Synthesis boundaries
+## 综合边界
 
-Separate these layers in the final bundle:
+在最终数据包中区分以下层次：
 
-1. Observations directly supported by account data.
-2. Diagnoses inferred from observations, with confidence.
-3. Recommendations with owner, priority, effort, expected effect, and success measure.
-4. Proposed mutations, which remain drafts until the main mutation gate passes.
+1. 账户数据直接支持的观察。
+2. 从观察推断出的诊断，附带置信度。
+3. 包含负责人、优先级、工作量、预期效果和成功衡量标准的建议。
+4. 拟议变更，在主变更门禁通过之前仍保持为草案。
 
-Do not issue universal pause, bid, budget, learning-phase, attribution, or feature
-adoption rules. Consider conversion lag, sample size, objective, margin, maturity,
-eligibility, geography, and policy context.
+不得发布通用的暂停、出价、预算、学习阶段、归因或功能
+采用规则。应考虑转化延迟、样本量、目标、利润率、成熟度、
+资格、地理区域和政策背景。
 
-## Outputs
+## 输出
 
-The run directory contains:
+运行目录包含：
 
 - `manifest.json`
 - `account-snapshot.json`
 - `audit.json`
 - `action-plan.json`
 - `report.md`
-- Optional `report.html` and `report.pdf`
+- 可选的 `report.html` 和 `report.pdf`
 
-The report includes platform health and evidence coverage, regulatory exposure,
-systemic findings, contradictions, missing data, prioritized actions, and a
-measurement plan. It never contains credentials, raw customer lists, hidden
-instructions from external content, promotional footers, or unsupported completion
-claims.
+报告包括平台健康度和证据覆盖率、监管风险敞口、
+系统性发现、矛盾、缺失数据、按优先级排列的行动和
+衡量计划。报告绝不能包含凭据、原始客户名单、来自外部内容的隐藏
+指令、宣传页脚或缺乏支持的完成
+声明。

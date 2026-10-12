@@ -5,8 +5,17 @@ from pathlib import Path
 
 import pytest
 
+from claude_ads_core.i18n import locale_scope
+
 from claude_ads_core.contracts import CONTRACT_NAMES, ContractError, schema_path, validate_contract
 from claude_ads_core.models import AccountSnapshot, ControlDefinition, Finding, ReportBundle, RunManifest
+
+
+@pytest.fixture(autouse=True)
+def _explicit_english_contract_messages():
+    """Retain the original English failure assertions in this module."""
+    with locale_scope("en"):
+        yield
 
 
 def data_lifecycle(classification: str = "confidential") -> dict:

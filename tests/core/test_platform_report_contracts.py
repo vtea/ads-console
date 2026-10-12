@@ -99,8 +99,13 @@ def test_every_platform_produces_a_schema_valid_unscored_finding_and_report(
         "actions": [],
     }
     validate_contract("report-bundle", bundle)
-    markdown = render_markdown(bundle)
-    html = render_html(bundle)
+    markdown = render_markdown(bundle, locale="en")
+    html = render_html(bundle, locale="en")
+    chinese_markdown = render_markdown(bundle, locale="zh-CN")
+    chinese_html = render_html(bundle, locale="zh-CN")
+    assert "证据不足" in chinese_markdown
+    assert "不得将本报告表述为完整审计" in chinese_markdown
+    assert 'lang="zh-CN"' in chinese_html
     assert control_id in markdown.replace("\\-", "-")
     assert control_id in html
     assert "Insufficient evidence" in markdown

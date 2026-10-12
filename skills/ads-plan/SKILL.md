@@ -1,31 +1,33 @@
 ---
 name: ads-plan
-description: "Create a professional paid-advertising strategy covering objectives, economics, platform selection, campaign architecture, audiences, budget, creative, measurement, experiments, governance, rollout, and reporting. Use for ad plan, media plan, PPC strategy, paid-social strategy, campaign architecture, advertising roadmap, or channel planning."
+description: "创建专业的付费广告策略，涵盖目标、经济效益、平台选择、广告系列架构、受众、预算、创意、衡量、实验、治理、分阶段实施和报告。适用于广告计划、媒体计划、PPC 策略、付费社交策略、广告系列架构、广告路线图或渠道规划。"
 ---
 
-# Paid Media Plan
+# 付费媒体计划
 
-1. Read the setup profile, business economics, evidence, current account state, and
-   relevant industry template as optional input.
-2. Define objective, customer, offer, conversion, value, constraints, geography,
-   regulated category, time horizon, and success criteria.
-3. Evaluate channel roles and exclusions from first principles; do not require every
-   supported platform. For a channel outside the twelve-platform contract, load
-   `ads/references/additional-platforms.md` and return a research lead unless
-   its current buying, eligibility, measurement, and creative evidence is present.
-4. Before proposing Meta budgets, learning-phase expectations, bidding,
-   consolidation, or performance forecasts, collect the account, Pixel, and
-   conversion cold-start dimensions per the contract in
-   `skills/ads-meta/SKILL.md`. When any dimension is cold or `unknown`, plan
-   for measurement validation, explicit creative hypotheses, staged reversible
-   tests, and confidence labels; do not apply mature-account benchmarks to
-   missing history.
-5. Specify campaign architecture, audience strategy, creative system, budget and
-   pacing, measurement, experiments, policy controls, and operating cadence.
-6. Phase prerequisites before launch, learning, optimization, and scale.
-7. Assign every action an owner, timing, dependency, guardrail, evidence, success
-   measure, and rollback or exit condition.
-8. Return canonical JSON and render the requested human plan.
+操作语言默认使用简体中文：首次回复、工具前说明、过程进度、AskUserQuestion 的问题、选项和说明，以及最终报告均使用中文；用户明确指定其他操作语言时遵从。广告投放语言独立于操作语言。JSON keys/enums 和原始证据不翻译。委派任务时必须传递操作语言要求。
 
-A plan is advisory. It becomes an account change only through launch or optimize
-mutation gates.
+1. 阅读设置档案、业务经济效益、证据、当前账户状态，
+   并将相关行业模板作为可选输入。
+2. 定义目标、客户、优惠、转化、价值、约束、地理区域、
+   受监管类别、时间范围和成功标准。
+3. 从第一性原理评估渠道角色和排除项；不得要求使用每个
+   受支持平台。对于十二平台契约以外的渠道，加载
+   `ads/references/additional-platforms.md` 并返回研究线索，除非
+   已具备其当前购买方式、资格、衡量和创意证据。
+4. 在提出 Meta 预算、学习阶段预期、出价、
+   整合或表现预测之前，按照
+   `skills/ads-meta/SKILL.md` 中的契约收集账户、Pixel 和
+   转化冷启动维度。任一维度处于冷启动或 `unknown` 状态时，应规划
+   衡量验证、明确的创意假设、分阶段可逆
+   测试和置信度标注；不得将成熟账户基准应用于
+   缺失的历史。
+5. 指定广告系列架构、受众策略、创意体系、预算和
+   投放节奏、衡量、实验、政策控制项和运营节奏。
+6. 在上线、学习、优化和扩量之前，分阶段安排先决条件。
+7. 为每项行动指定负责人、时间、依赖项、防护规则、证据、成功
+   衡量标准，以及回滚或退出条件。
+8. 返回规范化 JSON，并渲染请求的人类可读计划。
+
+计划仅供咨询。只有通过上线或优化的
+变更门禁后，它才会成为账户变更。

@@ -8,12 +8,13 @@ from os import PathLike
 from typing import Any, Literal, Mapping, Protocol, Sequence, runtime_checkable
 
 from ..models import AccountSnapshot
+from ..errors import LocalizedError
 
 CapabilityMode = Literal["export-read", "live-read", "draft-write", "live-write"]
 CapabilityStatus = Literal["declared", "implemented", "fixture-verified", "live-verified", "disabled"]
 
 
-class AdapterError(RuntimeError):
+class AdapterError(LocalizedError, RuntimeError):
     """Base exception for adapter failures."""
 
 
@@ -95,9 +96,7 @@ class BaseAdapter(ABC):
         """Read authorized data and normalize it to an AccountSnapshot."""
 
     def _mutation_disabled(self, operation: str) -> MutationDisabledError:
-        return MutationDisabledError(
-            f"{self.adapter_id} is read-only; {operation} requires a separately verified write adapter"
-        )
+        return MutationDisabledError('core.adapter.mutation_disabled', value1=self.adapter_id, operation=operation)
 
     def draft_changes(self, requested_changes: Sequence[Mapping[str, Any]]) -> Mapping[str, Any]:
         raise self._mutation_disabled("draft_changes")

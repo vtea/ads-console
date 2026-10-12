@@ -34,7 +34,7 @@ def _extract_triggers(description: str) -> list[str]:
     return [p.strip().lower() for p in raw_phrases if p.strip()]
 
 
-def test_positive_triggers_route_to_expected_skill(creative_evals, skill_descriptions):
+def test_positive_triggers_route_to_expected_skill(creative_evals, english_skill_descriptions):
     """Every positive eval entry should have at least one keyword overlap with
     its expected skill's trigger surface. Failures usually mean a description
     was tightened in a way that broke a previously-routing prompt."""
@@ -44,7 +44,7 @@ def test_positive_triggers_route_to_expected_skill(creative_evals, skill_descrip
             continue
         skill = entry["expected_skill"]
         prompt = entry["prompt"].lower()
-        desc = skill_descriptions.get(skill)
+        desc = english_skill_descriptions.get(skill)
         if desc is None:
             failures.append(f"{entry['id']}: skill '{skill}' has no description")
             continue

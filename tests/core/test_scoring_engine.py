@@ -2,7 +2,16 @@ from __future__ import annotations
 
 import pytest
 
+from claude_ads_core.i18n import locale_scope
+
 from claude_ads_core.scoring import SEVERITY_WEIGHTS, ScoringError, score_account, score_portfolio
+
+
+@pytest.fixture(autouse=True)
+def _explicit_english_contract_messages():
+    """Retain the original English failure assertions in this module."""
+    with locale_scope("en"):
+        yield
 
 
 def control(

@@ -11,6 +11,7 @@ import pytest
 
 from claude_ads_core.cli import main
 from claude_ads_core.contracts import validate_contract
+from claude_ads_core.i18n import locale_scope
 from claude_ads_core.reporting import (
     PDFDependencyError,
     ReportRenderError,
@@ -54,12 +55,12 @@ def test_sanitized_report_fixture_is_a_valid_bundle():
 
 def test_markdown_matches_golden_report():
     expected = (FIXTURE_ROOT / "sanitized-report.md").read_text(encoding="utf-8").rstrip("\n") + "\n"
-    assert render_markdown(load_bundle()) == expected
+    assert render_markdown(load_bundle(), locale="en") == expected
 
 
 def test_html_matches_golden_report_and_is_self_contained():
     expected = (FIXTURE_ROOT / "sanitized-report.html").read_text(encoding="utf-8").rstrip("\n") + "\n"
-    rendered = render_html(load_bundle())
+    rendered = render_html(load_bundle(), locale="en")
     assert rendered == expected
     lowered = rendered.lower()
     assert "<script" not in lowered
@@ -71,13 +72,13 @@ def test_html_matches_golden_report_and_is_self_contained():
 def test_rendering_is_reproducible_and_does_not_mutate_input():
     bundle = load_bundle()
     original = copy.deepcopy(bundle)
-    assert render_markdown(bundle) == render_markdown(bundle)
-    assert render_html(bundle) == render_html(bundle)
+    assert render_markdown(bundle, locale="en") == render_markdown(bundle, locale="en")
+    assert render_html(bundle, locale="en") == render_html(bundle, locale="en")
     assert bundle == original
 
 
 def test_report_surfaces_partial_provisional_evidence_contradictions_and_actions():
-    markdown = render_markdown(load_bundle())
+    markdown = render_markdown(load_bundle(), locale="en")
     assert "Run completeness: **Partial**" in markdown
     assert "Evidence status: **Provisional**" in markdown
     assert "must not be presented as a complete audit" in markdown
@@ -89,8 +90,8 @@ def test_report_surfaces_partial_provisional_evidence_contradictions_and_actions
 def test_insufficient_evidence_is_visible_and_health_is_not_invented():
     bundle = load_bundle()
     bundle["scoring"].update(health_score=None, evidence_coverage=42.0, status="insufficient_evidence")
-    markdown = render_markdown(bundle)
-    html = render_html(bundle)
+    markdown = render_markdown(bundle, locale="en")
+    html = render_html(bundle, locale="en")
     assert "Evidence status: **Insufficient evidence**" in markdown
     assert "Health score: **Not scored**" in markdown
     assert "Evidence is insufficient for a defensible health score" in markdown
@@ -108,8 +109,8 @@ def test_untrusted_content_is_escaped_and_obvious_credentials_and_pii_are_redact
     finding["evidence"].append(
         {"authorization": "Bearer credential-value", "nested": {"email": "person@example.test"}}
     )
-    markdown = render_markdown(bundle)
-    rendered_html = render_html(bundle)
+    markdown = render_markdown(bundle, locale="en")
+    rendered_html = render_html(bundle, locale="en")
     combined = markdown + rendered_html
     assert "analyst@example.test" not in combined
     assert "person@example.test" not in combined
@@ -124,17 +125,17 @@ def test_renderer_rejects_invalid_bundle_and_malformed_extensions():
     invalid = load_bundle()
     invalid["schema_version"] = "2.0.0"
     with pytest.raises(ReportRenderError, match="invalid report bundle"):
-        render_markdown(invalid)
+        render_markdown(invalid, locale="en")
 
     invalid = load_bundle()
     invalid["actions"] = {"action": "not an array"}
     with pytest.raises(ReportRenderError, match=r"\$\.actions"):
-        render_html(invalid)
+        render_html(invalid, locale="en")
 
 
 @pytest.mark.parametrize("destination", ["../outside.md", "/tmp/outside.md", "nested/../../outside.md"])
 def test_safe_report_path_rejects_absolute_and_traversal_paths(tmp_path, destination):
-    with pytest.raises(ReportRenderError, match="relative path"):
+    with locale_scope("en"), pytest.raises(ReportRenderError, match="relative path"):
         resolve_report_path(tmp_path / "reports", destination)
 
 
@@ -148,9 +149,9 @@ def test_safe_report_path_rejects_parent_and_destination_symlinks(tmp_path):
         (root / "report.md").symlink_to(outside / "report.md")
     except OSError as exc:
         pytest.skip(f"symlinks unavailable: {exc}")
-    with pytest.raises(ReportRenderError, match="parent must not be a symlink"):
+    with locale_scope("en"), pytest.raises(ReportRenderError, match="parent must not be a symlink"):
         resolve_report_path(root, "linked/report.md")
-    with pytest.raises(ReportRenderError, match="output must not be a symlink"):
+    with locale_scope("en"), pytest.raises(ReportRenderError, match="output must not be a symlink"):
         resolve_report_path(root, "report.md")
 
 
@@ -168,19 +169,20 @@ def test_pdf_bridge_fails_clearly_when_optional_dependency_is_unavailable(monkey
 
     monkeypatch.setattr("claude_ads_core.reporting.importlib.import_module", unavailable)
     with pytest.raises(PDFDependencyError, match="optional 'weasyprint'"):
-        render_pdf(load_bundle())
+        render_pdf(load_bundle(), locale="en")
 
 
 def test_real_pdf_render_smoke_when_runtime_dependencies_are_installed():
     pytest.importorskip("weasyprint")
-    rendered = render_pdf(load_bundle())
+    rendered = render_pdf(load_bundle(), locale="en")
     assert rendered.startswith(b"%PDF-")
     assert len(rendered) > 1_000
 
 
 def test_cli_render_writes_validated_report_under_safe_root(tmp_path, capsys):
     root = tmp_path / "runs"
-    assert main(["render", str(BUNDLE_PATH), "--format", "html", "--root", str(root)]) == 0
+    with locale_scope("en"):
+        assert main(["render", str(BUNDLE_PATH), "--format", "html", "--root", str(root)]) == 0
     result = json.loads(capsys.readouterr().out)
     output = root / "fixture-run-20260711-001" / "report.html"
     assert result == {
@@ -189,10 +191,11 @@ def test_cli_render_writes_validated_report_under_safe_root(tmp_path, capsys):
         "run_id": "fixture-run-20260711-001",
         "status": "rendered",
     }
-    assert output.read_text(encoding="utf-8") == render_html(load_bundle())
+    assert output.read_text(encoding="utf-8") == render_html(load_bundle(), locale="en")
 
 
-def test_cli_render_returns_machine_readable_error_for_unsafe_output(tmp_path, capsys):
+def test_cli_render_returns_machine_readable_error_for_unsafe_output(tmp_path, capsys, monkeypatch):
+    monkeypatch.setenv("CLAUDE_ADS_LOCALE", "en")
     assert (
         main(
             [

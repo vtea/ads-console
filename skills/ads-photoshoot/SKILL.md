@@ -1,21 +1,23 @@
 ---
 name: ads-photoshoot
-description: "Generate rights-cleared paid-ad product photography variants from an authorized source image and validated brand profile. Triggers on: product photo, product photography, virtual photoshoot, photoshoot, enhance product image, studio shot, lifestyle shot, lifestyle product image, floating product image, ingredient shot."
+description: "根据已授权的源图片和已验证的品牌档案，生成已完成权利许可的付费广告产品摄影变体。触发场景：产品照片、产品摄影、虚拟拍摄、摄影拍摄、增强产品图片、影棚照、生活方式照、生活方式产品图片、悬浮产品图片、原料照片。"
 ---
 
-# Product Photography Variants
+# 产品摄影变体
 
-1. Confirm rights to the product image and collect the validated brand profile,
-   product facts, intended placements, provider capability, cost ceiling, and output
-   root.
-2. Preserve product geometry, packaging, logos, labels, color, and material unless
-   the operator explicitly approves a change.
-3. Define distinct production hypotheses such as studio, contextual use, ingredient
-   story, scale/detail, or lifestyle; do not imply unsupported product outcomes.
-4. Generate approved aspect ratios and record source hashes, prompt version,
-   provider/model, cost, output hashes, and dimensions.
-5. Validate product fidelity, visual defects, safe zones, accessibility, and policy.
-6. Store assets and manifest atomically inside the run directory.
+操作语言默认使用简体中文：首次回复、工具前说明、过程进度、AskUserQuestion 的问题、选项和说明，以及最终报告均使用中文；用户明确指定其他操作语言时遵从。广告投放语言独立于操作语言。JSON keys/enums 和原始证据不翻译。委派任务时必须传递操作语言要求。
 
-Human review is mandatory. Do not create deceptive before/after evidence, people or
-endorsements without authorization, or regulated claims from visual implication.
+1. 确认产品图片的使用权，并收集已验证的品牌档案、
+   产品事实、预期版位、提供方能力、费用上限和输出
+   根目录。
+2. 保留产品几何形状、包装、徽标、标签、颜色和材质，除非
+   操作者明确批准变更。
+3. 定义不同的制作假设，例如影棚、使用场景、原料
+   故事、比例/细节或生活方式；不得暗示没有依据的产品效果。
+4. 生成已批准的宽高比，并记录源哈希、提示词版本、
+   提供方/模型、费用、输出哈希和尺寸。
+5. 验证产品保真度、视觉缺陷、安全区、无障碍和政策。
+6. 在运行目录内原子化存储素材和清单。
+
+必须进行人工审查。不得制作具有欺骗性的前后对比证据、未经授权的人物或
+背书，也不得通过视觉暗示形成受监管声明。

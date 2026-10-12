@@ -1,4 +1,4 @@
 interface:
   display_name: "Claude Ads"
-  short_description: "Source-grounded paid media operations"
-  default_prompt: "Use $ads to audit my paid-media accounts and produce a source-grounded action plan."
+  short_description: "循证付费广告运营（默认中文）"
+  default_prompt: "使用 $ads 审计我的付费广告账户，并用简体中文生成有证据支撑的行动计划。"

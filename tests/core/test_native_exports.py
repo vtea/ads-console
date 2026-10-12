@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from claude_ads_core.i18n import locale_scope
+
 from claude_ads_core.adapters import (
     MutationDisabledError,
     NativeCSVExportAdapter,
@@ -50,6 +52,13 @@ EXPECTED = {
     "pinterest": (33.5, 3.0, "total_conversions", 0, 0),
     "snapchat": (32.5, 2.0, "conversion_purchases", 0, 0),
 }
+
+
+@pytest.fixture(autouse=True)
+def _explicit_english_contract_messages():
+    """Retain the original English failure assertions in this module."""
+    with locale_scope("en"):
+        yield
 
 
 def _rewrite_csv(source: Path, target: Path, mutate) -> Path:

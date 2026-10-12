@@ -76,9 +76,9 @@ def _manifest(repo_root, name: str) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_runtime_references_name_registered_official_sources(repo_root):
+def test_runtime_references_name_registered_official_sources(english_documents_root):
     for platform, source_ids in PLATFORM_SOURCES.items():
-        text = (repo_root / "ads" / "references" / f"{platform}-audit.md").read_text(
+        text = (english_documents_root / "ads" / "references" / f"{platform}-audit.md").read_text(
             encoding="utf-8"
         )
         assert "## Runtime evaluation contract" in text
@@ -89,9 +89,9 @@ def test_runtime_references_name_registered_official_sources(repo_root):
             assert f"`{source_id}`" in text, f"{platform} omits {source_id}"
 
 
-def test_launch_discovery_is_explicitly_unscored(repo_root):
+def test_launch_discovery_is_explicitly_unscored(english_documents_root):
     for platform in PLATFORM_SOURCES:
-        text = (repo_root / "ads" / "references" / f"{platform}-audit.md").read_text(
+        text = (english_documents_root / "ads" / "references" / f"{platform}-audit.md").read_text(
             encoding="utf-8"
         )
         assert "discovery" in text.lower()
@@ -99,9 +99,9 @@ def test_launch_discovery_is_explicitly_unscored(repo_root):
         assert "scored within existing categories" not in text.lower()
 
 
-def test_every_legacy_row_has_one_safe_runtime_disposition(repo_root):
+def test_every_legacy_row_has_one_safe_runtime_disposition(english_documents_root):
     for platform, expected_unscored in UNSCORED_DISCOVERY_IDS.items():
-        text = (repo_root / "ads" / "references" / f"{platform}-audit.md").read_text(
+        text = (english_documents_root / "ads" / "references" / f"{platform}-audit.md").read_text(
             encoding="utf-8"
         )
         rows = {check_id: (intent, disposition) for check_id, intent, disposition in _CONTROL_ROW_RE.findall(text)}
@@ -121,7 +121,7 @@ def test_every_legacy_row_has_one_safe_runtime_disposition(repo_root):
             ), f"{platform} {check_id} has unsafe disposition: {disposition}"
 
 
-def test_registry_rows_contain_no_brittle_thresholds_or_mutable_dates(repo_root):
+def test_registry_rows_contain_no_brittle_thresholds_or_mutable_dates(repo_root, english_documents_root):
     forbidden_intent = re.compile(
         r"(?:\b20[0-9]{2}\b|\b[0-9]+(?:\.[0-9]+)?%|\$[0-9]|[<>]=?|[≥≤]|"
         r"\b[0-9]+(?:\.[0-9]+)?x\b)",
@@ -140,21 +140,55 @@ def test_registry_rows_contain_no_brittle_thresholds_or_mutable_dates(repo_root)
         "cpl reduction",
         "pass | warning | fail",
     )
-    for platform in PLATFORM_SOURCES:
-        text = (repo_root / "ads" / "references" / f"{platform}-audit.md").read_text(
-            encoding="utf-8"
-        )
-        rows = _CONTROL_ROW_RE.findall(text)
-        for check_id, intent, disposition in rows:
-            assert not forbidden_intent.search(intent), (
-                f"{platform} {check_id} retains brittle precision in {intent!r}"
+    for documents_root in (english_documents_root, repo_root):
+        for platform in PLATFORM_SOURCES:
+            text = (documents_root / "ads" / "references" / f"{platform}-audit.md").read_text(
+                encoding="utf-8"
             )
-            assert not forbidden_intent.search(disposition), (
-                f"{platform} {check_id} retains brittle precision in its disposition"
-            )
-        lowered = text.lower()
-        for phrase in forbidden_legacy_phrases:
-            assert phrase not in lowered, f"{platform} retains legacy phrase {phrase!r}"
+            rows = _CONTROL_ROW_RE.findall(text)
+            assert rows, f"{platform} has no control rows"
+            for check_id, intent, disposition in rows:
+                assert not forbidden_intent.search(intent), (
+                    f"{platform} {check_id} retains brittle precision in {intent!r}"
+                )
+                assert not forbidden_intent.search(disposition), (
+                    f"{platform} {check_id} retains brittle precision in its disposition"
+                )
+            lowered = text.lower()
+            for phrase in forbidden_legacy_phrases:
+                assert phrase not in lowered, f"{platform} retains legacy phrase {phrase!r}"
+
+
+def test_chinese_runtime_references_preserve_source_and_disposition_contracts(repo_root, english_documents_root):
+    conditional = "条件性证据控制项："
+    discovery = "不评分的来源刷新发现："
+    for platform, source_ids in PLATFORM_SOURCES.items():
+        relative = f"ads/references/{platform}-audit.md"
+        text = (repo_root / relative).read_text(encoding="utf-8")
+        for phrase in (
+            "## 运行时评估契约", "## 官方证据", "`not_applicable`", "`unknown`",
+            "所需证据缺失时，返回 `unknown`",
+            "产品采用、可用性、测试版访问、公告知晓程度和供应商报告的表现不是健康控制项",
+            "仅将其记录为不评分的发现",
+            "不要从本目录采用固定的平台级阈值",
+        ):
+            assert phrase in text, f"{platform} omits {phrase!r}"
+        for source_id in source_ids:
+            assert f"`{source_id}`" in text, f"{platform} omits {source_id}"
+        rows = {check_id: (intent, disposition) for check_id, intent, disposition in _CONTROL_ROW_RE.findall(text)}
+        baseline = (english_documents_root / relative).read_text(encoding="utf-8")
+        baseline_ids = {check_id for check_id, _, _ in _CONTROL_ROW_RE.findall(baseline)}
+        assert rows and set(rows) == baseline_ids
+        assert {
+            check_id for check_id, (_, disposition) in rows.items()
+            if disposition.startswith(discovery)
+        } == UNSCORED_DISCOVERY_IDS[platform]
+        for check_id, (_, disposition) in rows.items():
+            assert disposition.startswith((conditional, discovery)), (platform, check_id, disposition)
+            if disposition.startswith(discovery):
+                assert "未采用绝不算失败" in disposition
+            else:
+                assert "否则返回 `unknown` 或 `not_applicable`" in disposition
 
 
 def test_source_and_claim_ledgers_are_reciprocal_and_unique(repo_root):

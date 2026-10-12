@@ -23,6 +23,26 @@ WINDOWS_POWERSHELL_ONLY = pytest.mark.skipif(
     WINDOWS_POWERSHELL is None, reason="Windows PowerShell 5.1 is not installed"
 )
 LEGACY_INSTALL_MESSAGE = "Existing Claude Ads files without an ownership manifest detected"
+
+
+@pytest.fixture(autouse=True)
+def english_installer_diagnostics(monkeypatch):
+    """Retain exact English safety assertions; locale behavior has its own suite."""
+    monkeypatch.setenv("CLAUDE_ADS_LOCALE", "en")
+
+
+def _expected_document(relative: str, *, locale: str = "en") -> str:
+    source = ROOT / relative
+    translated = ROOT / "claude_ads_core" / "locales" / locale / "documents" / relative
+    if locale == "en" and translated.is_file():
+        source = translated
+    text = source.read_text(encoding="utf-8")
+    if locale == "en" and source.name == "SKILL.md" and "<!-- claude-ads:operator-language -->" not in text:
+        messages = json.loads((ROOT / "claude_ads_core/locales/en/installer.json").read_text(encoding="utf-8"))
+        text += "\n" + messages["installer.operator_language_rule"]
+    return text
+
+
 EMPTY_POWERSHELL_MANIFEST = {
     "version": 1,
     "target": "claude",
@@ -351,7 +371,7 @@ def test_bash_installer_reports_legacy_install_once_before_mutation(tmp_path):
     )
 
     assert result.returncode == 1
-    assert result.stderr.count("✗") == 1
+    assert result.stderr.count(LEGACY_INSTALL_MESSAGE) == 1
     assert LEGACY_INSTALL_MESSAGE in result.stderr
     assert "Refusing to overwrite unowned file" not in result.stderr
     assert "older than v2.0.0" in result.stderr
@@ -370,10 +390,10 @@ def test_bash_installer_reports_legacy_install_once_before_mutation(tmp_path):
 def test_bash_installer_upgrades_managed_install_in_place(tmp_path):
     skills, agents = _install(tmp_path)
     installed_main = skills / "ads" / "SKILL.md"
-    expected_main = (ROOT / "ads" / "SKILL.md").read_text(encoding="utf-8")
+    expected_main = _expected_document("ads/SKILL.md")
     installed_main.write_text("stale owned content\n", encoding="utf-8")
     installed_agent = sorted(agents.glob("*.md"))[0]
-    expected_agent = (ROOT / "agents" / installed_agent.name).read_text(encoding="utf-8")
+    expected_agent = _expected_document(f"agents/{installed_agent.name}")
     installed_agent.write_text("stale owned agent\n", encoding="utf-8")
 
     repeat = _run(
@@ -696,7 +716,7 @@ def test_powershell_install_uninstall_round_trip_preserves_unrelated_skill(tmp_p
     # The exact path is now recorded by the validated prior manifest, so a
     # repeat install may replace it and must restore the distribution content.
     installed_main = skills / "ads" / "SKILL.md"
-    expected_main = (ROOT / "ads" / "SKILL.md").read_text(encoding="utf-8")
+    expected_main = _expected_document("ads/SKILL.md")
     installed_main.write_text("stale owned content\n", encoding="utf-8")
     repeat = _powershell_install(skills, agents)
     assert repeat.returncode == 0, repeat.stdout + repeat.stderr

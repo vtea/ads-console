@@ -4,8 +4,9 @@ Shared fixtures:
 - ``repo_root``        — path to the repo root
 - ``check_catalog``    — parsed dict from fixtures/check-catalog.yaml
 - ``creative_evals``   — parsed list from evals/creative-evals.json
-- ``skill_descriptions`` — dict mapping skill name → description text (extracted
-  from every SKILL.md frontmatter)
+- ``skill_descriptions`` — installed/generated-view skill descriptions
+- ``english_documents_root`` — preserved English Markdown baseline (not repo_root)
+- ``english_skill_descriptions`` — English baseline for retained English lexical evals
 
 These are session-scoped to keep test runs fast even as the harness grows.
 """
@@ -67,11 +68,10 @@ def _parse_frontmatter(text: str) -> dict:
     return out
 
 
-@pytest.fixture(scope="session")
-def skill_descriptions() -> dict[str, str]:
-    """Returns {skill_name: description_text} for every SKILL.md under ads/ and skills/."""
-    skill_files = [REPO_ROOT / "ads" / "SKILL.md"] + sorted(
-        (REPO_ROOT / "skills").glob("*/SKILL.md")
+def _skill_descriptions(documents_root: Path) -> dict[str, str]:
+    """Parse descriptions from one explicit document surface; never fall back."""
+    skill_files = [documents_root / "ads" / "SKILL.md"] + sorted(
+        (documents_root / "skills").glob("*/SKILL.md")
     )
     result: dict[str, str] = {}
     for path in skill_files:
@@ -79,3 +79,27 @@ def skill_descriptions() -> dict[str, str]:
         if "name" in fm and "description" in fm:
             result[fm["name"]] = fm["description"]
     return result
+
+
+@pytest.fixture(scope="session")
+def skill_descriptions(repo_root: Path) -> dict[str, str]:
+    """Descriptions from actual installed/generated views, not locale resources."""
+    return _skill_descriptions(repo_root)
+
+
+@pytest.fixture(scope="session")
+def english_documents_root(repo_root: Path) -> Path:
+    """Explicit English baseline for language-dependent regression assertions.
+
+    Manifests, schemas, implementations, and generated Chinese surfaces must still
+    use repo_root. A missing baseline is an error, not a reason to skip coverage.
+    """
+    root = repo_root / "claude_ads_core" / "locales" / "en" / "documents"
+    assert (root / "ads" / "SKILL.md").is_file(), "English document baseline is missing"
+    return root
+
+
+@pytest.fixture(scope="session")
+def english_skill_descriptions(english_documents_root: Path) -> dict[str, str]:
+    """Retain English lexical evaluation independently of Chinese frontmatter."""
+    return _skill_descriptions(english_documents_root)
